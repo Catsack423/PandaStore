@@ -5,7 +5,10 @@ import project.project.Entity.seller.Seller;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "products")
@@ -20,9 +23,13 @@ public class Product {
     @JoinColumn(name = "seller_id", nullable = false)
     private Seller seller;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "product_categories",
+        joinColumns = @JoinColumn(name = "product_id"),
+        inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private Set<Category> categories = new HashSet<>();
 
     @Column(name = "name", nullable = false, length = 200)
     private String name;
@@ -61,10 +68,10 @@ public class Product {
     public Product() {
     }
 
-    public Product(Long productId, Seller seller, Category category, String name, String description, BigDecimal price, Integer stock, ProductStatus status, BigDecimal averageRating, Integer reviewCount, String shippingInfo, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Product(Long productId, Seller seller, Set<Category> categories, String name, String description, BigDecimal price, Integer stock, ProductStatus status, BigDecimal averageRating, Integer reviewCount, String shippingInfo, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.productId = productId;
         this.seller = seller;
-        this.category = category;
+        this.categories = categories != null ? categories : new HashSet<>();
         this.name = name;
         this.description = description;
         this.price = price;
@@ -107,12 +114,22 @@ public class Product {
         this.seller = seller;
     }
 
-    public Category getCategory() {
-        return category;
+    public Set<Category> getCategories() {
+        return categories;
     }
 
-    public void setCategory(Category category) {
-        this.category = category;
+    public void setCategories(Set<Category> categories) {
+        this.categories = categories;
+    }
+
+    public void addCategory(Category category) {
+        this.categories.add(category);
+        category.getProducts().add(this);
+    }
+
+    public void removeCategory(Category category) {
+        this.categories.remove(category);
+        category.getProducts().remove(this);
     }
 
     public String getName() {
@@ -201,5 +218,18 @@ public class Product {
 
     public void setImages(List<ProductImage> images) {
         this.images = images;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Product product = (Product) o;
+        return Objects.equals(productId, product.productId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(productId);
     }
 }
