@@ -38,6 +38,14 @@ public class User {
     public User() {
     }
 
+    public User(String username, String email, String passwordHash, UserRole role, UserStatus status) {
+        this.username = username;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.role = role;
+        this.status = status;
+    }
+
     public User(Long userId, String username, String email, String passwordHash, UserRole role, UserStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.userId = userId;
         this.username = username;
