@@ -42,12 +42,11 @@ public class CustomerServiceImp implements CustomerService {
         }
 
         User user = new User(
-            request.getUsername(),
-            request.getEmail(),
-            request.getPassword(),
-            UserRole.CUSTOMER,
-            UserStatus.ACTIVE
-        );
+                request.getUsername(),
+                request.getEmail(),
+                request.getPassword(),
+                UserRole.CUSTOMER,
+                UserStatus.ACTIVE);
 
         User savedUser;
         try {
@@ -57,15 +56,16 @@ public class CustomerServiceImp implements CustomerService {
         } catch (DataAccessException e) {
             throw new UserCreationException("บันทึกข้อมูล User ไม่สำเร็จ", e);
         }
-
+        Customer savedCustomer;
         try {
             Customer customer = new Customer(savedUser, request.getFullName(), request.getPhoneNumber());
-            Customer savedCustomer = customerRepository.save(customer);
+            savedCustomer = customerRepository.save(customer);
             return savedCustomer.getCustomerId();
 
         } catch (DataAccessException e) {
             throw new UserCreationException("บันทึกข้อมูล Customer ไม่สำเร็จ", e);
         }
+
     }
 
     @Override
