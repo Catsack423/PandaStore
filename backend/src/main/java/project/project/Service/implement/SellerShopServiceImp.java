@@ -71,7 +71,8 @@ public class SellerShopServiceImp implements SellerShopService {
                     "ไม่สามารถแก้ไขร้านค้าที่มีสถานะ: " + existingSeller.getStatus());
         }
 
-        // อัปเดตเฉพาะฟิลด์ที่มีค่า (Partial Update)
+        // อัปเดตเฉพาะฟิลด์ที่มีค่า (Partial Update) 
+        //[Fix] use DTO for validation
         if (updatedInfo.getShopName() != null && !updatedInfo.getShopName().isBlank()) {
             existingSeller.setShopName(updatedInfo.getShopName());
         }

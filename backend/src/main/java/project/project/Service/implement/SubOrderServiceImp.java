@@ -44,6 +44,7 @@ public class SubOrderServiceImp implements SubOrderService {
      * @return Order entity
      * @throws RuntimeException ถ้าไม่พบ
      */
+    
     @Override
     public Order getSubOrderById(Long orderId) {
         return orderRepository.findById(orderId)
@@ -57,6 +58,8 @@ public class SubOrderServiceImp implements SubOrderService {
      * @param orderGroupId รหัส OrderGroup (Master Order)
      * @return รายการ Sub-Order
      */
+
+    //[Fix] add throw Exception to Controller
     @Override
     public List<Order> getSubOrdersByOrderGroup(Long orderGroupId) {
         return orderRepository.findByOrderGroup_OrderGroupId(orderGroupId);
@@ -70,6 +73,7 @@ public class SubOrderServiceImp implements SubOrderService {
      */
     @Override
     public List<Order> getSubOrdersBySeller(Long sellerId) {
+            // [Fix] add throw Exception to Controller
         return orderRepository.findBySeller_SellerId(sellerId);
     }
 

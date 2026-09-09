@@ -27,6 +27,7 @@ public class ShippingServiceImp implements ShippingService {
      * Shipping fee rates ต่อ courier (Strategy Pattern — Map-based)
      * เพิ่ม courier ใหม่ได้โดยไม่ต้องแก้ if-else (OCP)
      */
+    //make this to stategy pattern
     private static final Map<String, BigDecimal> SHIPPING_RATES = Map.of(
             "KERRY", new BigDecimal("50.00"),
             "FLASH", new BigDecimal("40.00"),
