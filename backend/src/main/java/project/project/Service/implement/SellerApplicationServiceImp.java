@@ -45,6 +45,9 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
         this.notificationService = notificationService;
     }
 
+    //     แบบที่ 2: submit ใบสมัคร → create seller
+    // User กรอกฟอร์มสมัคร (เก็บใน SellerApplication) → Submit → Admin review → Approve → สร้าง Seller record จริง
+        
     @Override
     @Transactional
     public SellerApplication submitApplication(Long userId, SellerApplication application) {
@@ -67,6 +70,8 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
 
         return saved;
     }
+
+
 
     @Override
     @Transactional
@@ -192,6 +197,7 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
         return applicationRepository.findByStatus(SellerApplicationStatus.PENDING);
     }
 
+    //[Major] User Dto instead
     private void validateApplicationData(SellerApplication app) {
         if (app == null) {
             throw new InvalidApplicationDataException("ข้อมูลใบสมัครห้ามเป็นค่าว่าง");
