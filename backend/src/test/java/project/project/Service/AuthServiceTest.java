@@ -11,9 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import jakarta.validation.ConstraintViolationException;
-import project.project.DTO.auth.RegisterSellerRequest;
 import project.project.Entity.user.*;
-import project.project.Entity.seller.*;
 import project.project.Exception.DuplicateUserException;
 import project.project.Repository.*;
 import project.project.Service.api.AuthService;
@@ -49,13 +47,6 @@ class AuthServiceTest {
     private Customer registerCustomer() {
         return auth.registerCustomer("customer", "customer@example.com", "password123", "password123",
                 "Test Customer", "0812345678");
-    }
-
-    private RegisterSellerRequest sellerRequest(String username, String shopName) {
-        return new RegisterSellerRequest(username, username + "@example.com", "password123", "password123",
-                shopName, "Shop description", "0812345678", "shop@example.com", "Bangkok",
-                "Test", "Seller", "1234567890123", "/id-card.png", "Test Seller", "Test Bank",
-                "1234567890", "/bank-book.png");
     }
 
     @Test
@@ -102,35 +93,14 @@ class AuthServiceTest {
     }
 
     @Test
-    void sellerRegistrationCreatesPendingSellerAndApplication() {
-        Seller seller = auth.registerSeller(sellerRequest("seller", "My Shop"));
-        assertNotNull(seller.getSellerId());
-        assertEquals(SellerStatus.PENDING, seller.getStatus());
-        assertEquals(1, applications.count());
-        SellerApplication application = applications.findAll().getFirst();
-        assertEquals(SellerApplicationStatus.PENDING, application.getStatus());
-        assertEquals("1234567890123", application.getIdCardNumber());
-        assertEquals("My Shop", application.getShopName());
-        assertTrue(passwords.matches("password123", users.findByUsername("seller").orElseThrow().getPasswordHash()));
-        assertEquals(0, carts.count());
-    }
-
-    @Test
-    void sellerDatabaseFailureRollsBackNewUser() {
-        auth.registerSeller(sellerRequest("seller", "Same Shop"));
-        assertThrows(DataIntegrityViolationException.class,
-                () -> auth.registerSeller(sellerRequest("another", "Same Shop")));
-        assertEquals(1, users.count());
-        assertEquals(1, sellers.count());
-        assertEquals(1, applications.count());
-        assertFalse(users.existsByUsername("another"));
-    }
-
-    @Test
-    void sellerRejectsMissingDetails() {
-        assertThrows(IllegalArgumentException.class, () -> auth.registerSeller(null));
-        assertThrows(ConstraintViolationException.class, () -> auth.registerSeller(sellerRequest("seller", "")));
+    void sellerRegistrationWaitsForInterfaceWithoutWritingData() {
+        assertThrows(UnsupportedOperationException.class,
+                () -> auth.registerSeller("seller", "seller@example.com", "password123", "password123"));
+        assertThrows(IllegalArgumentException.class,
+                () -> auth.registerSeller("seller", "seller@example.com", "password123", "different"));
         assertEquals(0, users.count());
+        assertEquals(0, sellers.count());
+        assertEquals(0, applications.count());
     }
 
     @Test
@@ -173,19 +143,19 @@ class AuthServiceTest {
         sessions.save(new AuthSession(digest, users.findByUsername("customer").orElseThrow(),
                 Instant.now().minusSeconds(1)));
         assertFalse(auth.validateToken(token));
-        assertFalse(auth.resetPassword(token, "password123", "newPassword123", "newPassword123"));
     }
 
     @Test
-    void passwordChangeRequiresValidCredentialsAndRevokesEverySession() {
+    void passwordResetUsesOriginalInterfaceAndRevokesEverySession() {
         registerCustomer();
+        long userId = users.findByUsername("customer").orElseThrow().getUserId();
         String token = auth.login("customer", "password123");
         String secondToken = auth.login("customer", "password123");
-        assertFalse(auth.resetPassword(null, "password123", "newPassword123", "newPassword123"));
-        assertFalse(auth.resetPassword(token, "wrong123", "newPassword123", "newPassword123"));
-        assertFalse(auth.resetPassword(token, "password123", "newPassword123", "different"));
+        assertFalse(auth.resetPassword(0, "newPassword123", "newPassword123"));
+        assertFalse(auth.resetPassword(Long.MAX_VALUE, "newPassword123", "newPassword123"));
+        assertFalse(auth.resetPassword(userId, "newPassword123", "different"));
         assertTrue(auth.validateToken(token));
-        assertTrue(auth.resetPassword(token, "password123", "newPassword123", "newPassword123"));
+        assertTrue(auth.resetPassword(userId, "newPassword123", "newPassword123"));
         assertFalse(auth.validateToken(token));
         assertFalse(auth.validateToken(secondToken));
         assertEquals(0, sessions.count());

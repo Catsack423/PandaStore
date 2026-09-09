@@ -7,14 +7,21 @@ request authorization filters are not part of this change.
 
 - `registerCustomer(...)` validates the request and matching passwords, calls
   `CustomerService`, and creates an empty cart. All writes share one transaction.
-- `registerSeller(RegisterSellerRequest)` requires the shop, identity-document,
-  and banking details required by the existing entities. It delegates to
-  `SellerRegistrationService` and creates a seller and application in `PENDING`
-  status in one transaction. It does not approve the shop or verify documents.
-- Customer creation, including the existing customer endpoint, now stores BCrypt
-  hashes. Passwords must be at least 6 characters and no more than 72 UTF-8 bytes.
+- `registerSeller(username, email, password, confirmPassword)` retains the original
+  interface. It currently throws `UnsupportedOperationException` without writing
+  data: `SellerService.createSeller()` accepts no account details, and the Auth
+  interface does not supply the required application details. Agree on these
+  contracts before connecting `SellerService` and `SellerApplicationService`.
+  There is no separate seller registration implementation in this change.
+- Registration through AuthService stores BCrypt hashes in the same transaction
+  as customer creation. CustomerService's implementation remains unchanged.
+  Passwords must be at least 6 characters and no more than 72 UTF-8 bytes.
   Existing plaintext passwords are not accepted by login; existing accounts need
   a separately authorized migration or recovery process.
+- The existing customer endpoint still calls CustomerService directly. It does
+  not create a cart or hash passwords through AuthService. Route authentication
+  registration through AuthService when connecting the API; this change does not
+  modify that endpoint.
 
 ## Login and password changes
 
@@ -23,15 +30,16 @@ request authorization filters are not part of this change.
   `auth_sessions`. A username/email collision between different users is rejected.
 - `validateToken(token)` checks the persisted session, expiry, active user status,
   and whether the password has changed. Expired sessions are removed on login.
-- `resetPassword(token, currentPassword, password, confirmPassword)` is an
-  authenticated password change. It requires the current password and invalidates
-  all existing sessions. Invalid input returns `false`. Forgotten-password email
-  or OTP recovery is not implemented.
-- The old seller registration signature and ID-only password reset signature were
-  replaced. There were no callers in the repository. Future callers must use the
-  new signatures and must not expose entity password hashes or identity documents
-  in HTTP responses. Token validation alone does not authorize seller operations;
-  those operations must also check shop approval and resource ownership.
+- `resetPassword(id, password, confirmPassword)` retains the original interface
+  and invalidates all sessions for that user. The caller must verify reset
+  authorization for this user ID first; this method does not verify the caller's
+  identity, current password, or OTP. Do not expose it as an unauthenticated
+  endpoint accepting arbitrary user IDs. Invalid input or a missing user returns
+  `false`. Forgotten-password email/OTP recovery is not implemented.
+- Both Auth and Cart retain their original service signatures. Auth uses
+  repositories for database access and AuthSession for persistent sessions.
+  Supporting repositories and PasswordService are retained; CustomerService's
+  implementation and its tests are restored to their original versions.
 
 ## Database and checks
 

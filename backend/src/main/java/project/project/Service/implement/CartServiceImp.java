@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 import project.project.Entity.order.Cart;
 import project.project.Entity.order.CartItem;
@@ -18,7 +19,7 @@ import project.project.Entity.user.UserStatus;
 import project.project.Repository.CartRepository;
 import project.project.Repository.CartItemRepository;
 import project.project.Repository.CustomerRepository;
-import project.project.Repository.ProductRepository;
+import project.project.Service.api.ProductService;
 import project.project.Service.api.CartService;
 
 @Service
@@ -27,10 +28,10 @@ public class CartServiceImp implements CartService {
     private final CartRepository carts;
     private final CartItemRepository items;
     private final CustomerRepository customers;
-    private final ProductRepository products;
+    private final ProductService products;
 
     public CartServiceImp(CartRepository carts, CartItemRepository items,
-            CustomerRepository customers, ProductRepository products) {
+            CustomerRepository customers, @Lazy ProductService products) {
         this.carts = carts;
         this.items = items;
         this.customers = customers;
@@ -58,8 +59,8 @@ public class CartServiceImp implements CartService {
         requireQuantity(quantity);
         lockCustomer(customerId);
         Cart cart = getCartByCustomerId(customerId);
-        Product product = products.findById(productId)
-                .orElseThrow(() -> new NoSuchElementException("Product not found"));
+        Product product = products.getProductById(productId);
+        if (product == null) throw new NoSuchElementException("Product not found");
         CartItem existing = cart.getItems().stream()
                 .filter(item -> item.getProduct().getProductId().equals(productId))
                 .findFirst().orElse(null);

@@ -42,10 +42,6 @@ public class CustomerServiceTest {
     @InjectMocks
     private CustomerServiceImp customerService;
 
-    @org.mockito.Spy
-    private project.project.Service.implement.PasswordService passwords =
-            new project.project.Service.implement.PasswordService();
-
     @Mock
     private CustomerRepository customerRepository;
 

@@ -23,6 +23,7 @@ import project.project.Entity.user.UserRole;
 import project.project.Entity.user.UserStatus;
 import project.project.Repository.*;
 import project.project.Service.api.CartService;
+import project.project.Service.api.ProductService;
 
 @SpringBootTest(properties = {
     "spring.datasource.url=jdbc:h2:mem:cart-tests;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000",
@@ -37,6 +38,8 @@ class CartServiceTest {
     @Autowired UserRepository users;
     @Autowired SellerRepository sellers;
     @Autowired ProductRepository products;
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    ProductService productService;
 
     private Long customerId;
     private Long otherCustomerId;
@@ -56,6 +59,8 @@ class CartServiceTest {
         service.createCart(otherCustomerId);
         firstProduct = product("first");
         secondProduct = product("second");
+        org.mockito.Mockito.when(productService.getProductById(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(call -> products.findById(call.getArgument(0)).orElse(null));
     }
 
     private Customer customer(String username) {
@@ -111,6 +116,8 @@ class CartServiceTest {
         assertTrue(again.getIsSelected());
         assertEquals(1, service.getCartByCustomerId(customerId).getItems().size());
         assertEquals(10, products.findById(firstProduct.getProductId()).orElseThrow().getStock());
+        org.mockito.Mockito.verify(productService, org.mockito.Mockito.times(2))
+                .getProductById(firstProduct.getProductId());
     }
 
     @Test

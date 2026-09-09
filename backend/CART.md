@@ -3,6 +3,10 @@
 เพิ่ม `CartServiceImp` ตาม interface เดิม และให้ `AuthService` เรียกสร้างตะกร้า
 ผ่าน service นี้ตอนสมัครลูกค้า
 
+ใช้ Repository สำหรับข้อมูลตะกร้าและการล็อกลูกค้า ส่วนการเพิ่มสินค้าเรียก
+`ProductService.getProductById` ผ่าน interface ต้องมี implementation นี้ก่อนใช้งานจริง
+ในเทสจำลอง ProductService โดยไม่ได้เขียน service สินค้าเพิ่ม
+
 ## การทำงาน
 
 - `createCart` สร้างตะกร้าให้ลูกค้าที่มีอยู่ในระบบ ถ้ามีตะกร้าแล้วจะคืนอันเดิม

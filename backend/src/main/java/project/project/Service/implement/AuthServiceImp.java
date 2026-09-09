@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
-import project.project.DTO.auth.RegisterSellerRequest;
 import project.project.DTO.customer.CreateCustomerRequest;
 import project.project.Entity.seller.Seller;
 import project.project.Entity.user.*;
@@ -31,20 +30,18 @@ public class AuthServiceImp implements AuthService {
     private final CartService cartService;
     private final AuthSessionRepository sessions;
     private final CustomerService customerService;
-    private final SellerRegistrationService sellerRegistration;
     private final PasswordService passwords;
     private final Validator validator;
     private final SecureRandom random = new SecureRandom();
 
     public AuthServiceImp(UserRepository users, CustomerRepository customers, CartService cartService,
             AuthSessionRepository sessions, CustomerService customerService,
-            SellerRegistrationService sellerRegistration, PasswordService passwords, Validator validator) {
+            PasswordService passwords, Validator validator) {
         this.users = users;
         this.customers = customers;
         this.cartService = cartService;
         this.sessions = sessions;
         this.customerService = customerService;
-        this.sellerRegistration = sellerRegistration;
         this.passwords = passwords;
         this.validator = validator;
     }
@@ -61,13 +58,22 @@ public class AuthServiceImp implements AuthService {
         long id = customerService.createCustomer(request);
         Customer customer = customers.findById(id)
                 .orElseThrow(() -> new IllegalStateException("Created customer was not found"));
+        // Auth owns password hashing; leave CustomerService's implementation unchanged.
+        customer.getUser().setPasswordHash(passwords.hash(password));
+        users.save(customer.getUser());
         cartService.createCart(id);
         return customer;
     }
 
     @Override
-    public Seller registerSeller(RegisterSellerRequest request) {
-        return sellerRegistration.register(request);
+    public Seller registerSeller(String username, String email, String password, String confirmPassword) {
+        if (!verifyPassword(password, confirmPassword)) {
+            throw new IllegalArgumentException("Passwords are invalid or do not match");
+        }
+        // TODO: connect SellerService and SellerApplicationService after the team agrees on inputs.
+        // createSeller() currently accepts no account details; this interface has no application details.
+        throw new UnsupportedOperationException(
+                "Seller registration is waiting for SellerService parameters and application details");
     }
 
     @Override
@@ -106,13 +112,13 @@ public class AuthServiceImp implements AuthService {
         return passwords.isValid(password) && password.equals(confirmPassword);
     }
 
+    /** The caller must authorize the reset for this user ID before calling this method. */
     @Override
-    public boolean resetPassword(String token, String currentPassword, String password, String confirmPassword) {
-        if (!verifyPassword(password, confirmPassword)) return false;
-        var session = activeSession(token);
-        if (session.isEmpty()) return false;
-        User user = session.get().getUser();
-        if (!passwords.matches(currentPassword, user.getPasswordHash())) return false;
+    public boolean resetPassword(long id, String password, String confirmPassword) {
+        if (id <= 0 || !verifyPassword(password, confirmPassword)) return false;
+        var existing = users.findById(id);
+        if (existing.isEmpty()) return false;
+        User user = existing.get();
         user.setPasswordHash(passwords.hash(password));
         users.save(user);
         sessions.deleteByUser_UserId(user.getUserId());
