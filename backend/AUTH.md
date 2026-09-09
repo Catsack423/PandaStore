@@ -52,5 +52,6 @@ Commit the authentication change after the tests pass, before starting CartServi
 
     feat(auth): implement registration and token authentication
 
-`CartService` is intentionally left for the next task; authentication only creates
-the initial empty cart through its repository.
+Authentication now delegates creation of the initial empty cart to `CartService`.
+The customer and cart still share the registration transaction. See `CART.md` for
+cart operations.

@@ -16,19 +16,19 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import project.project.DTO.auth.RegisterSellerRequest;
 import project.project.DTO.customer.CreateCustomerRequest;
-import project.project.Entity.order.Cart;
 import project.project.Entity.seller.Seller;
 import project.project.Entity.user.*;
 import project.project.Repository.*;
 import project.project.Service.api.AuthService;
 import project.project.Service.api.CustomerService;
+import project.project.Service.api.CartService;
 
 @Service
 @Transactional
 public class AuthServiceImp implements AuthService {
     private final UserRepository users;
     private final CustomerRepository customers;
-    private final CartRepository carts;
+    private final CartService cartService;
     private final AuthSessionRepository sessions;
     private final CustomerService customerService;
     private final SellerRegistrationService sellerRegistration;
@@ -36,12 +36,12 @@ public class AuthServiceImp implements AuthService {
     private final Validator validator;
     private final SecureRandom random = new SecureRandom();
 
-    public AuthServiceImp(UserRepository users, CustomerRepository customers, CartRepository carts,
+    public AuthServiceImp(UserRepository users, CustomerRepository customers, CartService cartService,
             AuthSessionRepository sessions, CustomerService customerService,
             SellerRegistrationService sellerRegistration, PasswordService passwords, Validator validator) {
         this.users = users;
         this.customers = customers;
-        this.carts = carts;
+        this.cartService = cartService;
         this.sessions = sessions;
         this.customerService = customerService;
         this.sellerRegistration = sellerRegistration;
@@ -61,7 +61,7 @@ public class AuthServiceImp implements AuthService {
         long id = customerService.createCustomer(request);
         Customer customer = customers.findById(id)
                 .orElseThrow(() -> new IllegalStateException("Created customer was not found"));
-        carts.save(new Cart(null, customer));
+        cartService.createCart(id);
         return customer;
     }
 
