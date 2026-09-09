@@ -5,6 +5,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import org.springframework.context.annotation.Lazy;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,8 +21,7 @@ import project.project.Entity.user.Customer;
 import project.project.Entity.user.UserStatus;
 import project.project.Repository.CartRepository;
 import project.project.Repository.CartItemRepository;
-import project.project.Repository.CustomerRepository;
-import project.project.Repository.ProductRepository;
+import project.project.Service.api.ProductService;
 import project.project.Service.api.CartService;
 
 @Service
@@ -26,21 +29,21 @@ import project.project.Service.api.CartService;
 public class CartServiceImp implements CartService {
     private final CartRepository carts;
     private final CartItemRepository items;
-    private final CustomerRepository customers;
-    private final ProductRepository products;
+    private final EntityManager entities;
+    private final ProductService products;
 
     public CartServiceImp(CartRepository carts, CartItemRepository items,
-            CustomerRepository customers, ProductRepository products) {
+            EntityManager entities, @Lazy ProductService products) {
         this.carts = carts;
         this.items = items;
-        this.customers = customers;
+        this.entities = entities;
         this.products = products;
     }
 
     @Override
     public Cart createCart(Long customerId) {
         Customer customer = lockCustomer(customerId);
-        return carts.findByCustomer_CustomerId(customerId)
+        return findCart(customerId)
                 .orElseGet(() -> carts.save(new Cart(null, customer)));
     }
 
@@ -48,7 +51,7 @@ public class CartServiceImp implements CartService {
     @Transactional(readOnly = true)
     public Cart getCartByCustomerId(Long customerId) {
         requireId(customerId, "Customer");
-        return carts.findByCustomer_CustomerId(customerId)
+        return findCart(customerId)
                 .orElseThrow(() -> new NoSuchElementException("Cart not found for customer " + customerId));
     }
 
@@ -58,8 +61,9 @@ public class CartServiceImp implements CartService {
         requireQuantity(quantity);
         lockCustomer(customerId);
         Cart cart = getCartByCustomerId(customerId);
-        Product product = products.findById(productId)
-                .orElseThrow(() -> new NoSuchElementException("Product not found"));
+        // เรียก interface ของทีมสินค้า ไม่มี implementation สำรองเขียนแทนเพื่อน
+        Product product = products.getProductById(productId);
+        if (product == null) throw new NoSuchElementException("Product not found");
         CartItem existing = cart.getItems().stream()
                 .filter(item -> item.getProduct().getProductId().equals(productId))
                 .findFirst().orElse(null);
@@ -130,8 +134,20 @@ public class CartServiceImp implements CartService {
     private Customer lockCustomer(Long customerId) {
         requireId(customerId, "Customer");
         // Serialize cart writes, including the first creation when no cart exists yet.
-        return customers.findByIdForUpdate(customerId)
-                .orElseThrow(() -> new NoSuchElementException("Customer not found"));
+        Customer customer = entities.find(Customer.class, customerId, LockModeType.PESSIMISTIC_WRITE);
+        if (customer == null) throw new NoSuchElementException("Customer not found");
+        return customer;
+    }
+
+    private Optional<Cart> findCart(Long customerId) {
+        return entities.createQuery("""
+                select distinct c from Cart c
+                left join fetch c.items i
+                left join fetch i.product p
+                left join fetch p.seller s
+                left join fetch s.user
+                where c.customer.customerId = :customerId
+                """, Cart.class).setParameter("customerId", customerId).getResultStream().findFirst();
     }
 
     private CartItem findOwnedItem(Cart cart, Long cartItemId) {

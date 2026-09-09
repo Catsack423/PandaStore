@@ -1,51 +1,50 @@
 package project.project.Service.implement;
 
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
-import java.util.HexFormat;
-import java.util.Optional;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
-import project.project.DTO.auth.RegisterSellerRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import project.project.DTO.customer.CreateCustomerRequest;
 import project.project.Entity.seller.Seller;
-import project.project.Entity.user.*;
-import project.project.Repository.*;
+import project.project.Entity.user.Customer;
+import project.project.Entity.user.User;
+import project.project.Entity.user.UserStatus;
 import project.project.Service.api.AuthService;
-import project.project.Service.api.CustomerService;
 import project.project.Service.api.CartService;
+import project.project.Service.api.CustomerService;
 
 @Service
 @Transactional
 public class AuthServiceImp implements AuthService {
-    private final UserRepository users;
-    private final CustomerRepository customers;
-    private final CartService cartService;
-    private final AuthSessionRepository sessions;
+    private static final int PASSWORD_ITERATIONS = 600_000;
+    private final EntityManager entities;
     private final CustomerService customerService;
-    private final SellerRegistrationService sellerRegistration;
-    private final PasswordService passwords;
+    private final CartService cartService;
     private final Validator validator;
     private final SecureRandom random = new SecureRandom();
 
-    public AuthServiceImp(UserRepository users, CustomerRepository customers, CartService cartService,
-            AuthSessionRepository sessions, CustomerService customerService,
-            SellerRegistrationService sellerRegistration, PasswordService passwords, Validator validator) {
-        this.users = users;
-        this.customers = customers;
-        this.cartService = cartService;
-        this.sessions = sessions;
+    // เก็บเฉพาะใน instance นี้: restart แล้วต้อง login ใหม่ ยังไม่รองรับหลาย server
+    private final Map<String, Session> sessions = new ConcurrentHashMap<>();
+    private record Session(Long userId, String passwordHash, Instant expiresAt) {}
+
+    public AuthServiceImp(EntityManager entities, CustomerService customerService,
+            CartService cartService, Validator validator) {
+        this.entities = entities;
         this.customerService = customerService;
-        this.sellerRegistration = sellerRegistration;
-        this.passwords = passwords;
+        this.cartService = cartService;
         this.validator = validator;
     }
 
@@ -59,15 +58,26 @@ public class AuthServiceImp implements AuthService {
         var violations = validator.validate(request);
         if (!violations.isEmpty()) throw new ConstraintViolationException(violations);
         long id = customerService.createCustomer(request);
-        Customer customer = customers.findById(id)
-                .orElseThrow(() -> new IllegalStateException("Created customer was not found"));
+        Customer customer = entities.find(Customer.class, id);
+        if (customer == null || customer.getUser() == null) {
+            throw new IllegalStateException("CustomerService did not create a customer with a user");
+        }
+        // Auth รับผิดชอบ hash ภายใน transaction เดียวกัน ไม่แก้ implementation ของ CustomerService
+        customer.getUser().setPasswordHash(hashPassword(password));
         cartService.createCart(id);
         return customer;
     }
 
     @Override
-    public Seller registerSeller(RegisterSellerRequest request) {
-        return sellerRegistration.register(request);
+    public Seller registerSeller(String username, String email, String password, String confirmPassword) {
+        if (!verifyPassword(password, confirmPassword)) {
+            throw new IllegalArgumentException("Passwords are invalid or do not match");
+        }
+        // TODO: ต่อ SellerService และ SellerApplicationService เมื่อทีมตกลงพารามิเตอร์แล้ว
+        // createSeller() ยังรับข้อมูลบัญชีไม่ได้ และ Auth interface ยังไม่รับข้อมูลใบสมัคร
+        // หยุดก่อนเขียนข้อมูล แทนการสร้างบัญชี/ร้านที่ไม่ครบหรือเขียน service ของเพื่อนแทน
+        throw new UnsupportedOperationException(
+                "Seller registration is waiting for SellerService parameters and application details");
     }
 
     @Override
@@ -75,64 +85,94 @@ public class AuthServiceImp implements AuthService {
         if (usernameOrEmail == null || usernameOrEmail.isBlank()) {
             throw new IllegalArgumentException("Invalid credentials");
         }
-        // Refuse ambiguous identifiers rather than authenticating the wrong account.
-        Optional<User> byUsername = users.findByUsername(usernameOrEmail);
-        Optional<User> byEmail = users.findByEmail(usernameOrEmail);
-        if (byUsername.isPresent() && byEmail.isPresent()
-                && !byUsername.get().getUserId().equals(byEmail.get().getUserId())) {
-            throw new IllegalArgumentException("Invalid credentials");
-        }
-        User user = byUsername.or(() -> byEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
-        if (user.getStatus() != UserStatus.ACTIVE || !passwords.matches(password, user.getPasswordHash())) {
+        var matches = entities.createQuery(
+                "select u from User u where u.username = :identifier or u.email = :identifier", User.class)
+                .setParameter("identifier", usernameOrEmail).getResultList();
+        if (matches.size() != 1) throw new IllegalArgumentException("Invalid credentials");
+        User user = matches.getFirst();
+        if (user.getStatus() != UserStatus.ACTIVE || !matchesPassword(password, user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid credentials");
         }
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-        sessions.deleteByExpiresAtBefore(Instant.now());
-        sessions.save(new AuthSession(tokenHash(token), user, Instant.now().plus(24, ChronoUnit.HOURS)));
+        Instant now = Instant.now();
+        sessions.entrySet().removeIf(entry -> !entry.getValue().expiresAt().isAfter(now));
+        sessions.put(tokenKey(token), new Session(user.getUserId(), user.getPasswordHash(), now.plus(24, ChronoUnit.HOURS)));
         return token;
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean validateToken(String token) {
-        return activeSession(token).isPresent();
+        if (token == null || !token.matches("[A-Za-z0-9_-]{43}")) return false;
+        Session session = sessions.get(tokenKey(token));
+        if (session == null || !session.expiresAt().isAfter(Instant.now())) return false;
+        User user = entities.find(User.class, session.userId());
+        return user != null && user.getStatus() == UserStatus.ACTIVE
+                && session.passwordHash().equals(user.getPasswordHash());
     }
 
     @Override
     public boolean verifyPassword(String password, String confirmPassword) {
-        return passwords.isValid(password) && password.equals(confirmPassword);
+        return validPassword(password) && password.equals(confirmPassword);
     }
 
+    /** ผู้เรียกต้องยืนยันสิทธิ์ reset ของ userId นี้ก่อน ห้ามเปิดเป็น endpoint รับ id ตรง ๆ */
     @Override
-    public boolean resetPassword(String token, String currentPassword, String password, String confirmPassword) {
-        if (!verifyPassword(password, confirmPassword)) return false;
-        var session = activeSession(token);
-        if (session.isEmpty()) return false;
-        User user = session.get().getUser();
-        if (!passwords.matches(currentPassword, user.getPasswordHash())) return false;
-        user.setPasswordHash(passwords.hash(password));
-        users.save(user);
-        sessions.deleteByUser_UserId(user.getUserId());
+    public boolean resetPassword(long id, String password, String confirmPassword) {
+        if (id <= 0 || !verifyPassword(password, confirmPassword)) return false;
+        User user = entities.find(User.class, id);
+        if (user == null) return false;
+        user.setPasswordHash(hashPassword(password));
+        // validateToken จะปฏิเสธ session ที่ใช้ hash เก่า หลัง transaction commit แล้ว
         return true;
     }
 
-    private Optional<AuthSession> activeSession(String token) {
-        if (token == null || !token.matches("[A-Za-z0-9_-]{43}")) return Optional.empty();
-        return sessions.findById(tokenHash(token))
-                .filter(session -> session.getExpiresAt().isAfter(Instant.now()))
-                .filter(session -> session.getUser().getStatus() == UserStatus.ACTIVE)
-                .filter(session -> session.getCredentialHash().equals(session.getUser().getPasswordHash()));
+    private boolean validPassword(String password) {
+        return password != null && !password.isBlank() && password.length() >= 6 && password.length() <= 1024;
     }
 
-    private String tokenHash(String token) {
+    private String hashPassword(String password) {
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        var encoder = Base64.getEncoder();
+        return "pbkdf2$" + PASSWORD_ITERATIONS + "$" + encoder.encodeToString(salt)
+                + "$" + encoder.encodeToString(deriveKey(password, salt));
+    }
+
+    private boolean matchesPassword(String password, String encoded) {
+        if (!validPassword(password) || encoded == null) return false;
+        String[] parts = encoded.split("\\$", -1);
+        if (parts.length != 4 || !parts[0].equals("pbkdf2")
+                || !parts[1].equals(Integer.toString(PASSWORD_ITERATIONS))) return false;
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+            byte[] salt = Base64.getDecoder().decode(parts[2]);
+            byte[] expected = Base64.getDecoder().decode(parts[3]);
+            return salt.length == 16 && expected.length == 32
+                    && MessageDigest.isEqual(expected, deriveKey(password, salt));
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    private byte[] deriveKey(String password, byte[] salt) {
+        var spec = new PBEKeySpec(password.toCharArray(), salt, PASSWORD_ITERATIONS, 256);
+        try {
+            return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded();
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException("Password hashing is unavailable", e);
+        } finally {
+            spec.clearPassword();
+        }
+    }
+
+    private String tokenKey(String token) {
+        try {
+            return Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-256")
                     .digest(token.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 is unavailable", e);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException("Token hashing is unavailable", e);
         }
     }
 }

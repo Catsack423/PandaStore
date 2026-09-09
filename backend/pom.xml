@@ -20,10 +20,6 @@
 	</properties>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-crypto</artifactId>
-		</dependency>
 		<!-- Test Starter: ครอบคลุมทั้ง JUnit 5, Mockito และ WebMvcTest -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

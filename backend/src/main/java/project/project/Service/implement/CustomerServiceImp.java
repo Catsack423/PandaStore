@@ -25,12 +25,10 @@ public class CustomerServiceImp implements CustomerService {
 
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
-    private final PasswordService passwords;
 
-    public CustomerServiceImp(UserRepository userRepository, CustomerRepository customerRepository, PasswordService passwords) {
+    public CustomerServiceImp(UserRepository userRepository, CustomerRepository customerRepository) {
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
-        this.passwords = passwords;
     }
 
     @Override
@@ -46,7 +44,7 @@ public class CustomerServiceImp implements CustomerService {
         User user = new User(
                 request.getUsername(),
                 request.getEmail(),
-                passwords.hash(request.getPassword()),
+                request.getPassword(),
                 UserRole.CUSTOMER,
                 UserStatus.ACTIVE);
 
