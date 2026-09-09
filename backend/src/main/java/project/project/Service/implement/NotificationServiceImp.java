@@ -1,243 +1,187 @@
 package project.project.Service.implement;
 
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.util.Assert;
 import project.project.Entity.notification.Notification;
 import project.project.Entity.notification.NotificationType;
-import project.project.Entity.order.Order;
-import project.project.Entity.order.OrderGroup;
-import project.project.Entity.review.Review;
-import project.project.Entity.seller.SellerApplication;
 import project.project.Entity.user.User;
 import project.project.Entity.user.UserRole;
 import project.project.Entity.user.UserStatus;
+import project.project.Repository.CustomerRepository;
+import project.project.Repository.NotificationRepository;
+import project.project.Repository.SellerRepository;
+import project.project.Repository.UserRepository;
 import project.project.Service.api.NotificationService;
 
 import java.util.List;
-import java.util.Objects;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 public class NotificationServiceImp implements NotificationService {
 
-    private final EntityManager entityManager;
+        private final NotificationRepository notificationRepository;
+        private final UserRepository userRepository;
+        private final CustomerRepository customerRepository;
+        private final SellerRepository sellerRepository;
 
-    public NotificationServiceImp(EntityManager entityManager) {
-        this.entityManager = entityManager;
-    }
-
-    @Override
-    public Notification sendNotification(
-            Long recipientUserId,
-            String title,
-            String message,
-            NotificationType type) {
-
-        requireText(title, "title");
-        requireText(message, "message");
-
-        if (title.trim().length() > 150) {
-            throw new IllegalArgumentException(
-                    "Notification title must not exceed 150 characters");
-        }
-        if (type == null) {
-            throw new IllegalArgumentException(
-                    "Notification type is required");
+        public NotificationServiceImp(
+                        NotificationRepository notificationRepository,
+                        UserRepository userRepository,
+                        CustomerRepository customerRepository,
+                        SellerRepository sellerRepository) {
+                this.notificationRepository = notificationRepository;
+                this.userRepository = userRepository;
+                this.customerRepository = customerRepository;
+                this.sellerRepository = sellerRepository;
         }
 
-        User recipient = find(
-                User.class, recipientUserId, "recipientUserId");
+        @Override
+        @Transactional
+        public Notification sendNotification(
+                        Long recipientUserId,
+                        String title,
+                        String message,
+                        NotificationType type) {
+                Assert.notNull(recipientUserId, "Recipient user ID is required");
+                Assert.hasText(title, "Title is required");
+                Assert.isTrue(title.length() <= 150, "Title exceeds 150 characters");
+                Assert.hasText(message, "Message is required");
+                Assert.notNull(type, "Notification type is required");
 
-        Notification notification = new Notification();
-        notification.setRecipientUser(recipient);
-        notification.setTitle(title.trim());
-        notification.setMessage(message.trim());
-        notification.setType(type);
-        notification.setIsRead(false);
+                User recipient = userRepository.findById(recipientUserId)
+                                .orElseThrow(() -> new EntityNotFoundException(
+                                                "User not found: " + recipientUserId));
 
-        entityManager.persist(notification);
-        return notification;
-    }
-
-    @Override
-    public void notifyCustomerOrderPaid(
-            Long customerId,
-            Long orderGroupId) {
-
-        requireId(customerId, "customerId");
-
-        OrderGroup group = find(
-                OrderGroup.class, orderGroupId, "orderGroupId");
-
-        requireOwner(
-                group.getCustomer().getCustomerId(),
-                customerId);
-
-        sendNotification(
-                group.getCustomer().getUser().getUserId(),
-                "ชำระเงินสำเร็จ",
-                "คำสั่งซื้อ " + group.getGroupNumber()
-                        + " ชำระเงินสำเร็จแล้ว",
-                NotificationType.PAYMENT_SUCCESS);
-    }
-
-    @Override
-    public void notifySellerNewOrder(Long sellerId, Long orderId) {
-        requireId(sellerId, "sellerId");
-
-        Order order = find(Order.class, orderId, "orderId");
-        requireOwner(order.getSeller().getSellerId(), sellerId);
-
-        sendNotification(
-                order.getSeller().getUser().getUserId(),
-                "มีคำสั่งซื้อใหม่",
-                "คำสั่งซื้อ " + order.getSubOrderNumber()
-                        + " รอการยืนยัน",
-                NotificationType.NEW_ORDER_FOR_SELLER);
-    }
-
-    @Override
-    public void notifyAdminNewSellerApplication(Long applicationId) {
-        SellerApplication application = find(
-                SellerApplication.class,
-                applicationId,
-                "applicationId");
-
-        List<User> admins = entityManager.createQuery(
-                """
-                        select u from User u
-                        where u.role = :role
-                          and u.status = :status
-                        """,
-                User.class)
-                .setParameter("role", UserRole.ADMIN)
-                .setParameter("status", UserStatus.ACTIVE)
-                .getResultList();
-
-        for (User admin : admins) {
-            sendNotification(
-                    admin.getUserId(),
-                    "มีคำขอสมัครร้านค้าใหม่",
-                    "คำขอสมัครร้านค้า "
-                            + application.getShopName()
-                            + " รอการตรวจสอบ",
-                    NotificationType.NEW_SELLER_APPLICATION);
+                return saveNotification(recipient, title, message, type);
         }
-    }
 
-    @Override
-    public void notifyCustomerOrderShipped(
-            Long customerId,
-            Long orderId,
-            String trackingNumber) {
+        @Override
+        @Transactional
+        public void notifyCustomerOrderPaid(Long customerId, Long orderGroupId) {
+                Assert.notNull(orderGroupId, "Order group ID is required");
 
-        requireId(customerId, "customerId");
-        requireText(trackingNumber, "trackingNumber");
-
-        Order order = find(Order.class, orderId, "orderId");
-
-        requireOwner(
-                order.getOrderGroup().getCustomer().getCustomerId(),
-                customerId);
-
-        sendNotification(
-                order.getOrderGroup().getCustomer()
-                        .getUser().getUserId(),
-                "จัดส่งสินค้าแล้ว",
-                "คำสั่งซื้อ " + order.getSubOrderNumber()
-                        + " ถูกจัดส่งแล้ว เลขพัสดุ: "
-                        + trackingNumber.trim(),
-                NotificationType.ORDER_SHIPPED);
-    }
-
-    @Override
-    public void notifySellerNewReview(Long sellerId, Long reviewId) {
-        requireId(sellerId, "sellerId");
-
-        Review review = find(Review.class, reviewId, "reviewId");
-
-        requireOwner(
-                review.getProduct().getSeller().getSellerId(),
-                sellerId);
-
-        sendNotification(
-                review.getProduct().getSeller()
-                        .getUser().getUserId(),
-                "มีรีวิวสินค้าใหม่",
-                "สินค้า " + review.getProduct().getName()
-                        + " ได้รับรีวิวใหม่",
-                NotificationType.NEW_REVIEW);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Notification> getUserNotifications(Long userId) {
-        requireId(userId, "userId");
-
-        return entityManager.createQuery(
-                """
-                        select n from Notification n
-                        where n.recipientUser.userId = :userId
-                        order by n.createdAt desc, n.notificationId desc
-                        """,
-                Notification.class)
-                .setParameter("userId", userId)
-                .getResultList();
-    }
-
-    /**
-     * ใช้กับคำขอจากผู้ใช้ โดย userId ต้องมาจากบัญชีที่ login
-     * หากเรียกผ่าน NotificationService ให้เพิ่ม signature นี้ใน interface
-     */
-    @Override
-    public void markAsRead(Long userId, Long notificationId) {
-        requireId(userId, "userId");
-
-        Notification notification = find(
-                Notification.class,
-                notificationId,
-                "notificationId");
-
-        requireOwner(
-                notification.getRecipientUser().getUserId(),
-                userId);
-
-        notification.setIsRead(true);
-    }
-
-    private <T> T find(Class<T> type, Long id, String name) {
-        requireId(id, name);
-
-        T entity = entityManager.find(type, id);
-        if (entity == null) {
-            throw new EntityNotFoundException(
-                    type.getSimpleName() + " not found: " + id);
+                sendNotification(
+                                findCustomerUserId(customerId),
+                                "ชำระเงินสำเร็จ",
+                                "ได้รับการชำระเงินสำหรับคำสั่งซื้อ #" + orderGroupId,
+                                NotificationType.PAYMENT_SUCCESS);
         }
-        return entity;
-    }
 
-    private void requireOwner(Long actualId, Long expectedId) {
-        if (!Objects.equals(actualId, expectedId)) {
-            throw new IllegalArgumentException(
-                    "The resource does not belong to this user");
-        }
-    }
+        @Override
+        @Transactional
+        public void notifySellerNewOrder(Long sellerId, Long orderId) {
+                Assert.notNull(orderId, "Order ID is required");
 
-    private void requireId(Long id, String name) {
-        if (id == null || id <= 0) {
-            throw new IllegalArgumentException(
-                    name + " must be a positive value");
+                sendNotification(
+                                findSellerUserId(sellerId),
+                                "มีคำสั่งซื้อใหม่",
+                                "คำสั่งซื้อ #" + orderId + " รอการยืนยันจากร้านค้า",
+                                NotificationType.NEW_ORDER_FOR_SELLER);
         }
-    }
 
-    private void requireText(String value, String name) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(
-                    name + " is required");
+        @Override
+        @Transactional
+        public void notifyAdminNewSellerApplication(Long applicationId) {
+                Assert.notNull(applicationId, "Application ID is required");
+
+                List<User> admins = userRepository.findByRoleAndStatus(
+                                UserRole.ADMIN,
+                                UserStatus.ACTIVE);
+
+                for (User admin : admins) {
+                        saveNotification(
+                                        admin,
+                                        "มีคำขอสมัครผู้ขายใหม่",
+                                        "กรุณาตรวจสอบคำขอสมัครผู้ขาย #" + applicationId,
+                                        NotificationType.NEW_SELLER_APPLICATION);
+                }
         }
-    }
+
+        @Override
+        @Transactional
+        public void notifyCustomerOrderShipped(
+                        Long customerId,
+                        Long orderId,
+                        String trackingNumber) {
+                Assert.notNull(orderId, "Order ID is required");
+                Assert.hasText(trackingNumber, "Tracking number is required");
+
+                sendNotification(
+                                findCustomerUserId(customerId),
+                                "จัดส่งสินค้าแล้ว",
+                                "คำสั่งซื้อ #" + orderId
+                                                + " เลขติดตามพัสดุ: " + trackingNumber,
+                                NotificationType.ORDER_SHIPPED);
+        }
+
+        @Override
+        @Transactional
+        public void notifySellerNewReview(Long sellerId, Long reviewId) {
+                Assert.notNull(reviewId, "Review ID is required");
+
+                sendNotification(
+                                findSellerUserId(sellerId),
+                                "มีรีวิวใหม่",
+                                "ร้านค้าของคุณได้รับรีวิวใหม่ #" + reviewId,
+                                NotificationType.NEW_REVIEW);
+        }
+
+        @Override
+        public List<Notification> getUserNotifications(Long userId) {
+                Assert.notNull(userId, "User ID is required");
+
+                return notificationRepository
+                                .findByRecipientUser_UserIdOrderByCreatedAtDescNotificationIdDesc(
+                                                userId);
+        }
+
+        @Override
+        @Transactional
+        public void markAsRead(Long notificationId) {
+                Assert.notNull(notificationId, "Notification ID is required");
+
+                Notification notification = notificationRepository
+                                .findById(notificationId)
+                                .orElseThrow(() -> new EntityNotFoundException(
+                                                "Notification not found: " + notificationId));
+
+                notification.setIsRead(true);
+        }
+
+        private Notification saveNotification(
+                        User recipient,
+                        String title,
+                        String message,
+                        NotificationType type) {
+                Notification notification = new Notification();
+                notification.setRecipientUser(recipient);
+                notification.setTitle(title);
+                notification.setMessage(message);
+                notification.setType(type);
+                notification.setIsRead(false);
+
+                return notificationRepository.save(notification);
+        }
+
+        private Long findCustomerUserId(Long customerId) {
+                Assert.notNull(customerId, "Customer ID is required");
+
+                return customerRepository.findById(customerId)
+                                .orElseThrow(() -> new EntityNotFoundException(
+                                                "Customer not found: " + customerId))
+                                .getUser()
+                                .getUserId();
+        }
+
+        private Long findSellerUserId(Long sellerId) {
+                Assert.notNull(sellerId, "Seller ID is required");
+
+                return sellerRepository.findById(sellerId)
+                                .orElseThrow(() -> new EntityNotFoundException(
+                                                "Seller not found: " + sellerId))
+                                .getUser()
+                                .getUserId();
+        }
 }

@@ -1,500 +1,284 @@
 package project.project.Service.implement;
 
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.LockModeType;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import project.project.Entity.order.Cart;
-import project.project.Entity.order.CartItem;
-import project.project.Entity.order.Order;
-import project.project.Entity.order.OrderGroup;
-import project.project.Entity.order.OrderGroupPaymentStatus;
-import project.project.Entity.order.OrderItem;
-import project.project.Entity.order.OrderStatus;
-import project.project.Entity.order.Payment;
-import project.project.Entity.order.PaymentMethod;
-import project.project.Entity.order.PaymentStatus;
+import org.springframework.util.Assert;
+import project.project.Entity.order.*;
 import project.project.Entity.product.Product;
-import project.project.Entity.product.ProductStatus;
-import project.project.Entity.seller.SellerStatus;
 import project.project.Entity.user.Address;
-import project.project.Entity.user.Customer;
+import project.project.Repository.AddressRepository;
+import project.project.Repository.CartRepository;
+import project.project.Repository.OrderGroupRepository;
+import project.project.Service.api.InventoryService;
 import project.project.Service.api.NotificationService;
+import project.project.Service.api.OrderDraftFactory;
 import project.project.Service.api.OrderOrchestrationService;
-import project.project.Service.api.ShippingService;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
-import java.util.UUID;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 public class OrderOrchestrationServiceImp
         implements OrderOrchestrationService {
 
-    private final EntityManager entityManager;
-    private final ShippingService shippingService;
+    private final OrderGroupRepository orderGroupRepository;
+    private final CartRepository cartRepository;
+    private final AddressRepository addressRepository;
+
+    private final InventoryService inventoryService;
+    private final OrderDraftFactory orderDraftFactory;
     private final NotificationService notificationService;
 
     public OrderOrchestrationServiceImp(
-            EntityManager entityManager,
-            ShippingService shippingService,
+            OrderGroupRepository orderGroupRepository,
+            CartRepository cartRepository,
+            AddressRepository addressRepository,
+            InventoryService inventoryService,
+            OrderDraftFactory orderDraftFactory,
             NotificationService notificationService) {
-
-        this.entityManager = entityManager;
-        this.shippingService = shippingService;
+        this.orderGroupRepository = orderGroupRepository;
+        this.cartRepository = cartRepository;
+        this.addressRepository = addressRepository;
+        this.inventoryService = inventoryService;
+        this.orderDraftFactory = orderDraftFactory;
         this.notificationService = notificationService;
     }
 
     @Override
+    @Transactional
     public OrderGroup createOrderGroupFromCart(
             Long customerId,
             Long shippingAddressId,
             Map<Long, String> sellerShippingMethods,
             PaymentMethod paymentMethod) {
+        Assert.notNull(customerId, "Customer ID is required");
+        Assert.notNull(shippingAddressId, "Shipping address ID is required");
+        Assert.notNull(sellerShippingMethods, "Shipping methods are required");
+        Assert.notNull(paymentMethod, "Payment method is required");
 
-        Customer customer = find(
-                Customer.class, customerId, "customerId");
+        Cart cart = cartRepository.findByCustomerIdForUpdate(customerId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Cart not found for customer: " + customerId));
 
-        Address address = find(
-                Address.class, shippingAddressId, "shippingAddressId");
+        Address address = addressRepository.findById(shippingAddressId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Address not found: " + shippingAddressId));
 
         if (!Objects.equals(
-                address.getCustomer().getCustomerId(), customerId)) {
+                address.getCustomer().getCustomerId(),
+                customerId)) {
             throw new IllegalArgumentException(
                     "Shipping address does not belong to customer");
         }
 
-        if (paymentMethod == null) {
-            throw new IllegalArgumentException(
-                    "Payment method is required");
-        }
-
-        if (sellerShippingMethods == null
-                || sellerShippingMethods.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Shipping methods are required");
-        }
-
-        // ล็อกตะกร้าเพื่อไม่ให้ checkout ตะกร้าเดียวกันพร้อมกัน
-        Cart cart = entityManager.createQuery(
-                """
-                        select c from Cart c
-                        where c.customer.customerId = :customerId
-                        """,
-                Cart.class)
-                .setParameter("customerId", customerId)
-                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-                .getResultStream()
-                .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Cart not found for customer: " + customerId));
-
-        List<CartItem> selected = cart.getItems().stream()
+        List<CartItem> selectedItems = cart.getItems().stream()
                 .filter(item -> Boolean.TRUE.equals(item.getIsSelected()))
                 .toList();
 
-        if (selected.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Cart has no selected items");
+        if (selectedItems.isEmpty()) {
+            throw new IllegalStateException("No selected cart items");
         }
 
-        // รวมจำนวนต่อสินค้า และเรียง ID ให้ล็อกในลำดับเดียวกัน
-        Map<Long, Integer> quantities = new TreeMap<>();
+        Map<Long, Integer> quantities = new HashMap<>();
 
-        for (CartItem item : selected) {
-            if (item.getProduct() == null
-                    || item.getProduct().getProductId() == null
-                    || item.getQuantity() == null
-                    || item.getQuantity() <= 0) {
+        for (CartItem item : selectedItems) {
+            if (item.getQuantity() == null || item.getQuantity() <= 0) {
                 throw new IllegalArgumentException(
-                        "Cart contains an invalid item");
+                        "Invalid quantity for cart item: " + item.getCartItemId());
             }
 
             quantities.merge(
                     item.getProduct().getProductId(),
                     item.getQuantity(),
-                    (a, b) -> Math.addExact(a, b));
+                    Math::addExact);
         }
 
-        OrderGroup group = new OrderGroup();
-        group.setGroupNumber(UUID.randomUUID().toString());
-        group.setCustomer(customer);
-        group.setShippingAddress(address);
-        group.setPaymentStatus(OrderGroupPaymentStatus.PENDING);
-        group.setTotalDiscount(BigDecimal.ZERO);
+        Map<Long, Product> products = inventoryService.reserve(quantities);
 
-        Map<Long, Order> ordersBySeller = new TreeMap<>();
+        OrderGroup group = orderDraftFactory.create(
+                cart.getCustomer(),
+                address,
+                products,
+                quantities,
+                sellerShippingMethods,
+                paymentMethod);
 
-        for (Map.Entry<Long, Integer> entry : quantities.entrySet()) {
-            Product product = lockProduct(entry.getKey());
-            int quantity = entry.getValue();
+        // Cascade บันทึก subOrders, orderItems และ payment
+        OrderGroup savedGroup = orderGroupRepository.save(group);
 
-            if (product.getStatus() != ProductStatus.ACTIVE
-                    || product.getSeller().getStatus() != SellerStatus.ACTIVE) {
-                throw new IllegalStateException(
-                        "Product or seller is not active: "
-                                + product.getProductId());
-            }
+        // Cart.items มี orphanRemoval = true
+        cart.getItems().removeAll(selectedItems);
 
-            BigDecimal unitPrice = money(
-                    product.getPrice(), "Product price");
-
-            if (unitPrice.signum() <= 0) {
-                throw new IllegalArgumentException(
-                        "Product price must be greater than zero");
-            }
-
-            if (product.getStock() == null
-                    || product.getStock() < quantity) {
-                throw new IllegalStateException(
-                        "Insufficient stock for product: "
-                                + product.getProductId());
-            }
-
-            Long sellerId = product.getSeller().getSellerId();
-            Order order = ordersBySeller.get(sellerId);
-
-            if (order == null) {
-                String method = sellerShippingMethods.get(sellerId);
-                requireText(method, "Shipping method for seller " + sellerId);
-
-                BigDecimal shippingFee = money(
-                        shippingService.calculateShippingFee(
-                                sellerId,
-                                method.trim(),
-                                shippingAddressId),
-                        "Shipping fee");
-
-                order = new Order();
-                order.setSubOrderNumber(UUID.randomUUID().toString());
-                order.setOrderGroup(group);
-                order.setSeller(product.getSeller());
-                order.setOrderStatus(OrderStatus.PENDING_PAYMENT);
-                order.setSubtotal(BigDecimal.ZERO);
-                order.setShippingFee(shippingFee);
-                order.setSellerDiscount(BigDecimal.ZERO);
-
-                ordersBySeller.put(sellerId, order);
-                group.getSubOrders().add(order);
-            }
-
-            BigDecimal lineTotal = money(
-                    unitPrice.multiply(BigDecimal.valueOf(quantity)),
-                    "Line total");
-
-            OrderItem orderItem = new OrderItem();
-            orderItem.setOrder(order);
-            orderItem.setProduct(product);
-            orderItem.setProductName(product.getName());
-            orderItem.setUnitPrice(unitPrice);
-            orderItem.setQuantity(quantity);
-            orderItem.setTotalPrice(lineTotal);
-            orderItem.setIsReviewed(false);
-
-            order.getOrderItems().add(orderItem);
-            order.setSubtotal(order.getSubtotal().add(lineTotal));
-
-            // จองสต็อกตอน checkout ภายใน transaction เดียวกัน
-            product.setStock(product.getStock() - quantity);
-        }
-
-        BigDecimal productsTotal = BigDecimal.ZERO;
-        BigDecimal shippingTotal = BigDecimal.ZERO;
-
-        for (Order order : group.getSubOrders()) {
-            order.setTotalAmount(money(
-                    order.getSubtotal().add(order.getShippingFee()),
-                    "Order total"));
-
-            productsTotal = productsTotal.add(order.getSubtotal());
-            shippingTotal = shippingTotal.add(order.getShippingFee());
-        }
-
-        group.setTotalProductsAmount(
-                money(productsTotal, "Products total"));
-        group.setTotalShippingFee(
-                money(shippingTotal, "Shipping total"));
-        group.setGrandTotal(money(
-                productsTotal.add(shippingTotal), "Grand total"));
-
-        Payment payment = new Payment();
-        payment.setOrderGroup(group);
-        payment.setPaymentMethod(paymentMethod);
-        payment.setAmount(group.getGrandTotal());
-        payment.setRefundedAmount(BigDecimal.ZERO);
-        payment.setStatus(PaymentStatus.PENDING);
-
-        group.setPayment(payment);
-
-        // CascadeType.ALL บันทึก sub-orders, items และ payment
-        entityManager.persist(group);
-
-        // ลบเฉพาะรายการที่ใช้ checkout ผ่าน orphanRemoval ของ Cart
-        cart.getItems().removeAll(selected);
-
-        entityManager.flush();
-        return group;
+        return savedGroup;
     }
 
-    /**
-     * ผู้เรียกต้องตรวจสอบ callback กับ payment gateway ก่อน
-     * รวมถึง transaction, order และยอดเงิน
-     */
     @Override
+    @Transactional
     public void handlePaymentSuccess(
             Long orderGroupId,
             String gatewayTransactionId) {
+        Assert.hasText(gatewayTransactionId, "Gateway transaction ID is required");
+        Assert.isTrue(
+                gatewayTransactionId.length() <= 100,
+                "Gateway transaction ID exceeds 100 characters");
 
-        requireText(gatewayTransactionId, "Gateway transaction ID");
+        OrderGroup group = lockOrderGroup(orderGroupId);
+        Payment payment = requirePayment(group);
 
-        String transactionId = gatewayTransactionId.trim();
-        if (transactionId.length() > 100) {
-            throw new IllegalArgumentException(
-                    "Gateway transaction ID must not exceed 100 characters");
-        }
-
-        OrderGroup group = lockGroup(orderGroupId);
-        Payment payment = lockPayment(group);
-
-        if (payment.getStatus() == PaymentStatus.SUCCESS) {
+        if (hasSuccessfulPayment(group)) {
+            // Callback ซ้ำต้องอ้างถึงธุรกรรมเดิม
             if (!Objects.equals(
-                    payment.getGatewayTransactionId(), transactionId)) {
+                    payment.getGatewayTransactionId(),
+                    gatewayTransactionId)) {
                 throw new IllegalStateException(
-                        "Payment succeeded with another transaction ID");
+                        "Order group already has another successful payment");
             }
-
-            // callback เดิมซ้ำ: ไม่เปลี่ยนข้อมูลหรือแจ้งเตือนซ้ำ
             return;
         }
 
-        requirePending(group, payment);
-
-        for (Order order : group.getSubOrders()) {
-            if (order.getOrderStatus() != OrderStatus.PENDING_PAYMENT) {
-                throw new IllegalStateException(
-                        "Sub-order is not pending payment: "
-                                + order.getOrderId());
-            }
+        if (group.getPaymentStatus() != OrderGroupPaymentStatus.PENDING) {
+            throw new IllegalStateException(
+                    "Cannot confirm payment from status: "
+                            + group.getPaymentStatus());
         }
 
+        requirePendingPayment(payment);
+        requirePendingSubOrders(group);
+
         payment.setStatus(PaymentStatus.SUCCESS);
-        payment.setGatewayTransactionId(transactionId);
+        payment.setGatewayTransactionId(gatewayTransactionId);
         payment.setPaidAt(LocalDateTime.now());
+
         group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
 
         for (Order order : group.getSubOrders()) {
             order.setOrderStatus(OrderStatus.WAITING_SELLER_CONFIRM);
-        }
 
-        // ไม่ตัดสต็อกซ้ำ เพราะจองไว้ตอน checkout แล้ว
-        notificationService.notifyCustomerOrderPaid(
-                group.getCustomer().getCustomerId(),
-                group.getOrderGroupId());
-
-        for (Order order : group.getSubOrders()) {
             notificationService.notifySellerNewOrder(
                     order.getSeller().getSellerId(),
                     order.getOrderId());
         }
+
+        notificationService.notifyCustomerOrderPaid(
+                group.getCustomer().getCustomerId(),
+                group.getOrderGroupId());
     }
 
     @Override
+    @Transactional
     public void handlePaymentFailure(
             Long orderGroupId,
             String failureReason) {
+        OrderGroup group = lockOrderGroup(orderGroupId);
 
-        requireText(failureReason, "Failure reason");
-
-        String reason = failureReason.trim();
-        if (reason.length() > 255) {
-            throw new IllegalArgumentException(
-                    "Failure reason must not exceed 255 characters");
-        }
-
-        OrderGroup group = lockGroup(orderGroupId);
-        Payment payment = lockPayment(group);
-
-        if (payment.getStatus() == PaymentStatus.FAILED) {
-            // callback ซ้ำ: ห้ามคืนสต็อกอีกครั้ง
+        // ไม่คืนสต็อกซ้ำ และไม่ให้ failure ที่มาช้าเปลี่ยนสถานะที่จ่ายแล้ว
+        if (group.getPaymentStatus() == OrderGroupPaymentStatus.FAILED
+                || hasSuccessfulPayment(group)) {
             return;
         }
 
-        // ห้ามเปลี่ยน SUCCESS / REFUNDED กลับเป็น FAILED
-        requirePending(group, payment);
+        if (group.getPaymentStatus() != OrderGroupPaymentStatus.PENDING) {
+            throw new IllegalStateException(
+                    "Cannot fail payment from status: "
+                            + group.getPaymentStatus());
+        }
 
-        Map<Long, Integer> quantities = new TreeMap<>();
+        Assert.hasText(failureReason, "Failure reason is required");
+        Assert.isTrue(
+                failureReason.length() <= 255,
+                "Failure reason exceeds 255 characters");
+
+        Payment payment = requirePayment(group);
+        requirePendingPayment(payment);
+        requirePendingSubOrders(group);
+
+        Map<Long, Integer> quantities = new HashMap<>();
 
         for (Order order : group.getSubOrders()) {
-            if (order.getOrderStatus() != OrderStatus.PENDING_PAYMENT) {
-                throw new IllegalStateException(
-                        "Sub-order is not pending payment: "
-                                + order.getOrderId());
-            }
-
             for (OrderItem item : order.getOrderItems()) {
                 quantities.merge(
                         item.getProduct().getProductId(),
                         item.getQuantity(),
-                        (a, b) -> Math.addExact(a, b));
+                        Math::addExact);
             }
         }
 
-        // คืนสต็อกที่จองไว้ โดยใช้ลำดับล็อกเดียวกับ checkout
-        for (Map.Entry<Long, Integer> entry : quantities.entrySet()) {
-            Product product = lockProduct(entry.getKey());
-
-            if (product.getStock() == null) {
-                throw new IllegalStateException(
-                        "Product stock is missing: " + entry.getKey());
-            }
-
-            product.setStock(Math.addExact(
-                    product.getStock(), entry.getValue()));
-        }
-
-        for (Order order : group.getSubOrders()) {
-            order.setOrderStatus(OrderStatus.CANCELLED);
-
-            // Entity ปัจจุบันยังไม่มี Payment.failureReason
-            order.setRejectionReason(reason);
-        }
+        inventoryService.release(quantities);
 
         payment.setStatus(PaymentStatus.FAILED);
         group.setPaymentStatus(OrderGroupPaymentStatus.FAILED);
+
+        for (Order order : group.getSubOrders()) {
+            order.setOrderStatus(OrderStatus.CANCELLED);
+            order.setRejectionReason(failureReason);
+        }
     }
 
     @Override
-    @Transactional(readOnly = true)
     public OrderGroup getOrderGroupDetails(Long orderGroupId) {
-        OrderGroup group = find(
-                OrderGroup.class, orderGroupId, "orderGroupId");
+        Assert.notNull(orderGroupId, "Order group ID is required");
 
-        // โหลดรายละเอียดหลักภายใน transaction
-        group.getCustomer().getFullName();
-        group.getShippingAddress().getAddressLine();
+        OrderGroup group = orderGroupRepository
+                .findDetailsById(orderGroupId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Order group not found: " + orderGroupId));
 
-        if (group.getPayment() != null) {
-            group.getPayment().getStatus();
-        }
-
+        // โหลด collection อีกระดับใน transaction
+        // ไม่ fetch สอง List พร้อมกันใน EntityGraph เดียว
         for (Order order : group.getSubOrders()) {
-            order.getSeller().getShopName();
             order.getOrderItems().size();
         }
 
         return group;
     }
 
-    private OrderGroup lockGroup(Long orderGroupId) {
-        requireId(orderGroupId, "orderGroupId");
+    private OrderGroup lockOrderGroup(Long orderGroupId) {
+        Assert.notNull(orderGroupId, "Order group ID is required");
 
-        OrderGroup group = entityManager.find(
-                OrderGroup.class,
-                orderGroupId,
-                LockModeType.PESSIMISTIC_WRITE);
-
-        if (group == null) {
-            throw new EntityNotFoundException(
-                    "Order group not found: " + orderGroupId);
-        }
-
-        entityManager.refresh(group, LockModeType.PESSIMISTIC_WRITE);
-        return group;
+        return orderGroupRepository.findByIdForUpdate(orderGroupId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Order group not found: " + orderGroupId));
     }
 
-    private Payment lockPayment(OrderGroup group) {
-        Payment payment = group.getPayment();
-
-        if (payment == null) {
+    private Payment requirePayment(OrderGroup group) {
+        if (group.getPayment() == null) {
             throw new IllegalStateException(
-                    "Order group has no payment");
+                    "Payment not found for order group: "
+                            + group.getOrderGroupId());
         }
 
-        entityManager.refresh(payment, LockModeType.PESSIMISTIC_WRITE);
-        return payment;
+        return group.getPayment();
     }
 
-    private Product lockProduct(Long productId) {
-        requireId(productId, "productId");
-
-        Product product = entityManager.find(
-                Product.class,
-                productId,
-                LockModeType.PESSIMISTIC_WRITE);
-
-        if (product == null) {
-            throw new EntityNotFoundException(
-                    "Product not found: " + productId);
-        }
-
-        // Product อาจถูกโหลดผ่าน Cart มาก่อน ต้องอ่านสต็อกล่าสุด
-        entityManager.refresh(product, LockModeType.PESSIMISTIC_WRITE);
-        return product;
-    }
-
-    private void requirePending(OrderGroup group, Payment payment) {
-        if (group.getPaymentStatus() != OrderGroupPaymentStatus.PENDING
-                || payment.getStatus() != PaymentStatus.PENDING) {
+    private void requirePendingPayment(Payment payment) {
+        if (payment.getStatus() != PaymentStatus.PENDING) {
             throw new IllegalStateException(
-                    "Payment is no longer pending");
+                    "Payment is not pending: " + payment.getStatus());
         }
     }
 
-    private <T> T find(Class<T> type, Long id, String name) {
-        requireId(id, name);
-
-        T entity = entityManager.find(type, id);
-        if (entity == null) {
-            throw new EntityNotFoundException(
-                    type.getSimpleName() + " not found: " + id);
+    private void requirePendingSubOrders(OrderGroup group) {
+        if (group.getSubOrders().isEmpty()) {
+            throw new IllegalStateException("Order group has no sub-orders");
         }
 
-        return entity;
-    }
-
-    private BigDecimal money(BigDecimal value, String name) {
-        if (value == null || value.signum() < 0) {
-            throw new IllegalArgumentException(
-                    name + " must not be null or negative");
-        }
-
-        BigDecimal result;
-        try {
-            result = value.setScale(2, RoundingMode.UNNECESSARY);
-        } catch (ArithmeticException exception) {
-            throw new IllegalArgumentException(
-                    name + " must have at most two decimal places",
-                    exception);
-        }
-
-        if (result.precision() > 12) {
-            throw new IllegalArgumentException(
-                    name + " exceeds the supported amount");
-        }
-
-        return result;
-    }
-
-    private void requireId(Long id, String name) {
-        if (id == null || id <= 0) {
-            throw new IllegalArgumentException(
-                    name + " must be a positive value");
+        for (Order order : group.getSubOrders()) {
+            if (order.getOrderStatus() != OrderStatus.PENDING_PAYMENT) {
+                throw new IllegalStateException(
+                        "Sub-order is not pending payment: " + order.getOrderId());
+            }
         }
     }
 
-    private void requireText(String value, String name) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(
-                    name + " is required");
-        }
+    private boolean hasSuccessfulPayment(OrderGroup group) {
+        return switch (group.getPaymentStatus()) {
+            case PAID, PARTIALLY_REFUNDED, REFUNDED -> true;
+            default -> false;
+        };
     }
 }
