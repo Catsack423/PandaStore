@@ -11,9 +11,10 @@ import project.project.Repository.AddressRepository;
 import project.project.Repository.CartRepository;
 import project.project.Repository.OrderGroupRepository;
 import project.project.Service.api.InventoryService;
-import project.project.Service.api.NotificationService;
 import project.project.Service.api.OrderDraftFactory;
 import project.project.Service.api.OrderOrchestrationService;
+import org.springframework.context.ApplicationEventPublisher;
+import project.project.Event.OrderPaidEvent;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -23,8 +24,7 @@ import java.util.Objects;
 
 @Service
 @Transactional(readOnly = true)
-public class OrderOrchestrationServiceImp
-        implements OrderOrchestrationService {
+public class OrderOrchestrationServiceImp implements OrderOrchestrationService {
 
     private final OrderGroupRepository orderGroupRepository;
     private final CartRepository cartRepository;
@@ -32,7 +32,7 @@ public class OrderOrchestrationServiceImp
 
     private final InventoryService inventoryService;
     private final OrderDraftFactory orderDraftFactory;
-    private final NotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public OrderOrchestrationServiceImp(
             OrderGroupRepository orderGroupRepository,
@@ -40,13 +40,13 @@ public class OrderOrchestrationServiceImp
             AddressRepository addressRepository,
             InventoryService inventoryService,
             OrderDraftFactory orderDraftFactory,
-            NotificationService notificationService) {
+            ApplicationEventPublisher eventPublisher) {
         this.orderGroupRepository = orderGroupRepository;
         this.cartRepository = cartRepository;
         this.addressRepository = addressRepository;
         this.inventoryService = inventoryService;
         this.orderDraftFactory = orderDraftFactory;
-        this.notificationService = notificationService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -122,7 +122,10 @@ public class OrderOrchestrationServiceImp
     public void handlePaymentSuccess(
             Long orderGroupId,
             String gatewayTransactionId) {
-        Assert.hasText(gatewayTransactionId, "Gateway transaction ID is required");
+        Assert.hasText(
+                gatewayTransactionId,
+                "Gateway transaction ID is required");
+
         Assert.isTrue(
                 gatewayTransactionId.length() <= 100,
                 "Gateway transaction ID exceeds 100 characters");
@@ -130,14 +133,15 @@ public class OrderOrchestrationServiceImp
         OrderGroup group = lockOrderGroup(orderGroupId);
         Payment payment = requirePayment(group);
 
+        // Callback ซ้ำของธุรกรรมเดิมไม่ประกาศ event ซ้ำ
         if (hasSuccessfulPayment(group)) {
-            // Callback ซ้ำต้องอ้างถึงธุรกรรมเดิม
             if (!Objects.equals(
                     payment.getGatewayTransactionId(),
                     gatewayTransactionId)) {
                 throw new IllegalStateException(
                         "Order group already has another successful payment");
             }
+
             return;
         }
 
@@ -158,15 +162,19 @@ public class OrderOrchestrationServiceImp
 
         for (Order order : group.getSubOrders()) {
             order.setOrderStatus(OrderStatus.WAITING_SELLER_CONFIRM);
-
-            notificationService.notifySellerNewOrder(
-                    order.getSeller().getSellerId(),
-                    order.getOrderId());
         }
 
-        notificationService.notifyCustomerOrderPaid(
-                group.getCustomer().getCustomerId(),
-                group.getOrderGroupId());
+        List<OrderPaidEvent.SellerOrder> sellerOrders = group.getSubOrders().stream()
+                .map(order -> new OrderPaidEvent.SellerOrder(
+                        order.getSeller().getSellerId(),
+                        order.getOrderId()))
+                .toList();
+
+        eventPublisher.publishEvent(
+                new OrderPaidEvent(
+                        group.getOrderGroupId(),
+                        group.getCustomer().getCustomerId(),
+                        sellerOrders));
     }
 
     @Override
