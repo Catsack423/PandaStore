@@ -3,10 +3,8 @@ package project.project.Service.implement;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Optional;
 
@@ -32,11 +30,11 @@ public class AuthServiceImp implements AuthService {
     private final CustomerService customerService;
     private final PasswordService passwords;
     private final Validator validator;
-    private final SecureRandom random = new SecureRandom();
+    private final JwtTokenService jwt;
 
     public AuthServiceImp(UserRepository users, CustomerRepository customers, CartService cartService,
             AuthSessionRepository sessions, CustomerService customerService,
-            PasswordService passwords, Validator validator) {
+            PasswordService passwords, Validator validator, JwtTokenService jwt) {
         this.users = users;
         this.customers = customers;
         this.cartService = cartService;
@@ -44,6 +42,7 @@ public class AuthServiceImp implements AuthService {
         this.customerService = customerService;
         this.passwords = passwords;
         this.validator = validator;
+        this.jwt = jwt;
     }
 
     @Override
@@ -93,11 +92,11 @@ public class AuthServiceImp implements AuthService {
         if (user.getStatus() != UserStatus.ACTIVE || !passwords.matches(password, user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid credentials");
         }
-        byte[] bytes = new byte[32];
-        random.nextBytes(bytes);
-        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-        sessions.deleteByExpiresAtBefore(Instant.now());
-        sessions.save(new AuthSession(tokenHash(token), user, Instant.now().plus(24, ChronoUnit.HOURS)));
+        Instant now = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+        Instant expiresAt = now.plus(24, ChronoUnit.HOURS);
+        String token = jwt.issue(user.getUserId(), now, expiresAt);
+        sessions.deleteByExpiresAtBefore(now);
+        sessions.save(new AuthSession(tokenHash(token), user, expiresAt));
         return token;
     }
 
@@ -126,8 +125,10 @@ public class AuthServiceImp implements AuthService {
     }
 
     private Optional<AuthSession> activeSession(String token) {
-        if (token == null || !token.matches("[A-Za-z0-9_-]{43}")) return Optional.empty();
+        var subject = jwt.verifiedSubject(token);
+        if (subject.isEmpty()) return Optional.empty();
         return sessions.findById(tokenHash(token))
+                .filter(session -> session.getUser().getUserId().toString().equals(subject.get()))
                 .filter(session -> session.getExpiresAt().isAfter(Instant.now()))
                 .filter(session -> session.getUser().getStatus() == UserStatus.ACTIVE)
                 .filter(session -> session.getCredentialHash().equals(session.getUser().getPasswordHash()));

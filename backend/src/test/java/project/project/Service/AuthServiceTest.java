@@ -137,7 +137,7 @@ class AuthServiceTest {
     @Test
     void expiredTokensAreRejected() throws Exception {
         registerCustomer();
-        String token = "B".repeat(43);
+        String token = auth.login("customer", "password123");
         String digest = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
                 .digest(token.getBytes(StandardCharsets.UTF_8)));
         sessions.save(new AuthSession(digest, users.findByUsername("customer").orElseThrow(),

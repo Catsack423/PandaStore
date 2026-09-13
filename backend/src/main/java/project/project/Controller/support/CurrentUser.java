@@ -31,7 +31,7 @@ public class CurrentUser {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "กรุณาเข้าสู่ระบบ");
         }
         String token = authorization.substring(7).trim();
-        if (!token.matches("[A-Za-z0-9_-]{43}")) {
+        if (token.length() > 4096 || !token.matches("[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+")) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "โทเคนไม่ถูกต้อง");
         }
         return token;
