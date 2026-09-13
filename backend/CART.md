@@ -40,8 +40,27 @@
   สร้างตะกร้าซ้ำหรือเขียนจำนวนทับกัน
 - customerId ต้องมาจากผู้ใช้ที่ยืนยันตัวตนแล้ว ห้ามเชื่อ customerId จาก request
   โดยไม่ตรวจเจ้าของ เพราะ service นี้ไม่ได้อ่าน token เอง
-- ยังไม่ได้เพิ่ม controller หรือคำสั่งเปลี่ยน `isSelected` ใน interface
-- ยังไม่ควรส่ง entity ออกเป็น JSON ตรง ๆ ให้แปลงเป็น response DTO ก่อน
+- CartController อ่าน customerId จาก token และส่งเฉพาะ response DTO
+- ยังไม่มีคำสั่งเปลี่ยน `isSelected` ใน interface
+
+## HTTP endpoints
+
+ทุกเส้นทางต้องส่ง `Authorization: Bearer <token>` ของบัญชีลูกค้า ไม่รับ customerId
+จาก request และไม่เปลี่ยนการตรวจสิทธิ์ของ Controller อื่น
+
+| Method | Route | ข้อมูล |
+| --- | --- | --- |
+| POST | `/api/cart` | สร้างตะกร้าหรือคืนอันเดิม |
+| GET | `/api/cart` | อ่านตะกร้าของผู้ใช้ |
+| POST | `/api/cart/items` | body: productId, quantity |
+| PATCH | `/api/cart/items/{itemId}` | body: quantity |
+| DELETE | `/api/cart/items/{itemId}` | ลบรายการ ตอบ 204 |
+| DELETE | `/api/cart/items` | ล้างตะกร้า ตอบ 204 |
+| GET | `/api/cart/stock` | คืนค่า valid |
+| GET | `/api/cart/sellers` | รายการที่เลือกแยกตาม sellerId |
+
+Token ไม่ถูกต้องตอบ 401 บัญชีที่ไม่ใช่ลูกค้าตอบ 403 รายการที่ไม่อยู่ในตะกร้าตอบ 404
+และจำนวนไม่ถูกต้องหรือสต็อกไม่พอตอบ 400
 
 ## ทดสอบและ commit
 

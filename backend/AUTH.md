@@ -1,7 +1,25 @@
 # Authentication service
 
-`AuthServiceImp` implements the service layer. HTTP authentication endpoints and
-request authorization filters are not part of this change.
+`AuthServiceImp` implements the service layer. `AuthController` exposes the routes
+below. The new Auth and Cart controllers validate bearer tokens explicitly; this
+is not a global authorization filter for the application's other controllers.
+
+## HTTP endpoints
+
+| Method | Route | Request |
+| --- | --- | --- |
+| POST | `/api/auth/register/customer` | username, email, password, confirmPassword, fullName, phoneNumber |
+| POST | `/api/auth/register/seller` | username, email, password, confirmPassword; currently returns 501 |
+| POST | `/api/auth/login` | usernameOrEmail, password |
+| GET | `/api/auth/token` | Authorization: Bearer token; returns valid |
+| POST | `/api/auth/reset-password` | Authorization header plus currentPassword, password, confirmPassword |
+
+Registration returns 201 with a customer DTO, never the User entity or password
+hash. Login returns `token` and `tokenType: Bearer`. Wrong credentials return 401;
+duplicate registration returns 409. Password reset derives the user ID from the
+session and verifies the current password before calling the service. Do not send
+a user ID in the reset request. The token endpoint returns `valid: false` for an
+expired/unknown well-formed token; missing or malformed headers return 401.
 
 ## Registration
 
