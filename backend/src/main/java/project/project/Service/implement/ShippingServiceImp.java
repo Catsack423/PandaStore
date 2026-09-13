@@ -22,34 +22,23 @@ public class ShippingServiceImp implements ShippingService {
     private final OrderRepository orderRepository;
     private final ShipmentRepository shipmentRepository;
     private final NotificationService notificationService;
-
-    /**
-     * Shipping fee rates ต่อ courier (Strategy Pattern — Map-based)
-     * เพิ่ม courier ใหม่ได้โดยไม่ต้องแก้ if-else (OCP)
-     */
-    //make this to stategy pattern
-    private static final Map<String, BigDecimal> SHIPPING_RATES = Map.of(
-            "KERRY", new BigDecimal("50.00"),
-            "FLASH", new BigDecimal("40.00"),
-            "STANDARD", new BigDecimal("30.00"),
-            "EMS", new BigDecimal("60.00"),
-            "THAILANDPOST", new BigDecimal("35.00"),
-            "J&T", new BigDecimal("45.00"));
-
-    private static final BigDecimal DEFAULT_SHIPPING_FEE = new BigDecimal("50.00");
+    private final project.project.Service.strategy.shipping.ShippingFeeStrategyFactory shippingFeeStrategyFactory;
 
     // Constructor Injection (SOLID - Dependency Inversion Principle)
     public ShippingServiceImp(OrderRepository orderRepository,
             ShipmentRepository shipmentRepository,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            project.project.Service.strategy.shipping.ShippingFeeStrategyFactory shippingFeeStrategyFactory) {
         this.orderRepository = orderRepository;
         this.shipmentRepository = shipmentRepository;
         this.notificationService = notificationService;
+        this.shippingFeeStrategyFactory = shippingFeeStrategyFactory;
     }
 
     /**
      * คำนวณค่าจัดส่งสำหรับร้านค้า โดยใช้ shipping method ที่ลูกค้าเลือก
      * (UC1 Step 8: ลูกค้าเลือกวิธีจัดส่งแยกตามร้าน)
+     * ใช้ Strategy Pattern ในการคำนวณตามผู้ให้บริการขนส่ง
      *
      * @param sellerId       รหัสร้านค้า
      * @param shippingMethod วิธีจัดส่ง เช่น "KERRY", "FLASH", "STANDARD"
@@ -58,13 +47,9 @@ public class ShippingServiceImp implements ShippingService {
      */
     @Override
     public BigDecimal calculateShippingFee(Long sellerId, String shippingMethod, Long addressId) {
-        if (shippingMethod == null || shippingMethod.isBlank()) {
-            return DEFAULT_SHIPPING_FEE;
-        }
-
-        // Strategy Pattern: ดึงค่าส่งจาก Map ตาม shippingMethod
-        String methodKey = shippingMethod.toUpperCase().trim();
-        return SHIPPING_RATES.getOrDefault(methodKey, DEFAULT_SHIPPING_FEE);
+        // Strategy Pattern: ดึงและคำนวณค่าส่งผ่าน ShippingFeeStrategy
+        return shippingFeeStrategyFactory.getStrategy(shippingMethod)
+                .calculateFee(sellerId, addressId);
     }
 
     /**

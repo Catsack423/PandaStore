@@ -24,11 +24,12 @@ public class SellerShopServiceImp implements SellerShopService {
         this.sellerBankAccountRepository = sellerBankAccountRepository;
     }
 
-
-     @param sellerId 
-     @return Seller entity
-     @throws RuntimeException 
-
+    /**
+     * ค้นหาร้านค้าด้วย sellerId
+     * @param sellerId 
+     * @return Seller entity
+     * @throws RuntimeException 
+     */
     @Override
     public Seller getShopBySellerId(Long sellerId) {
         return sellerRepository.findById(sellerId)
@@ -36,12 +37,12 @@ public class SellerShopServiceImp implements SellerShopService {
                         "ไม่พบร้านค้า sellerId: " + sellerId));
     }
 
-
-    userId (ใช้กรณี User ล็อกอินแล้วต้องการดูร้านค้าของตัวเอง)
-     @param userId 
-     @return Seller entity
-     @throws RuntimeException 
-
+    /**
+     * ค้นหาร้านค้าด้วย userId (ใช้กรณี User ล็อกอินแล้วต้องการดูร้านค้าของตัวเอง)
+     * @param userId 
+     * @return Seller entity
+     * @throws RuntimeException 
+     */
     @Override
     public Seller getShopByUserId(Long userId) {
         return sellerRepository.findByUser_UserId(userId)
