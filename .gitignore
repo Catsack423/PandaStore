@@ -110,3 +110,5 @@ frontend/build/
 tmp/
 temp/
 .cache/
+PROGRESS_TRACKING.md
+
