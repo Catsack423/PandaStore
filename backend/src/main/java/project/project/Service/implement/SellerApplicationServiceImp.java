@@ -3,6 +3,8 @@ package project.project.Service.implement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import project.project.DTO.seller.CreateSellerApplicationRequest;
+import project.project.DTO.seller.SellerApplicationResponse;
 import project.project.Entity.notification.NotificationType;
 import project.project.Entity.seller.Seller;
 import project.project.Entity.seller.SellerApplication;
@@ -11,7 +13,6 @@ import project.project.Entity.seller.SellerBankAccount;
 import project.project.Entity.seller.SellerStatus;
 import project.project.Entity.user.User;
 import project.project.Entity.user.UserRole;
-import project.project.Exception.InvalidApplicationDataException;
 import project.project.Exception.ResourceNotFoundException;
 import project.project.Repository.SellerApplicationRepository;
 import project.project.Repository.SellerBankAccountRepository;
@@ -45,22 +46,39 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
         this.notificationService = notificationService;
     }
 
-    //     แบบที่ 2: submit ใบสมัคร → create seller
-    // User กรอกฟอร์มสมัคร (เก็บใน SellerApplication) → Submit → Admin review → Approve → สร้าง Seller record จริง
-        
+    // แบบที่ 2: submit ใบสมัคร → create seller
+    // User กรอกฟอร์มสมัคร (ตรวจสอบ Format ผ่าน Bean Validation ใน DTO) → Submit → Admin review → Approve → สร้าง Seller record จริง
+
     @Override
     @Transactional
-    public SellerApplication submitApplication(Long userId, SellerApplication application) {
+    public SellerApplication submitApplication(Long userId, CreateSellerApplicationRequest request) {
         if (userId == null) {
             throw new IllegalArgumentException("User ID cannot be null");
         }
-        validateApplicationData(application);
+        if (request == null) {
+            throw new IllegalArgumentException("Application request cannot be null");
+        }
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
+        SellerApplication application = new SellerApplication();
         application.setUser(user);
+        application.setShopName(request.getShopName());
+        application.setShopDescription(request.getShopDescription());
+        application.setShopPhone(request.getShopPhone());
+        application.setShopEmail(request.getShopEmail());
+        application.setShopAddress(request.getShopAddress());
+        application.setSellerFirstName(request.getSellerFirstName());
+        application.setSellerLastName(request.getSellerLastName());
+        application.setIdCardNumber(request.getIdCardNumber());
+        application.setIdCardImageUrl(request.getIdCardImageUrl());
+        application.setBankAccountName(request.getBankAccountName());
+        application.setBankName(request.getBankName());
+        application.setBankAccountNumber(request.getBankAccountNumber());
+        application.setBankBookImageUrl(request.getBankBookImageUrl());
         application.setStatus(SellerApplicationStatus.PENDING);
+        application.setCreatedAt(LocalDateTime.now());
 
         SellerApplication saved = applicationRepository.save(application);
 
@@ -71,7 +89,33 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
         return saved;
     }
 
+    @Override
+    @Transactional
+    public SellerApplication submitApplication(Long userId, SellerApplication application) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+        if (application == null) {
+            throw new IllegalArgumentException("Application cannot be null");
+        }
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        application.setUser(user);
+        application.setStatus(SellerApplicationStatus.PENDING);
+        if (application.getCreatedAt() == null) {
+            application.setCreatedAt(LocalDateTime.now());
+        }
+
+        SellerApplication saved = applicationRepository.save(application);
+
+        if (notificationService != null) {
+            notificationService.notifyAdminNewSellerApplication(saved.getApplicationId());
+        }
+
+        return saved;
+    }
 
     @Override
     @Transactional
@@ -193,57 +237,20 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
     }
 
     @Override
+    public SellerApplicationResponse getApplicationResponseById(Long applicationId) {
+        SellerApplication application = getApplicationById(applicationId);
+        return SellerApplicationResponse.fromEntity(application);
+    }
+
+    @Override
     public List<SellerApplication> getPendingApplications() {
         return applicationRepository.findByStatus(SellerApplicationStatus.PENDING);
     }
 
-    //[Major] User Dto instead
-    private void validateApplicationData(SellerApplication app) {
-        if (app == null) {
-            throw new InvalidApplicationDataException("ข้อมูลใบสมัครห้ามเป็นค่าว่าง");
-        }
-        if (isBlank(app.getShopName())) {
-            throw new InvalidApplicationDataException("ชื่อร้านค้าห้ามว่าง");
-        }
-        if (isBlank(app.getShopDescription())) {
-            throw new InvalidApplicationDataException("รายละเอียดร้านค้าห้ามว่าง");
-        }
-        if (isBlank(app.getShopPhone())) {
-            throw new InvalidApplicationDataException("เบอร์โทรศัพท์ร้านค้าห้ามว่าง");
-        }
-        if (isBlank(app.getShopEmail())) {
-            throw new InvalidApplicationDataException("อีเมลร้านค้าห้ามว่าง");
-        }
-        if (isBlank(app.getShopAddress())) {
-            throw new InvalidApplicationDataException("ที่อยู่ร้านค้าห้ามว่าง");
-        }
-        if (isBlank(app.getSellerFirstName())) {
-            throw new InvalidApplicationDataException("ชื่อผู้ขายห้ามว่าง");
-        }
-        if (isBlank(app.getSellerLastName())) {
-            throw new InvalidApplicationDataException("นามสกุลผู้ขายห้ามว่าง");
-        }
-        if (isBlank(app.getIdCardNumber()) || !app.getIdCardNumber().matches("^[0-9]{13}$")) {
-            throw new InvalidApplicationDataException("เลขประจำตัวประชาชนต้องเป็นตัวเลข 13 หลัก");
-        }
-        if (isBlank(app.getIdCardImageUrl())) {
-            throw new InvalidApplicationDataException("รูปภาพบัตรประชาชนห้ามว่าง");
-        }
-        if (isBlank(app.getBankAccountName())) {
-            throw new InvalidApplicationDataException("ชื่อบัญชีธนาคารห้ามว่าง");
-        }
-        if (isBlank(app.getBankName())) {
-            throw new InvalidApplicationDataException("ชื่อธนาคารห้ามว่าง");
-        }
-        if (isBlank(app.getBankAccountNumber())) {
-            throw new InvalidApplicationDataException("เลขที่บัญชีธนาคารห้ามว่าง");
-        }
-        if (isBlank(app.getBankBookImageUrl())) {
-            throw new InvalidApplicationDataException("รูปภาพสมุดบัญชีห้ามว่าง");
-        }
-    }
-
-    private boolean isBlank(String str) {
-        return str == null || str.trim().isEmpty();
+    @Override
+    public List<SellerApplicationResponse> getPendingApplicationResponses() {
+        return getPendingApplications().stream()
+                .map(SellerApplicationResponse::fromEntity)
+                .toList();
     }
 }

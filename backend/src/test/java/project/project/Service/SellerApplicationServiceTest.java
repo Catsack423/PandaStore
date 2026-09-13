@@ -1,5 +1,9 @@
 package project.project.Service;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,6 +13,8 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import project.project.DTO.seller.CreateSellerApplicationRequest;
+import project.project.DTO.seller.SellerApplicationResponse;
 import project.project.Entity.notification.NotificationType;
 import project.project.Entity.seller.Seller;
 import project.project.Entity.seller.SellerApplication;
@@ -18,7 +24,6 @@ import project.project.Entity.seller.SellerStatus;
 import project.project.Entity.user.User;
 import project.project.Entity.user.UserRole;
 import project.project.Entity.user.UserStatus;
-import project.project.Exception.InvalidApplicationDataException;
 import project.project.Exception.ResourceNotFoundException;
 import project.project.Repository.SellerApplicationRepository;
 import project.project.Repository.SellerBankAccountRepository;
@@ -29,6 +34,7 @@ import project.project.Service.implement.SellerApplicationServiceImp;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -129,31 +135,25 @@ public class SellerApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("UC3 Step 9 (13A): ข้อมูลไม่ครบถ้วน ต้องแจ้งเตือนและไม่บันทึกข้อมูล")
-    void testSubmitApplication_IncompleteData_ThrowsExceptionAndNeverSaves() {
-        // Arrange: ข้อมูลชื่อร้านว่างเปล่า
-        sampleApplication.setShopName("");
-
-        // Act & Assert
-        assertThrows(InvalidApplicationDataException.class, () -> {
-            sellerApplicationService.submitApplication(1L, sampleApplication);
+    @DisplayName("UC3 Step 9: ส่งข้อมูล Entity เป็น null ต้องโยน IllegalArgumentException")
+    void testSubmitApplication_NullApplication_ThrowsException() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            sellerApplicationService.submitApplication(1L, (SellerApplication) null);
         });
 
-        // ตรวจสอบว่าไม่เคยเรียก save และไม่ส่ง notification
         verify(applicationRepository, never()).save(any());
         verify(notificationService, never()).notifyAdminNewSellerApplication(any());
     }
 
     @Test
-    @DisplayName("UC3 Step 9: เลขบัตรประชาชนไม่ครบ 13 หลัก ต้องโยน InvalidApplicationDataException")
-    void testSubmitApplication_InvalidIdCard_ThrowsException() {
-        sampleApplication.setIdCardNumber("12345"); // Not 13 digits
-
-        assertThrows(InvalidApplicationDataException.class, () -> {
-            sellerApplicationService.submitApplication(1L, sampleApplication);
+    @DisplayName("UC3 Step 9: ส่งข้อมูล DTO เป็น null ต้องโยน IllegalArgumentException")
+    void testSubmitApplication_NullDto_ThrowsException() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            sellerApplicationService.submitApplication(1L, (CreateSellerApplicationRequest) null);
         });
 
         verify(applicationRepository, never()).save(any());
+        verify(notificationService, never()).notifyAdminNewSellerApplication(any());
     }
 
     @Test
@@ -172,24 +172,14 @@ public class SellerApplicationServiceTest {
     @DisplayName("UC3: แอดมินอนุมัติคำขอเปิดร้านสำเร็จ -> สร้าง Seller และ SellerBankAccount พร้อมเปลี่ยน Role User เป็น SELLER")
     void testApproveApplication_Success() {
         // Arrange
-        SellerApplication application = new SellerApplication();
-        application.setApplicationId(501L);
-        application.setUser(sampleUser);
-        application.setShopName("สมชาย อิเล็กทรอนิกส์");
-        application.setShopDescription("อุปกรณ์ไอที");
-        application.setShopPhone("0812345678");
-        application.setShopEmail("somchai@shop.com");
-        application.setShopAddress("กทม.");
-        application.setBankName("กสิกรไทย");
-        application.setBankAccountNumber("0123456789");
-        application.setBankAccountName("สมชาย ใจดี");
-        application.setBankBookImageUrl("https://cdn.example.com/bank.jpg");
-        application.setStatus(SellerApplicationStatus.PENDING);
+        sampleApplication.setApplicationId(501L);
+        sampleApplication.setUser(sampleUser);
+        sampleApplication.setStatus(SellerApplicationStatus.PENDING);
 
-        when(applicationRepository.findById(501L)).thenReturn(Optional.of(application));
+        when(applicationRepository.findById(501L)).thenReturn(Optional.of(sampleApplication));
         when(userRepository.findById(99L)).thenReturn(Optional.of(adminUser));
-        when(sellerRepository.save(any(Seller.class))).thenAnswer(invocation -> {
-            Seller s = invocation.getArgument(0);
+        when(sellerRepository.save(any(Seller.class))).thenAnswer(inv -> {
+            Seller s = inv.getArgument(0);
             s.setSellerId(10L);
             return s;
         });
@@ -198,106 +188,234 @@ public class SellerApplicationServiceTest {
         sellerApplicationService.approveApplication(501L, 99L);
 
         // Assert
-        assertEquals(SellerApplicationStatus.APPROVED, application.getStatus());
-        assertEquals(adminUser, application.getReviewedBy());
-        assertNotNull(application.getReviewedAt());
-        assertEquals(UserRole.SELLER, sampleUser.getRole());
+        assertEquals(SellerApplicationStatus.APPROVED, sampleApplication.getStatus());
+        assertEquals(adminUser, sampleApplication.getReviewedBy());
+        assertNotNull(sampleApplication.getReviewedAt());
 
-        verify(applicationRepository, times(1)).save(application);
+        // ตรวจสอบว่าอัปเดต Role ผู้ใช้เป็น SELLER
+        assertEquals(UserRole.SELLER, sampleUser.getRole());
         verify(userRepository, times(1)).save(sampleUser);
-        verify(sellerRepository, times(1)).save(any(Seller.class));
-        verify(sellerBankAccountRepository, times(1)).save(any(SellerBankAccount.class));
+
+        // ตรวจสอบการสร้าง Seller
+        ArgumentCaptor<Seller> sellerCaptor = ArgumentCaptor.forClass(Seller.class);
+        verify(sellerRepository, times(1)).save(sellerCaptor.capture());
+        Seller savedSeller = sellerCaptor.getValue();
+        assertEquals(sampleUser, savedSeller.getUser());
+        assertEquals("สมชาย อิเล็กทรอนิกส์", savedSeller.getShopName());
+        assertEquals(SellerStatus.ACTIVE, savedSeller.getStatus());
+
+        // ตรวจสอบการสร้าง Bank Account
+        ArgumentCaptor<SellerBankAccount> bankCaptor = ArgumentCaptor.forClass(SellerBankAccount.class);
+        verify(sellerBankAccountRepository, times(1)).save(bankCaptor.capture());
+        SellerBankAccount savedBank = bankCaptor.getValue();
+        assertEquals("ธนาคารกสิกรไทย", savedBank.getBankName());
+        assertEquals("0123456789", savedBank.getAccountNumber());
+        assertEquals("สมชาย ใจดี", savedBank.getAccountName());
+
+        // ตรวจสอบการส่ง Notification แจ้งผลให้ผู้ใช้
         verify(notificationService, times(1)).sendNotification(
-                eq(sampleUser.getUserId()),
-                eq("คำขอเปิดร้านค้าได้รับการอนุมัติ"),
-                anyString(),
+                eq(1L),
+                contains("อนุมัติ"),
+                contains("สมชาย อิเล็กทรอนิกส์"),
                 eq(NotificationType.SELLER_APPROVED)
         );
     }
 
     @Test
-    @DisplayName("UC3: แอดมินปฏิเสธคำขอเปิดร้าน -> สถานะเป็น REJECTED พร้อมบันทึก adminNote")
-    void testRejectApplication_Success() {
-        SellerApplication application = new SellerApplication();
-        application.setApplicationId(501L);
-        application.setUser(sampleUser);
-        application.setStatus(SellerApplicationStatus.PENDING);
+    @DisplayName("UC3: อนุมัติใบสมัครซ้ำ ต้องโยน IllegalStateException")
+    void testApproveApplication_AlreadyApproved_ThrowsException() {
+        sampleApplication.setStatus(SellerApplicationStatus.APPROVED);
+        when(applicationRepository.findById(501L)).thenReturn(Optional.of(sampleApplication));
+        when(userRepository.findById(99L)).thenReturn(Optional.of(adminUser));
 
-        when(applicationRepository.findById(501L)).thenReturn(Optional.of(application));
+        assertThrows(IllegalStateException.class, () -> {
+            sellerApplicationService.approveApplication(501L, 99L);
+        });
+
+        verify(sellerRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("UC3: แอดมินปฏิเสธคำขอเปิดร้าน พร้อมบันทึกเหตุผลและแจ้งเตือนผู้ใช้")
+    void testRejectApplication_Success() {
+        sampleApplication.setApplicationId(501L);
+        sampleApplication.setUser(sampleUser);
+        sampleApplication.setStatus(SellerApplicationStatus.PENDING);
+
+        when(applicationRepository.findById(501L)).thenReturn(Optional.of(sampleApplication));
         when(userRepository.findById(99L)).thenReturn(Optional.of(adminUser));
 
         sellerApplicationService.rejectApplication(501L, 99L, "เอกสารบัตรประชาชนไม่ชัดเจน");
 
-        assertEquals(SellerApplicationStatus.REJECTED, application.getStatus());
-        assertEquals("เอกสารบัตรประชาชนไม่ชัดเจน", application.getAdminNote());
-        assertEquals(adminUser, application.getReviewedBy());
-        verify(applicationRepository, times(1)).save(application);
+        assertEquals(SellerApplicationStatus.REJECTED, sampleApplication.getStatus());
+        assertEquals("เอกสารบัตรประชาชนไม่ชัดเจน", sampleApplication.getAdminNote());
+        assertEquals(adminUser, sampleApplication.getReviewedBy());
+        assertNotNull(sampleApplication.getReviewedAt());
+
+        verify(applicationRepository, times(1)).save(sampleApplication);
+        verify(sellerRepository, never()).save(any());
+
+        verify(notificationService, times(1)).sendNotification(
+                eq(1L),
+                contains("ถูกปฏิเสธ"),
+                contains("เอกสารบัตรประชาชนไม่ชัดเจน"),
+                eq(NotificationType.SELLER_APPROVED)
+        );
     }
 
     @Test
-    @DisplayName("UC3: แอดมินขอเอกสารเพิ่มเติม -> สถานะเป็น NEED_MORE_DOC")
+    @DisplayName("UC3: แอดมินขอเอกสารเพิ่มเติม ปรับสถานะเป็น NEED_MORE_DOC พร้อมบันทึกข้อความ")
     void testRequestMoreDocuments_Success() {
-        SellerApplication application = new SellerApplication();
-        application.setApplicationId(501L);
-        application.setUser(sampleUser);
-        application.setStatus(SellerApplicationStatus.PENDING);
+        sampleApplication.setApplicationId(501L);
+        sampleApplication.setUser(sampleUser);
+        sampleApplication.setStatus(SellerApplicationStatus.PENDING);
 
-        when(applicationRepository.findById(501L)).thenReturn(Optional.of(application));
+        when(applicationRepository.findById(501L)).thenReturn(Optional.of(sampleApplication));
         when(userRepository.findById(99L)).thenReturn(Optional.of(adminUser));
 
-        sellerApplicationService.requestMoreDocuments(501L, 99L, "กรุณาแนบรูปหน้าสมุดบัญชีใหม่");
+        sellerApplicationService.requestMoreDocuments(501L, 99L, "โปรดแนบรูปถ่ายคู่กับบัตรประชาชน");
 
-        assertEquals(SellerApplicationStatus.NEED_MORE_DOC, application.getStatus());
-        assertEquals("กรุณาแนบรูปหน้าสมุดบัญชีใหม่", application.getAdminNote());
-        verify(applicationRepository, times(1)).save(application);
+        assertEquals(SellerApplicationStatus.NEED_MORE_DOC, sampleApplication.getStatus());
+        assertEquals("โปรดแนบรูปถ่ายคู่กับบัตรประชาชน", sampleApplication.getAdminNote());
+
+        verify(applicationRepository, times(1)).save(sampleApplication);
+        verify(notificationService, times(1)).sendNotification(
+                eq(1L),
+                contains("ขอเอกสารเพิ่มเติม"),
+                contains("โปรดแนบรูปถ่ายคู่กับบัตรประชาชน"),
+                eq(NotificationType.SELLER_APPROVED)
+        );
     }
 
     @Test
-    @DisplayName("ดึงรายการคำขอเปิดร้านที่รอตรวจสอบ (PENDING)")
-    void testGetPendingApplications() {
-        SellerApplication app1 = new SellerApplication();
-        app1.setApplicationId(1L);
-        app1.setStatus(SellerApplicationStatus.PENDING);
+    @DisplayName("UC3: ดึงใบสมัครตาม ID สำเร็จ")
+    void testGetApplicationById_Success() {
+        sampleApplication.setApplicationId(501L);
+        when(applicationRepository.findById(501L)).thenReturn(Optional.of(sampleApplication));
 
+        SellerApplication result = sellerApplicationService.getApplicationById(501L);
+
+        assertNotNull(result);
+        assertEquals(501L, result.getApplicationId());
+    }
+
+    @Test
+    @DisplayName("UC3: ดึงใบสมัครตาม ID ไม่พบ ต้องโยน ResourceNotFoundException")
+    void testGetApplicationById_NotFound_ThrowsException() {
+        when(applicationRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            sellerApplicationService.getApplicationById(999L);
+        });
+    }
+
+    @Test
+    @DisplayName("UC3: ดึงรายการใบสมัครสถานะ PENDING ทั้งหมดสำเร็จ")
+    void testGetPendingApplications_Success() {
+        sampleApplication.setStatus(SellerApplicationStatus.PENDING);
         when(applicationRepository.findByStatus(SellerApplicationStatus.PENDING))
-                .thenReturn(List.of(app1));
+                .thenReturn(List.of(sampleApplication));
 
-        List<SellerApplication> pending = sellerApplicationService.getPendingApplications();
-        assertEquals(1, pending.size());
-        assertEquals(1L, pending.get(0).getApplicationId());
+        List<SellerApplication> result = sellerApplicationService.getPendingApplications();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(SellerApplicationStatus.PENDING, result.get(0).getStatus());
     }
 
     @Test
-    @DisplayName("UC3 Step 9, 10, 11: ส่งข้อมูลด้วย SellerApplication Entity โดยตรง")
-    void testSubmitApplication_WithEntity_Success() {
-        SellerApplication app = new SellerApplication();
-        app.setShopName("สมชาย อิเล็กทรอนิกส์");
-        app.setShopDescription("ศูนย์รวมอุปกรณ์ไอทีและอิเล็กทรอนิกส์");
-        app.setShopPhone("0812345678");
-        app.setShopEmail("somchai@shop.com");
-        app.setShopAddress("99/1 ถ.สุขุมวิท กทม.");
-        app.setSellerFirstName("สมชาย");
-        app.setSellerLastName("ใจดี");
-        app.setIdCardNumber("1234567890123");
-        app.setIdCardImageUrl("https://cdn.example.com/idcards/123.jpg");
-        app.setBankAccountName("สมชาย ใจดี");
-        app.setBankName("ธนาคารกสิกรไทย");
-        app.setBankAccountNumber("0123456789");
-        app.setBankBookImageUrl("https://cdn.example.com/banks/book.jpg");
+    @DisplayName("UC3 Step 9, 10, 11: ส่งข้อมูลด้วย CreateSellerApplicationRequest DTO สำเร็จและตั้งสถานะ PENDING")
+    void testSubmitApplication_WithDto_Success() {
+        CreateSellerApplicationRequest req = new CreateSellerApplicationRequest(
+                "สมชาย อิเล็กทรอนิกส์",
+                "ศูนย์รวมอุปกรณ์ไอทีและอิเล็กทรอนิกส์",
+                "0812345678",
+                "somchai@shop.com",
+                "99/1 ถ.สุขุมวิท กทม.",
+                "สมชาย",
+                "ใจดี",
+                "1234567890123",
+                "https://cdn.example.com/idcards/123.jpg",
+                "สมชาย ใจดี",
+                "ธนาคารกสิกรไทย",
+                "0123456789",
+                "https://cdn.example.com/banks/book.jpg"
+        );
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
         when(applicationRepository.save(any(SellerApplication.class))).thenAnswer(invocation -> {
             SellerApplication a = invocation.getArgument(0);
-            a.setApplicationId(601L);
+            a.setApplicationId(701L);
             return a;
         });
 
-        SellerApplication result = sellerApplicationService.submitApplication(1L, app);
+        SellerApplication result = sellerApplicationService.submitApplication(1L, req);
 
         assertNotNull(result);
-        assertEquals(601L, result.getApplicationId());
+        assertEquals(701L, result.getApplicationId());
         assertEquals(SellerApplicationStatus.PENDING, result.getStatus());
-        assertEquals(sampleUser, result.getUser());
-        verify(applicationRepository, times(1)).save(app);
+        assertEquals("สมชาย อิเล็กทรอนิกส์", result.getShopName());
+
+        verify(applicationRepository, times(1)).save(applicationArgumentCaptor.capture());
+        SellerApplication captured = applicationArgumentCaptor.getValue();
+        assertEquals("1234567890123", captured.getIdCardNumber());
+        assertEquals(SellerApplicationStatus.PENDING, captured.getStatus());
+        assertEquals(sampleUser, captured.getUser());
+
+        verify(notificationService, times(1)).notifyAdminNewSellerApplication(701L);
+    }
+
+    @Test
+    @DisplayName("UC3 Step 9: Bean Validation ใน DTO ตรวจจับข้อมูลว่างและเลขบัตรประชาชนไม่ถูกต้อง")
+    void testCreateSellerApplicationRequest_BeanValidation_DetectsViolations() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        Validator validator = factory.getValidator();
+
+        CreateSellerApplicationRequest req = new CreateSellerApplicationRequest();
+        req.setShopName(""); // Blank
+        req.setIdCardNumber("12345"); // Invalid pattern
+        req.setShopEmail("invalid-email"); // Invalid email
+
+        Set<ConstraintViolation<CreateSellerApplicationRequest>> violations = validator.validate(req);
+        assertFalse(violations.isEmpty());
+
+        List<String> invalidProperties = violations.stream()
+                .map(v -> v.getPropertyPath().toString())
+                .toList();
+
+        assertTrue(invalidProperties.contains("shopName"));
+        assertTrue(invalidProperties.contains("idCardNumber"));
+        assertTrue(invalidProperties.contains("shopEmail"));
+    }
+
+    @Test
+    @DisplayName("UC3: ดึงข้อมูลใบสมัครในรูปแบบ SellerApplicationResponse สำเร็จ")
+    void testGetApplicationResponseById_Success() {
+        sampleApplication.setApplicationId(501L);
+        sampleApplication.setUser(sampleUser);
+        when(applicationRepository.findById(501L)).thenReturn(Optional.of(sampleApplication));
+
+        SellerApplicationResponse response = sellerApplicationService.getApplicationResponseById(501L);
+
+        assertNotNull(response);
+        assertEquals(501L, response.getApplicationId());
+        assertEquals(1L, response.getUserId());
+        assertEquals("สมชาย อิเล็กทรอนิกส์", response.getShopName());
+        assertEquals(SellerApplicationStatus.PENDING, response.getStatus());
+    }
+
+    @Test
+    @DisplayName("UC3: ดึงรายการใบสมัคร PENDING ในรูปแบบ List<SellerApplicationResponse> สำเร็จ")
+    void testGetPendingApplicationResponses_Success() {
+        sampleApplication.setApplicationId(501L);
+        sampleApplication.setUser(sampleUser);
+        when(applicationRepository.findByStatus(SellerApplicationStatus.PENDING)).thenReturn(List.of(sampleApplication));
+
+        List<SellerApplicationResponse> responses = sellerApplicationService.getPendingApplicationResponses();
+
+        assertNotNull(responses);
+        assertEquals(1, responses.size());
+        assertEquals(501L, responses.get(0).getApplicationId());
+        assertEquals("สมชาย อิเล็กทรอนิกส์", responses.get(0).getShopName());
     }
 }
