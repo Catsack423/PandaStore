@@ -1,6 +1,7 @@
 package project.project.Controller;
 
 import java.util.Map;
+import project.project.ApiResponse.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,34 +27,34 @@ public class AuthController {
     }
 
     @PostMapping("/register/customer")
-    public ResponseEntity<CustomerResponse> registerCustomer(@Valid @RequestBody AuthRequests.RegisterCustomer request) {
+    public ResponseEntity<ApiResponse<CustomerResponse>> registerCustomer(@Valid @RequestBody AuthRequests.RegisterCustomer request) {
         var customer = auth.registerCustomer(request.username(), request.email(), request.password(),
                 request.confirmPassword(), request.fullName(), request.phoneNumber());
-        return ResponseEntity.status(HttpStatus.CREATED).body(CustomerResponse.fromEntity(customer));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("สมัครสมาชิกสำเร็จ", CustomerResponse.fromEntity(customer)));
     }
 
     @PostMapping("/register/seller")
-    public ResponseEntity<Map<String, Long>> registerSeller(@Valid @RequestBody AuthRequests.RegisterSeller request) {
+    public ResponseEntity<ApiResponse<Map<String, Long>>> registerSeller(@Valid @RequestBody AuthRequests.RegisterSeller request) {
         var seller = auth.registerSeller(request.username(), request.email(), request.password(), request.confirmPassword());
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("sellerId", seller.getSellerId()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("สมัครผู้ขายสำเร็จ", Map.of("sellerId", seller.getSellerId())));
     }
 
     @PostMapping("/login")
-    public Map<String, String> login(@Valid @RequestBody AuthRequests.Login request) {
+    public ApiResponse<Map<String, String>> login(@Valid @RequestBody AuthRequests.Login request) {
         try {
-            return Map.of("token", auth.login(request.usernameOrEmail(), request.password()), "tokenType", "Bearer");
+            return ApiResponse.success("เข้าสู่ระบบสำเร็จ", Map.of("token", auth.login(request.usernameOrEmail(), request.password()), "tokenType", "Bearer"));
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
         }
     }
 
     @GetMapping("/token")
-    public Map<String, Boolean> validateToken(@RequestHeader(value = "Authorization", required = false) String authorization) {
-        return Map.of("valid", auth.validateToken(currentUser.token(authorization)));
+    public ApiResponse<Map<String, Boolean>> validateToken(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        return ApiResponse.success("ตรวจสอบโทเคนสำเร็จ", Map.of("valid", auth.validateToken(currentUser.token(authorization))));
     }
 
     @PostMapping("/reset-password")
-    public Map<String, Boolean> resetPassword(
+    public ApiResponse<Map<String, Boolean>> resetPassword(
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @Valid @RequestBody AuthRequests.ResetPassword request) {
         var user = currentUser.requireUser(authorization);
@@ -63,6 +64,6 @@ public class AuthController {
         if (!auth.resetPassword(user.getUserId(), request.password(), request.confirmPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "รหัสผ่านใหม่ไม่ถูกต้องหรือไม่ตรงกัน");
         }
-        return Map.of("success", true);
+        return ApiResponse.success("เปลี่ยนรหัสผ่านสำเร็จ", Map.of("success", true));
     }
 }

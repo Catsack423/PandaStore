@@ -45,7 +45,13 @@ class AuthCartControllerTest {
 
     @BeforeEach
     void setup() {
-        mvc = MockMvcBuilders.webAppContextSetup(context).build();
+        mvc = MockMvcBuilders.webAppContextSetup(context).alwaysExpect(result -> {
+            String body = result.getResponse().getContentAsString();
+            boolean expectedSuccess = result.getResponse().getStatus() < 400;
+            assertEquals(expectedSuccess, JsonPath.<Boolean>read(body, "$.success"));
+            assertNotNull(JsonPath.read(body, "$.message"));
+            if (!expectedSuccess) assertNull(JsonPath.read(body, "$.data"));
+        }).build();
         sessions.deleteAll();
         carts.deleteAll();
         customers.deleteAll();
@@ -75,47 +81,47 @@ class AuthCartControllerTest {
                 {"username":"%s","email":"%s@example.com","password":"password123",
                  "confirmPassword":"password123","fullName":"Test Customer","phoneNumber":"0812345678"}
                 """.formatted(name, name)))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.customerId").isNumber())
-                .andExpect(jsonPath("$.passwordHash").doesNotExist()).andExpect(jsonPath("$.user").doesNotExist());
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.data.customerId").isNumber())
+                .andExpect(jsonPath("$.data.passwordHash").doesNotExist()).andExpect(jsonPath("$.data.user").doesNotExist());
         return login(name);
     }
 
     private String login(String name) throws Exception {
         String body = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"usernameOrEmail\":\"" + name + "\",\"password\":\"password123\"}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.tokenType").value("Bearer"))
                 .andReturn().getResponse().getContentAsString();
-        return "Bearer " + JsonPath.read(body, "$.token");
+        return "Bearer " + JsonPath.read(body, "$.data.token");
     }
 
     private long addItem(String authorization, int quantity) throws Exception {
         String body = mvc.perform(post("/api/cart/items").header("Authorization", authorization)
                 .contentType(MediaType.APPLICATION_JSON).content("{\"productId\":" + productId + ",\"quantity\":" + quantity + "}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.quantity").value(quantity))
-                .andExpect(jsonPath("$.productName").value("Test Product"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.quantity").value(quantity))
+                .andExpect(jsonPath("$.data.productName").value("Test Product"))
                 .andReturn().getResponse().getContentAsString();
-        return ((Number) JsonPath.read(body, "$.cartItemId")).longValue();
+        return ((Number) JsonPath.read(body, "$.data.cartItemId")).longValue();
     }
 
     @Test
     void registrationLoginAndCartOperationsWorkWithoutExposingEntities() throws Exception {
         String token = register("customer");
-        mvc.perform(get("/api/auth/token").header("Authorization", token)).andExpect(jsonPath("$.valid").value(true));
+        mvc.perform(get("/api/auth/token").header("Authorization", token)).andExpect(jsonPath("$.data.valid").value(true));
         mvc.perform(post("/api/cart").header("Authorization", token)).andExpect(status().isOk());
         assertEquals(1, carts.count());
         long itemId = addItem(token, 2);
         mvc.perform(get("/api/cart").header("Authorization", token))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].quantity").value(2))
-                .andExpect(jsonPath("$.items[0].product").doesNotExist());
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.items[0].quantity").value(2))
+                .andExpect(jsonPath("$.data.items[0].product").doesNotExist());
         mvc.perform(patch("/api/cart/items/" + itemId).header("Authorization", token)
                 .contentType(MediaType.APPLICATION_JSON).content("{\"quantity\":3}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.quantity").value(3));
-        mvc.perform(get("/api/cart/stock").header("Authorization", token)).andExpect(jsonPath("$.valid").value(true));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.quantity").value(3));
+        mvc.perform(get("/api/cart/stock").header("Authorization", token)).andExpect(jsonPath("$.data.valid").value(true));
         mvc.perform(get("/api/cart/sellers").header("Authorization", token)).andExpect(status().isOk());
-        mvc.perform(delete("/api/cart/items/" + itemId).header("Authorization", token)).andExpect(status().isNoContent());
+        mvc.perform(delete("/api/cart/items/" + itemId).header("Authorization", token)).andExpect(status().isOk());
         addItem(token, 1);
-        mvc.perform(delete("/api/cart/items").header("Authorization", token)).andExpect(status().isNoContent());
-        mvc.perform(get("/api/cart").header("Authorization", token)).andExpect(jsonPath("$.items").isEmpty());
+        mvc.perform(delete("/api/cart/items").header("Authorization", token)).andExpect(status().isOk());
+        mvc.perform(get("/api/cart").header("Authorization", token)).andExpect(jsonPath("$.data.items").isEmpty());
         verify(productService, times(2)).getProductById(productId);
     }
 
@@ -139,7 +145,7 @@ class AuthCartControllerTest {
                 .contentType(MediaType.APPLICATION_JSON).content("{\"quantity\":5}"))
                 .andExpect(status().isNotFound());
         mvc.perform(delete("/api/cart/items/" + itemId).header("Authorization", other)).andExpect(status().isNotFound());
-        mvc.perform(get("/api/cart").header("Authorization", owner)).andExpect(jsonPath("$.items[0].quantity").value(2));
+        mvc.perform(get("/api/cart").header("Authorization", owner)).andExpect(jsonPath("$.data.items[0].quantity").value(2));
     }
 
     @Test
@@ -159,9 +165,9 @@ class AuthCartControllerTest {
                 .andExpect(status().isUnauthorized());
         mvc.perform(post("/api/auth/reset-password").header("Authorization", token)
                 .contentType(MediaType.APPLICATION_JSON).content(request))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.success").value(true));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.success").value(true));
         mvc.perform(get("/api/cart").header("Authorization", second)).andExpect(status().isUnauthorized());
-        mvc.perform(get("/api/auth/token").header("Authorization", token)).andExpect(jsonPath("$.valid").value(false));
+        mvc.perform(get("/api/auth/token").header("Authorization", token)).andExpect(jsonPath("$.data.valid").value(false));
         assertTrue(auth.validateToken(auth.login("customer", "newPassword123")));
     }
 
@@ -178,6 +184,16 @@ class AuthCartControllerTest {
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"usernameOrEmail\":\"customer\",\"password\":\"wrong123\"}"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void malformedJsonAndInvalidPathUseApiResponse() throws Exception {
+        String token = register("customer");
+        mvc.perform(post("/api/cart/items").header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON).content("{"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(delete("/api/cart/items/not-a-number").header("Authorization", token))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
