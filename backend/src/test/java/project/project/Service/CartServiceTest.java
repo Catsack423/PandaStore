@@ -146,6 +146,48 @@ class CartServiceTest {
     }
 
     @Test
+    void selectionChangesCheckoutGroupsWithoutChangingQuantityOrStock() {
+        CartItem first = service.addItemToCart(customerId, firstProduct.getProductId(), 2);
+        service.addItemToCart(customerId, secondProduct.getProductId(), 1);
+
+        service.updateItemSelection(customerId, first.getCartItemId(), false);
+        CartItem saved = items.findById(first.getCartItemId()).orElseThrow();
+        assertFalse(saved.getIsSelected());
+        assertEquals(2, saved.getQuantity());
+        assertEquals(10, products.findById(firstProduct.getProductId()).orElseThrow().getStock());
+        assertFalse(service.splitCartBySeller(customerId).containsKey(firstProduct.getSeller().getSellerId()));
+
+        service.updateItemSelection(customerId, first.getCartItemId(), true);
+        service.updateItemSelection(customerId, first.getCartItemId(), true);
+        assertTrue(items.findById(first.getCartItemId()).orElseThrow().getIsSelected());
+        assertEquals(2, service.splitCartBySeller(customerId).size());
+    }
+
+    @Test
+    void unavailableItemCanBeDeselectedButCannotBeSelected() {
+        CartItem item = service.addItemToCart(customerId, firstProduct.getProductId(), 2);
+        firstProduct.setStock(0);
+        products.save(firstProduct);
+
+        service.updateItemSelection(customerId, item.getCartItemId(), false);
+        assertThrows(IllegalArgumentException.class,
+                () -> service.updateItemSelection(customerId, item.getCartItemId(), true));
+        assertFalse(items.findById(item.getCartItemId()).orElseThrow().getIsSelected());
+    }
+
+    @Test
+    void selectionRejectsMissingValueAndItemsOutsideOwnersCart() {
+        CartItem item = service.addItemToCart(customerId, firstProduct.getProductId(), 1);
+        assertThrows(IllegalArgumentException.class,
+                () -> service.updateItemSelection(customerId, item.getCartItemId(), null));
+        assertThrows(NoSuchElementException.class,
+                () -> service.updateItemSelection(otherCustomerId, item.getCartItemId(), false));
+        assertThrows(NoSuchElementException.class,
+                () -> service.updateItemSelection(customerId, Long.MAX_VALUE, false));
+        assertTrue(items.findById(item.getCartItemId()).orElseThrow().getIsSelected());
+    }
+
+    @Test
     void cannotUpdateOrRemoveAnotherCustomersItem() {
         CartItem item = service.addItemToCart(customerId, firstProduct.getProductId(), 1);
         assertThrows(NoSuchElementException.class,

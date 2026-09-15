@@ -90,6 +90,25 @@ public class CartServiceImp implements CartService {
     }
 
     @Override
+    public CartItem updateItemSelection(Long customerId, Long cartItemId, Boolean selected) {
+        if (selected == null) {
+            throw new IllegalArgumentException("Selection is required");
+        }
+
+        lockCustomer(customerId);
+        Cart cart = getCartByCustomerId(customerId);
+        CartItem item = findOwnedItem(cart, cartItemId);
+
+        // เลือกซื้อได้เมื่อสินค้าพร้อมขาย แต่ยกเลิกเลือกได้เสมอ
+        if (selected && !isAvailable(item.getProduct(), item.getQuantity())) {
+            throw new IllegalArgumentException("Product is unavailable or stock is insufficient");
+        }
+
+        item.setIsSelected(selected);
+        return items.save(item);
+    }
+
+    @Override
     public void removeItemFromCart(Long customerId, Long cartItemId) {
         lockCustomer(customerId);
         Cart cart = getCartByCustomerId(customerId);

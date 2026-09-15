@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import project.project.Security.CurrentUser;
 import project.project.DTO.cart.CartDtos;
+import project.project.Entity.order.CartItem;
 import project.project.Service.api.CartService;
 
 @RestController
@@ -40,6 +41,17 @@ public class CartController {
     @PatchMapping("/items/{itemId}")
     public ApiResponse<CartDtos.Item> update(@PathVariable Long itemId, @Valid @RequestBody CartDtos.UpdateQuantity request) {
         return ApiResponse.success("ดำเนินการตะกร้าสำเร็จ", CartDtos.Item.from(carts.updateItemQuantity(currentUser.requireCustomerId(), itemId, request.quantity())));
+    }
+
+    @PatchMapping("/items/{itemId}/selection")
+    public ApiResponse<CartDtos.Item> updateSelection(
+            @PathVariable Long itemId,
+            @Valid @RequestBody CartDtos.UpdateSelection request) {
+        Long customerId = currentUser.requireCustomerId();
+        CartItem item = carts.updateItemSelection(customerId, itemId, request.selected());
+        CartDtos.Item response = CartDtos.Item.from(item);
+
+        return ApiResponse.success("เปลี่ยนการเลือกสินค้าสำเร็จ", response);
     }
 
     @DeleteMapping("/items/{itemId}")

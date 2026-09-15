@@ -154,6 +154,63 @@ class AuthCartControllerTest {
     }
 
     @Test
+    void customerCanDeselectAndReselectItemThroughApi() throws Exception {
+        String token = register("customer");
+        long itemId = addItem(token, 2);
+        String path = "/api/cart/items/" + itemId + "/selection";
+
+        mvc.perform(patch(path).header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"selected\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.selected").value(false))
+                .andExpect(jsonPath("$.data.quantity").value(2));
+        mvc.perform(get("/api/cart").header("Authorization", token))
+                .andExpect(jsonPath("$.data.items[0].selected").value(false));
+        mvc.perform(get("/api/cart/stock").header("Authorization", token))
+                .andExpect(jsonPath("$.data.valid").value(false));
+        mvc.perform(get("/api/cart/sellers").header("Authorization", token))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(patch(path).header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"selected\":true}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.selected").value(true));
+        mvc.perform(get("/api/cart/stock").header("Authorization", token))
+                .andExpect(jsonPath("$.data.valid").value(true));
+    }
+
+    @Test
+    void selectionApiRejectsMissingLoginAndOtherCustomers() throws Exception {
+        String ownerToken = register("owner");
+        String otherToken = register("other");
+        long itemId = addItem(ownerToken, 1);
+        String path = "/api/cart/items/" + itemId + "/selection";
+
+        mvc.perform(patch(path).contentType(MediaType.APPLICATION_JSON).content("{\"selected\":false}"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(patch(path).header("Authorization", otherToken)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"selected\":false}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(patch(path).header("Authorization", login("seller"))
+                .contentType(MediaType.APPLICATION_JSON).content("{\"selected\":false}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/cart").header("Authorization", ownerToken))
+                .andExpect(jsonPath("$.data.items[0].selected").value(true));
+    }
+
+    @Test
+    void selectionApiRequiresBooleanValue() throws Exception {
+        String token = register("customer");
+        long itemId = addItem(token, 1);
+        String path = "/api/cart/items/" + itemId + "/selection";
+
+        for (String body : new String[] {"{}", "{\"selected\":null}", "{\"selected\":{}}"}) {
+            mvc.perform(patch(path).header("Authorization", token)
+                    .contentType(MediaType.APPLICATION_JSON).content(body))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Test
     void registrationLoginAndCartOperationsWorkWithoutExposingEntities() throws Exception {
         String token = register("customer");
         mvc.perform(get("/api/auth/token").header("Authorization", token)).andExpect(jsonPath("$.data.valid").value(true));

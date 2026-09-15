@@ -12,6 +12,7 @@ public final class CartDtos {
 
     public record AddItem(@NotNull @Positive Long productId, @NotNull @Positive Integer quantity) {}
     public record UpdateQuantity(@NotNull @Positive Integer quantity) {}
+    public record UpdateSelection(@NotNull Boolean selected) {}
     public record Item(Long cartItemId, Long productId, String productName, Long sellerId,
             BigDecimal unitPrice, Integer quantity, Boolean selected) {
         public static Item from(CartItem item) {
