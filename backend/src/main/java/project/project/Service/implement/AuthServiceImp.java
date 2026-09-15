@@ -31,10 +31,11 @@ public class AuthServiceImp implements AuthService {
     private final PasswordService passwords;
     private final Validator validator;
     private final JwtTokenService jwt;
+    private final project.project.Security.SessionAuthenticator authenticator;
 
     public AuthServiceImp(UserRepository users, CustomerRepository customers, CartService cartService,
             AuthSessionRepository sessions, CustomerService customerService,
-            PasswordService passwords, Validator validator, JwtTokenService jwt) {
+            PasswordService passwords, Validator validator, JwtTokenService jwt, project.project.Security.SessionAuthenticator authenticator) {
         this.users = users;
         this.customers = customers;
         this.cartService = cartService;
@@ -43,6 +44,7 @@ public class AuthServiceImp implements AuthService {
         this.passwords = passwords;
         this.validator = validator;
         this.jwt = jwt;
+        this.authenticator = authenticator;
     }
 
     @Override
@@ -103,7 +105,7 @@ public class AuthServiceImp implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public boolean validateToken(String token) {
-        return activeSession(token).isPresent();
+        return authenticator.authenticate(token).isPresent();
     }
 
     @Override
@@ -122,16 +124,6 @@ public class AuthServiceImp implements AuthService {
         users.save(user);
         sessions.deleteByUser_UserId(user.getUserId());
         return true;
-    }
-
-    private Optional<AuthSession> activeSession(String token) {
-        var subject = jwt.verifiedSubject(token);
-        if (subject.isEmpty()) return Optional.empty();
-        return sessions.findById(tokenHash(token))
-                .filter(session -> session.getUser().getUserId().toString().equals(subject.get()))
-                .filter(session -> session.getExpiresAt().isAfter(Instant.now()))
-                .filter(session -> session.getUser().getStatus() == UserStatus.ACTIVE)
-                .filter(session -> session.getCredentialHash().equals(session.getUser().getPasswordHash()));
     }
 
     private String tokenHash(String token) {

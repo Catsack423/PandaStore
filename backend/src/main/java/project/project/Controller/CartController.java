@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import project.project.Controller.support.CurrentUser;
+import project.project.Security.CurrentUser;
 import project.project.DTO.cart.CartDtos;
 import project.project.Service.api.CartService;
 
@@ -23,48 +23,45 @@ public class CartController {
     }
 
     @PostMapping
-    public ApiResponse<CartDtos.CartResponse> create(@RequestHeader(value = "Authorization", required = false) String authorization) {
-        return ApiResponse.success("ดำเนินการตะกร้าสำเร็จ", CartDtos.CartResponse.from(carts.createCart(currentUser.requireCustomerId(authorization))));
+    public ApiResponse<CartDtos.CartResponse> create() {
+        return ApiResponse.success("ดำเนินการตะกร้าสำเร็จ", CartDtos.CartResponse.from(carts.createCart(currentUser.requireCustomerId())));
     }
 
     @GetMapping
-    public ApiResponse<CartDtos.CartResponse> get(@RequestHeader(value = "Authorization", required = false) String authorization) {
-        return ApiResponse.success("ดำเนินการตะกร้าสำเร็จ", CartDtos.CartResponse.from(carts.getCartByCustomerId(currentUser.requireCustomerId(authorization))));
+    public ApiResponse<CartDtos.CartResponse> get() {
+        return ApiResponse.success("ดำเนินการตะกร้าสำเร็จ", CartDtos.CartResponse.from(carts.getCartByCustomerId(currentUser.requireCustomerId())));
     }
 
     @PostMapping("/items")
-    public ApiResponse<CartDtos.Item> add(@RequestHeader(value = "Authorization", required = false) String authorization,
-            @Valid @RequestBody CartDtos.AddItem request) {
-        return ApiResponse.success("ดำเนินการตะกร้าสำเร็จ", CartDtos.Item.from(carts.addItemToCart(currentUser.requireCustomerId(authorization), request.productId(), request.quantity())));
+    public ApiResponse<CartDtos.Item> add(@Valid @RequestBody CartDtos.AddItem request) {
+        return ApiResponse.success("ดำเนินการตะกร้าสำเร็จ", CartDtos.Item.from(carts.addItemToCart(currentUser.requireCustomerId(), request.productId(), request.quantity())));
     }
 
     @PatchMapping("/items/{itemId}")
-    public ApiResponse<CartDtos.Item> update(@RequestHeader(value = "Authorization", required = false) String authorization,
-            @PathVariable Long itemId, @Valid @RequestBody CartDtos.UpdateQuantity request) {
-        return ApiResponse.success("ดำเนินการตะกร้าสำเร็จ", CartDtos.Item.from(carts.updateItemQuantity(currentUser.requireCustomerId(authorization), itemId, request.quantity())));
+    public ApiResponse<CartDtos.Item> update(@PathVariable Long itemId, @Valid @RequestBody CartDtos.UpdateQuantity request) {
+        return ApiResponse.success("ดำเนินการตะกร้าสำเร็จ", CartDtos.Item.from(carts.updateItemQuantity(currentUser.requireCustomerId(), itemId, request.quantity())));
     }
 
     @DeleteMapping("/items/{itemId}")
-    public ResponseEntity<ApiResponse<Void>> remove(@RequestHeader(value = "Authorization", required = false) String authorization,
-            @PathVariable Long itemId) {
-        carts.removeItemFromCart(currentUser.requireCustomerId(authorization), itemId);
+    public ResponseEntity<ApiResponse<Void>> remove(@PathVariable Long itemId) {
+        carts.removeItemFromCart(currentUser.requireCustomerId(), itemId);
         return ResponseEntity.ok(ApiResponse.success("ลบรายการสินค้าสำเร็จ", null));
     }
 
     @DeleteMapping("/items")
-    public ResponseEntity<ApiResponse<Void>> clear(@RequestHeader(value = "Authorization", required = false) String authorization) {
-        carts.clearCart(currentUser.requireCustomerId(authorization));
+    public ResponseEntity<ApiResponse<Void>> clear() {
+        carts.clearCart(currentUser.requireCustomerId());
         return ResponseEntity.ok(ApiResponse.success("ลบรายการสินค้าสำเร็จ", null));
     }
 
     @GetMapping("/stock")
-    public ApiResponse<Map<String, Boolean>> stock(@RequestHeader(value = "Authorization", required = false) String authorization) {
-        return ApiResponse.success("ตรวจสอบสต็อกสำเร็จ", Map.of("valid", carts.validateCartStock(currentUser.requireCustomerId(authorization))));
+    public ApiResponse<Map<String, Boolean>> stock() {
+        return ApiResponse.success("ตรวจสอบสต็อกสำเร็จ", Map.of("valid", carts.validateCartStock(currentUser.requireCustomerId())));
     }
 
     @GetMapping("/sellers")
-    public ApiResponse<Map<Long, List<CartDtos.Item>>> split(@RequestHeader(value = "Authorization", required = false) String authorization) {
-        return ApiResponse.success("แยกสินค้าตามร้านสำเร็จ", carts.splitCartBySeller(currentUser.requireCustomerId(authorization)).entrySet().stream()
+    public ApiResponse<Map<Long, List<CartDtos.Item>>> split() {
+        return ApiResponse.success("แยกสินค้าตามร้านสำเร็จ", carts.splitCartBySeller(currentUser.requireCustomerId()).entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().stream().map(CartDtos.Item::from).toList())));
     }
 }

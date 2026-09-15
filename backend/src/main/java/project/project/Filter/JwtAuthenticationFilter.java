@@ -14,25 +14,29 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.ObjectMapper;
 import project.project.ApiResponse.ApiResponse;
-import project.project.Controller.support.CurrentUser;
-import project.project.Service.api.AuthService;
+import project.project.Security.BearerTokens;
+import project.project.Security.SessionAuthenticator;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import java.util.List;
+import java.util.Optional;
+import project.project.Security.AuthenticatedUser;
 
-/** Token gate for the Auth/Cart APIs. User context will be introduced separately. */
+
+/** Per-request identity; mandatory authentication remains scoped to Auth/Cart. */
 @Component
 @Order(0)
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private final AuthService auth;
-    private final CurrentUser currentUser;
+    private final SessionAuthenticator authenticator;
     private final ObjectMapper json;
 
-    public JwtAuthenticationFilter(AuthService auth, CurrentUser currentUser, ObjectMapper json) {
-        this.auth = auth;
-        this.currentUser = currentUser;
+    public JwtAuthenticationFilter(SessionAuthenticator authenticator, ObjectMapper json) {
+        this.authenticator = authenticator;
         this.json = json;
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
+    private boolean authenticationOptional(HttpServletRequest request) {
         if ("OPTIONS".equals(request.getMethod())) return true;
         String path = request.getRequestURI().substring(request.getContextPath().length());
         boolean ownedPath = path.equals("/api/cart") || path.startsWith("/api/cart/")
@@ -49,25 +53,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
             FilterChain chain) throws ServletException, IOException {
-        var headers = Collections.list(request.getHeaders(HttpHeaders.AUTHORIZATION));
-        String token;
+        SecurityContextHolder.clearContext();
         try {
-            if (headers.size() != 1) {
+            boolean optional = authenticationOptional(request);
+            var identity = resolveIdentity(request);
+            if (identity.isEmpty() && !optional) {
                 unauthorized(response);
                 return;
             }
-            token = currentUser.token(headers.getFirst());
+            identity.ifPresent(user -> {
+                var context = SecurityContextHolder.createEmptyContext();
+                context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(user, null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + user.role().name()))));
+                SecurityContextHolder.setContext(context);
+            });
+            chain.doFilter(request, response);
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    private Optional<AuthenticatedUser> resolveIdentity(HttpServletRequest request) {
+        if ("OPTIONS".equals(request.getMethod())) return Optional.empty();
+        var headers = Collections.list(request.getHeaders(HttpHeaders.AUTHORIZATION));
+        if (headers.size() != 1) return Optional.empty();
+        String token;
+        try {
+            token = BearerTokens.requireToken(headers.getFirst());
         } catch (ResponseStatusException e) {
-            unauthorized(response);
-            return;
+            return Optional.empty();
         }
-        // validateToken also checks persisted session, expiry and account status.
-        if (!auth.validateToken(token)) {
-            unauthorized(response);
-            return;
-        }
-        // Keep downstream exceptions outside authentication handling.
-        chain.doFilter(request, response);
+        return authenticator.authenticate(token);
     }
 
     private void unauthorized(HttpServletResponse response) throws IOException {

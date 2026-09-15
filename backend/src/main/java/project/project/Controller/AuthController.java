@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import project.project.Controller.support.CurrentUser;
+import project.project.Security.CurrentUser;
 import project.project.DTO.auth.AuthRequests;
 import project.project.DTO.customer.CustomerResponse;
 import project.project.Service.api.AuthService;
@@ -50,14 +50,13 @@ public class AuthController {
 
     @GetMapping("/token")
     public ApiResponse<Map<String, Boolean>> validateToken(@RequestHeader(value = "Authorization", required = false) String authorization) {
-        return ApiResponse.success("ตรวจสอบโทเคนสำเร็จ", Map.of("valid", auth.validateToken(currentUser.token(authorization))));
+        return ApiResponse.success("ตรวจสอบโทเคนสำเร็จ", Map.of("valid", auth.validateToken(project.project.Security.BearerTokens.requireToken(authorization))));
     }
 
     @PostMapping("/reset-password")
     public ApiResponse<Map<String, Boolean>> resetPassword(
-            @RequestHeader(value = "Authorization", required = false) String authorization,
             @Valid @RequestBody AuthRequests.ResetPassword request) {
-        var user = currentUser.requireUser(authorization);
+        var user = currentUser.requireUser();
         if (!passwords.matches(request.currentPassword(), user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "รหัสผ่านเดิมไม่ถูกต้อง");
         }

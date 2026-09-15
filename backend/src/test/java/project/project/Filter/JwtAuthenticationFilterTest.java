@@ -8,13 +8,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import tools.jackson.databind.json.JsonMapper;
-import project.project.Controller.support.CurrentUser;
-import project.project.Service.api.AuthService;
+import project.project.Security.CurrentUser;
+import project.project.Security.SessionAuthenticator;
+import project.project.Security.AuthenticatedUser;
+import project.project.Entity.user.UserRole;
+import java.util.Optional;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 
 class JwtAuthenticationFilterTest {
-    private final AuthService auth = mock(AuthService.class);
-    private final CurrentUser currentUser = new CurrentUser(auth, null, null);
-    private final JwtAuthenticationFilter filter = new JwtAuthenticationFilter(auth, currentUser, new JsonMapper());
+    private final SessionAuthenticator auth = mock(SessionAuthenticator.class);
+    private final CurrentUser currentUser = new CurrentUser(null, null);
+    private final JwtAuthenticationFilter filter = new JwtAuthenticationFilter(auth, new JsonMapper());
     private final String token = "abc.def.ghi";
 
     @Test
@@ -42,7 +47,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     void allowsValidTokenWithContextPathAndDoesNotHideDownstreamFailures() throws Exception {
-        when(auth.validateToken(token)).thenReturn(true);
+        when(auth.authenticate(token)).thenReturn(Optional.of(new AuthenticatedUser(42, UserRole.CUSTOMER)));
         var request = new MockHttpServletRequest("GET", "/store/api/cart/items");
         request.setContextPath("/store");
         request.addHeader("Authorization", "Bearer " + token);
@@ -50,7 +55,8 @@ class JwtAuthenticationFilterTest {
         FilterChain chain = mock(FilterChain.class);
         doThrow(new ServletException("downstream failure")).when(chain).doFilter(request, response);
         assertThrows(ServletException.class, () -> filter.doFilter(request, response, chain));
-        verify(auth).validateToken(token);
+        verify(auth).authenticate(token);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
         assertNotEquals(401, response.getStatus());
     }
 
@@ -79,5 +85,56 @@ class JwtAuthenticationFilterTest {
             assertEquals(401, response.getStatus());
             verifyNoInteractions(chain);
         }
+    }
+
+    @Test
+    void helperReadsIdentityAndContextIsClearedForNextRequest() throws Exception {
+        when(auth.authenticate(token)).thenReturn(Optional.of(new AuthenticatedUser(42, UserRole.CUSTOMER)));
+        var request = new MockHttpServletRequest("GET", "/api/cart");
+        request.addHeader("Authorization", "Bearer " + token);
+        filter.doFilter(request, new MockHttpServletResponse(), (req, res) -> {
+            assertEquals(42, currentUser.getCurrentUserId());
+            var authentication = SecurityContextHolder.getContext().getAuthentication();
+            assertEquals("42", authentication.getName());
+            assertNull(authentication.getCredentials());
+            assertEquals("ROLE_CUSTOMER", authentication.getAuthorities().iterator().next().getAuthority());
+        });
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, currentUser::getCurrentUserId);
+        filter.doFilter(new MockHttpServletRequest("GET", "/api/customers"), new MockHttpServletResponse(),
+                (req, res) -> assertNull(SecurityContextHolder.getContext().getAuthentication()));
+        // A valid token provides identity on other teams' routes without requiring login there.
+        var optional = new MockHttpServletRequest("GET", "/api/customers");
+        optional.addHeader("Authorization", "Bearer " + token);
+        filter.doFilter(optional, new MockHttpServletResponse(),
+                (req, res) -> assertEquals(42, currentUser.getCurrentUserId()));
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
+    void concurrentRequestsDoNotShareIdentity() throws Exception {
+        var ready = new java.util.concurrent.CountDownLatch(2);
+        when(auth.authenticate(token)).thenReturn(Optional.of(new AuthenticatedUser(42, UserRole.CUSTOMER)));
+        when(auth.authenticate("other.jwt.signature")).thenReturn(Optional.of(new AuthenticatedUser(84, UserRole.SELLER)));
+        try (var pool = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            var first = pool.submit(() -> runConcurrentRequest(token, 42, ready));
+            var second = pool.submit(() -> runConcurrentRequest("other.jwt.signature", 84, ready));
+            first.get(10, java.util.concurrent.TimeUnit.SECONDS);
+            second.get(10, java.util.concurrent.TimeUnit.SECONDS);
+        }
+    }
+
+    private Void runConcurrentRequest(String jwt, long expectedId,
+            java.util.concurrent.CountDownLatch ready) throws Exception {
+        var request = new MockHttpServletRequest("GET", "/api/cart");
+        request.addHeader("Authorization", "Bearer " + jwt);
+        filter.doFilter(request, new MockHttpServletResponse(), (req, res) -> {
+            ready.countDown();
+            try { assertTrue(ready.await(5, java.util.concurrent.TimeUnit.SECONDS)); }
+            catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new ServletException(e); }
+            assertEquals(expectedId, currentUser.getCurrentUserId());
+        });
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        return null;
     }
 }
