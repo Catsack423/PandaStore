@@ -14,17 +14,20 @@ import project.project.Service.implement.JwtTokenService;
 
 @Service
 public class SessionAuthenticator {
-    private final JwtTokenService jwt;
-    private final AuthSessionRepository sessions;
-    public SessionAuthenticator(JwtTokenService jwt, AuthSessionRepository sessions) {
-        this.jwt = jwt;
-        this.sessions = sessions;
+    private final JwtTokenService jwtService;
+    private final AuthSessionRepository sessionsRepository;
+    public SessionAuthenticator(JwtTokenService jwt, AuthSessionRepository sessionsRepository) {
+        this.jwtService = jwt;
+        this.sessionsRepository = sessionsRepository;
     }
+
     @Transactional(readOnly = true)
     public Optional<AuthenticatedUser> authenticate(String token) {
-        var subject = jwt.verifiedSubject(token);
+        //verify content in jwt
+        var subject = jwtService.verifiedSubject(token);
         if (subject.isEmpty()) return Optional.empty();
-        return sessions.findById(tokenHash(token))
+
+        return sessionsRepository.findById(tokenHash(token))
                 .filter(session -> session.getUser().getUserId().toString().equals(subject.get()))
                 .filter(session -> session.getExpiresAt().isAfter(Instant.now()))
                 .filter(session -> session.getUser().getStatus() == UserStatus.ACTIVE)

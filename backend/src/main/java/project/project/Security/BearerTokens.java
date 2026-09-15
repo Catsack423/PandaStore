@@ -1,8 +1,12 @@
 package project.project.Security;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+
 public final class BearerTokens {
-    private BearerTokens() {}
+    private BearerTokens() {
+    }
+
     public static String requireToken(String authorization) {
         if (authorization == null || !authorization.regionMatches(true, 0, "Bearer ", 0, 7)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "กรุณาเข้าสู่ระบบ");

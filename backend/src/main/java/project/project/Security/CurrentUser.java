@@ -10,16 +10,21 @@ import project.project.Entity.user.UserRole;
 import project.project.Repository.UserRepository;
 import project.project.Repository.CustomerRepository;
 
-/** Inject in controllers/services on the request thread.
- * Background/async work must receive identity explicitly; context is not inherited. */
+/**
+ * Inject in controllers/services on the request thread.
+ * Background/async work must receive identity explicitly; context is not
+ * inherited.
+ */
 @Component
 public class CurrentUser {
-    private final UserRepository users;
-    private final CustomerRepository customers;
+    private final UserRepository usersRepository ;
+    private final CustomerRepository customersRepository;
+
     public CurrentUser(UserRepository users, CustomerRepository customers) {
-        this.users = users;
-        this.customers = customers;
+        this.usersRepository  = users;
+        this.customersRepository = customers;
     }
+
     public AuthenticatedUser requireIdentity() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()
@@ -28,19 +33,25 @@ public class CurrentUser {
         }
         return identity;
     }
-    public long getCurrentUserId() { return requireIdentity().userId(); }
+
+    public long getCurrentUserId() {
+        return requireIdentity().userId();
+    }
+
     @Transactional(readOnly = true)
     public User requireUser() {
-        return users.findById(getCurrentUserId()).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.UNAUTHORIZED, "ไม่พบผู้ใช้ปัจจุบัน"));
+        return usersRepository .findById(getCurrentUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "ไม่พบผู้ใช้ปัจจุบัน"));
     }
+
     @Transactional(readOnly = true)
     public Long requireCustomerId() {
         var identity = requireIdentity();
         if (identity.role() != UserRole.CUSTOMER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "บัญชีนี้ไม่ใช่ลูกค้า");
         }
-        return customers.findByUser_UserId(identity.userId()).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.FORBIDDEN, "ไม่พบข้อมูลลูกค้า")).getCustomerId();
+        return customersRepository.findByUser_UserId(identity.userId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "ไม่พบข้อมูลลูกค้า"))
+                .getCustomerId();
     }
 }

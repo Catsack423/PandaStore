@@ -21,15 +21,29 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+
 import project.project.Security.AuthenticatedUser;
 
-
-/** Per-request identity; mandatory authentication remains scoped to Auth/Cart. */
+/**
+ * Per-request identity; mandatory authentication remains scoped to Auth/Cart.
+ */
 @Component
 @Order(0)
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final SessionAuthenticator authenticator;
     private final ObjectMapper json;
+    private static final List<String> MONITORED_PATH_PREFIXES = List.of(
+            "/api/cart",
+            "/api/auth"
+    );
+
+    // Endpoint เมธอด POST ที่อนุญาตให้ผ่านได้โดยไม่ต้องมี Token
+    private static final Set<String> PUBLIC_POST_PATHS = Set.of(
+            "/api/auth/login",
+            "/api/auth/register/customer",
+            "/api/auth/register/seller"
+    );
 
     public JwtAuthenticationFilter(SessionAuthenticator authenticator, ObjectMapper json) {
         this.authenticator = authenticator;
@@ -37,17 +51,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean authenticationOptional(HttpServletRequest request) {
-        if ("OPTIONS".equals(request.getMethod())) return true;
-        String path = request.getRequestURI().substring(request.getContextPath().length());
-        boolean ownedPath = path.equals("/api/cart") || path.startsWith("/api/cart/")
-                || path.equals("/api/auth") || path.startsWith("/api/auth/");
-        if (!ownedPath) return true;
-        if ("POST".equals(request.getMethod()) && (path.equals("/api/auth/login")
-                || path.equals("/api/auth/register/customer") || path.equals("/api/auth/register/seller"))) {
+        // 1. อนุญาต Pre-flight request ของ CORS
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
-        // This endpoint reports validity itself, including valid=false for expired/revoked JWTs.
-        return "GET".equals(request.getMethod()) && path.equals("/api/auth/token");
+
+        String path = request.getRequestURI().substring(request.getContextPath().length());
+        String method = request.getMethod();
+
+        // 2. ถ้าไม่ใช่ Path ที่ Filter นี้ดูแล ให้ข้ามการตรวจได้เลย
+        boolean isMonitored = MONITORED_PATH_PREFIXES.stream()
+                .anyMatch(prefix -> path.equals(prefix) || path.startsWith(prefix + "/"));
+        if (!isMonitored) {
+            return true;
+        }
+
+        // 3. ตรวจสอบ POST endpoints ที่เป็น Public
+        if ("POST".equalsIgnoreCase(method) && PUBLIC_POST_PATHS.contains(path)) {
+            return true;
+        }
+
+        // 4. ยกเว้น GET /api/auth/token เพื่อให้ Controller ตรวจสอบสถานะ Token เอง
+        return "GET".equalsIgnoreCase(method) && "/api/auth/token".equals(path);
     }
 
     @Override
@@ -74,9 +99,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private Optional<AuthenticatedUser> resolveIdentity(HttpServletRequest request) {
-        if ("OPTIONS".equals(request.getMethod())) return Optional.empty();
+        if ("OPTIONS".equals(request.getMethod()))
+            return Optional.empty();
         var headers = Collections.list(request.getHeaders(HttpHeaders.AUTHORIZATION));
-        if (headers.size() != 1) return Optional.empty();
+        if (headers.size() != 1)
+            return Optional.empty();
         String token;
         try {
             token = BearerTokens.requireToken(headers.getFirst());
@@ -86,6 +113,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return authenticator.authenticate(token);
     }
 
+    //return Error Unauthorized
     private void unauthorized(HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
