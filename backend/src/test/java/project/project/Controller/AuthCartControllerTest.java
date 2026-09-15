@@ -127,6 +127,42 @@ class AuthCartControllerTest {
     }
 
     @Test
+    void logoutRevokesOnlyPresentedSessionAndKeepsCartAndOtherLogins() throws Exception {
+        String token = register("customer");
+        String second = login("customer");
+        String other = register("other");
+        addItem(token, 2);
+        mvc.perform(post("/api/auth/logout").header("Authorization", token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.success").value(true));
+        assertFalse(auth.validateToken(token.substring(7)));
+        assertTrue(auth.validateToken(second.substring(7)));
+        assertTrue(auth.validateToken(other.substring(7)));
+        mvc.perform(get("/api/cart").header("Authorization", token)).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/auth/logout").header("Authorization", token)).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/cart").header("Authorization", second))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.items[0].quantity").value(2));
+        assertNull(org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
+    void logoutRejectsMissingInvalidAndDuplicateHeadersWithoutRevokingValidSession() throws Exception {
+        String token = register("customer");
+        mvc.perform(post("/api/auth/logout")).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/auth/logout").header("Authorization", "Bearer invalid"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/auth/logout").header("Authorization", token, token))
+                .andExpect(status().isUnauthorized());
+        assertTrue(auth.validateToken(token.substring(7)));
+    }
+
+    @Test
+    void sellerCanLogoutWithoutCustomerProfile() throws Exception {
+        String token = login("seller");
+        mvc.perform(post("/api/auth/logout").header("Authorization", token)).andExpect(status().isOk());
+        assertFalse(auth.validateToken(token.substring(7)));
+    }
+
+    @Test
     void missingInvalidAndSuspendedTokensCannotAccessCart() throws Exception {
         mvc.perform(get("/api/cart")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/cart").header("Authorization", "Bearer " + "A".repeat(43))).andExpect(status().isUnauthorized());

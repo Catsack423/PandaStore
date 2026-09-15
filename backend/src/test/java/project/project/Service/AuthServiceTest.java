@@ -135,6 +135,24 @@ class AuthServiceTest {
     }
 
     @Test
+    void logoutOnlyDeletesMatchingSessionAndRejectsInvalidTokens() throws Exception {
+        registerCustomer();
+        String token = auth.login("customer", "password123");
+        String second = auth.login("customer", "password123");
+        assertFalse(auth.logout(null));
+        assertFalse(auth.logout("invalid"));
+        assertEquals(2, sessions.count());
+        assertTrue(auth.logout(token));
+        String digest = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+                .digest(token.getBytes(StandardCharsets.UTF_8)));
+        assertFalse(sessions.existsById(digest));
+        assertFalse(auth.validateToken(token));
+        assertFalse(auth.logout(token));
+        assertTrue(auth.validateToken(second));
+        assertEquals(1, sessions.count());
+    }
+
+    @Test
     void expiredTokensAreRejected() throws Exception {
         registerCustomer();
         String token = auth.login("customer", "password123");

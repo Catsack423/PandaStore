@@ -109,6 +109,13 @@ public class AuthServiceImp implements AuthService {
     }
 
     @Override
+    public boolean logout(String token) {
+        if (authenticator.authenticate(token).isEmpty()) return false;
+        sessions.deleteById(tokenHash(token));
+        return true;
+    }
+
+    @Override
     public boolean verifyPassword(String password, String confirmPassword) {
         return passwords.isValid(password) && password.equals(confirmPassword);
     }

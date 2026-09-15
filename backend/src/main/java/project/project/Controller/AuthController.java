@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import project.project.Security.CurrentUser;
+import project.project.Security.BearerTokens;
+import org.springframework.security.core.context.SecurityContextHolder;
 import project.project.DTO.auth.AuthRequests;
 import project.project.DTO.customer.CustomerResponse;
 import project.project.Service.api.AuthService;
@@ -51,6 +53,17 @@ public class AuthController {
     @GetMapping("/token")
     public ApiResponse<Map<String, Boolean>> validateToken(@RequestHeader(value = "Authorization", required = false) String authorization) {
         return ApiResponse.success("ตรวจสอบโทเคนสำเร็จ", Map.of("valid", auth.validateToken(project.project.Security.BearerTokens.requireToken(authorization))));
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        // The bearer token identifies this session, not every login belonging to the user.
+        if (!auth.logout(BearerTokens.requireToken(authorization))) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "โทเคนไม่ถูกต้องหรือหมดอายุ");
+        }
+        SecurityContextHolder.clearContext();
+        return ApiResponse.success("ออกจากระบบสำเร็จ", null);
     }
 
     @PostMapping("/reset-password")
