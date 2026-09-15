@@ -11,6 +11,8 @@ import project.project.Security.CurrentUser;
 import project.project.Security.BearerTokens;
 import org.springframework.security.core.context.SecurityContextHolder;
 import project.project.DTO.auth.AuthRequests;
+import project.project.DTO.auth.CurrentUserResponse;
+import org.springframework.http.CacheControl;
 import project.project.DTO.customer.CustomerResponse;
 import project.project.Service.api.AuthService;
 import project.project.Service.implement.PasswordService;
@@ -48,6 +50,13 @@ public class AuthController {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
         }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<CurrentUserResponse>> me() {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(ApiResponse.success("ดึงข้อมูลผู้ใช้ปัจจุบันสำเร็จ",
+                        CurrentUserResponse.from(currentUser.requireUser())));
     }
 
     @GetMapping("/token")

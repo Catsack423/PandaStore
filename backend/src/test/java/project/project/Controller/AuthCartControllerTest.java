@@ -105,6 +105,55 @@ class AuthCartControllerTest {
     }
 
     @Test
+    void meReturnsOnlyCurrentAccountFieldsEvenWhenAnotherUserIdIsSupplied() throws Exception {
+        String token = register("customer");
+        String otherToken = register("other");
+        User customer = users.findByUsername("customer").orElseThrow();
+        User other = users.findByUsername("other").orElseThrow();
+        // Read current account data, not a stale profile copied into JWT claims.
+        customer.setEmail("updated@example.com");
+        users.save(customer);
+        String body = mvc.perform(get("/api/auth/me").header("Authorization", token)
+                .param("userId", other.getUserId().toString()))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.data.userId").value(customer.getUserId()))
+                .andExpect(jsonPath("$.data.username").value("customer"))
+                .andExpect(jsonPath("$.data.email").value("updated@example.com"))
+                .andExpect(jsonPath("$.data.role").value("CUSTOMER"))
+                .andExpect(jsonPath("$.data.status").value("ACTIVE"))
+                .andReturn().getResponse().getContentAsString();
+        java.util.Map<String, Object> data = JsonPath.read(body, "$.data");
+        assertEquals(java.util.Set.of("userId", "username", "email", "role", "status"), data.keySet());
+        mvc.perform(get("/api/auth/me").header("Authorization", otherToken))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.userId").value(other.getUserId()));
+    }
+
+    @Test
+    void meSupportsSellerAndAdminWithoutCustomerProfiles() throws Exception {
+        mvc.perform(get("/api/auth/me").header("Authorization", login("seller")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.role").value("SELLER"));
+        users.save(new User("admin", "admin@example.com", passwords.hash("password123"),
+                UserRole.ADMIN, UserStatus.ACTIVE));
+        mvc.perform(get("/api/auth/me").header("Authorization", login("admin")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.role").value("ADMIN"));
+    }
+
+    @Test
+    void meRequiresActiveSessionAndRejectsLoggedOutAndSuspendedUsers() throws Exception {
+        mvc.perform(get("/api/auth/me")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/auth/me").header("Authorization", "Bearer invalid"))
+                .andExpect(status().isUnauthorized());
+        String token = register("customer");
+        mvc.perform(post("/api/auth/logout").header("Authorization", token)).andExpect(status().isOk());
+        mvc.perform(get("/api/auth/me").header("Authorization", token)).andExpect(status().isUnauthorized());
+        String activeToken = login("customer");
+        User user = users.findByUsername("customer").orElseThrow();
+        user.setStatus(UserStatus.SUSPENDED);
+        users.save(user);
+        mvc.perform(get("/api/auth/me").header("Authorization", activeToken)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void registrationLoginAndCartOperationsWorkWithoutExposingEntities() throws Exception {
         String token = register("customer");
         mvc.perform(get("/api/auth/token").header("Authorization", token)).andExpect(jsonPath("$.data.valid").value(true));
