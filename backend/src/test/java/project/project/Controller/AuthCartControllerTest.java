@@ -38,6 +38,7 @@ class AuthCartControllerTest {
     @Autowired SellerRepository sellers;
     @Autowired UserRepository users;
     @Autowired AuthService auth;
+    @Autowired project.project.Filter.JwtAuthenticationFilter authenticationFilter;
     @Autowired PasswordService passwords;
     @MockitoBean ProductService productService;
     MockMvc mvc;
@@ -45,7 +46,7 @@ class AuthCartControllerTest {
 
     @BeforeEach
     void setup() {
-        mvc = MockMvcBuilders.webAppContextSetup(context).alwaysExpect(result -> {
+        mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(authenticationFilter).alwaysExpect(result -> {
             String body = result.getResponse().getContentAsString();
             boolean expectedSuccess = result.getResponse().getStatus() < 400;
             assertEquals(expectedSuccess, JsonPath.<Boolean>read(body, "$.success"));
