@@ -10,7 +10,6 @@ import project.project.DTO.review.ReplyReviewRequest;
 import project.project.DTO.review.ReviewResponse;
 import project.project.DTO.review.UpdateReviewRequest;
 import project.project.Entity.review.Review;
-import project.project.Entity.review.ReviewReply;
 import project.project.Service.api.ReviewService;
 
 import java.util.List;
