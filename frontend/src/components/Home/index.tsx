@@ -12,7 +12,9 @@ const Home = () => {
   return (
     <main>
       <Categories />
-      <NewArrival />
+      <ProductContextProvider>
+        <NewArrival />
+      </ProductContextProvider>
     </main>
   );
 };

@@ -1,10 +1,19 @@
-import React from "react";
+import React, { useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ProductItem from "@/components/Common/ProductItem";
-import shopData from "@/components/Shop/shopData";
+import { useProductContext } from "@/app/context/ProductContext";
 
 const NewArrival = () => {
+  const [isPending, startTransition] = useTransition();
+  const { products, isLoading, error, dispatch } = useProductContext();
+
+  startTransition(async function () {
+      dispatch({type:"FETCH_START"})
+      
+
+  })
+
   return (
     <section className="overflow-hidden pt-15">
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
