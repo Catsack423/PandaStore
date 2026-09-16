@@ -1,3 +1,5 @@
+"use client"
+
 import React from "react";
 import Hero from "./Hero";
 import Categories from "./Categories";
@@ -7,13 +9,15 @@ import BestSeller from "./BestSeller";
 import CounDown from "./Countdown";
 import Testimonials from "./Testimonials";
 import Newsletter from "../Common/Newsletter";
+import { ProductContextProvider } from "@/app/context/ProductContext";
+import { Product } from "@/types/product";
 
-const Home = () => {
+const Home = ({initialProducts}:{initialProducts:Product[]}) => {
   return (
     <main>
       <Categories />
       <ProductContextProvider>
-        <NewArrival />
+        <NewArrival  initialProducts={initialProducts} />
       </ProductContextProvider>
     </main>
   );

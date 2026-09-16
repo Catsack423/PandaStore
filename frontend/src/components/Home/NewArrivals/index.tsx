@@ -1,18 +1,21 @@
-import React, { useTransition } from "react";
+import React, { useEffect, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ProductItem from "@/components/Common/ProductItem";
 import { useProductContext } from "@/app/context/ProductContext";
+import { getProducts } from "@/ServerAction/products";
+import { Product } from "@/types/product";
 
-const NewArrival = () => {
-  const [isPending, startTransition] = useTransition();
-  const { products, isLoading, error, dispatch } = useProductContext();
+const NewArrival = ({ initialProducts }: { initialProducts: Product[] }) => {
+  const { products, dispatch } = useProductContext();
 
-  startTransition(async function () {
-      dispatch({type:"FETCH_START"})
-      
+  useEffect(() => {
+    // นำข้อมูลที่ได้จาก Server ใส่เข้า Context กลาง
+    if (initialProducts.length > 0) {
+      dispatch({ type: "FETCH_SUCCESS", payload: initialProducts });
+    }
+  }, [initialProducts, dispatch]);
 
-  })
 
   return (
     <section className="overflow-hidden pt-15">
@@ -57,7 +60,7 @@ const NewArrival = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-7.5 gap-y-9">
           {/* <!-- New Arrivals item --> */}
-          {shopData.map((item, key) => (
+          {initialProducts.map((item, key) => (
             <ProductItem item={item} key={key} />
           ))}
         </div>

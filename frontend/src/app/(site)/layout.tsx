@@ -15,6 +15,7 @@ import PreviewSliderModal from "@/components/Common/PreviewSlider";
 
 import ScrollToTop from "@/components/Common/ScrollToTop";
 import PreLoader from "@/components/Common/PreLoader";
+import { ProductContextProvider } from "../context/ProductContext";
 
 export default function RootLayout({
   children,
@@ -38,9 +39,10 @@ export default function RootLayout({
               <CartModalProvider>
                 <ModalProvider>
                   <PreviewSliderProvider>
-                    <Header />
-                    {children}
-
+                    <ProductContextProvider>
+                      <Header />
+                      {children}
+                    </ProductContextProvider>
                     <QuickViewModal />
                     <CartSidebarModal />
                     <PreviewSliderModal />
