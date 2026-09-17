@@ -161,4 +161,40 @@ public class SubOrderControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("ยืนยันการรับสินค้าสำเร็จ"));
     }
+
+    @Test
+    @DisplayName("POST /api/sub-orders/{orderId}/cancel - ลูกค้ายกเลิกคำสั่งซื้อสำเร็จ")
+    void customerCancelOrder_Success() throws Exception {
+        Long orderId = 1L;
+        Long customerId = 10L;
+
+        String json = "{\"reason\":\"เปลี่ยนใจไม่ต้องการสินค้า\"}";
+
+        doNothing().when(subOrderService).customerCancelOrder(customerId, orderId, "เปลี่ยนใจไม่ต้องการสินค้า");
+
+        mockMvc.perform(post("/api/sub-orders/{orderId}/cancel", orderId)
+                        .param("customerId", String.valueOf(customerId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("ยกเลิกคำสั่งซื้อสำเร็จ"));
+    }
+
+    @Test
+    @DisplayName("POST /api/sub-orders/{orderId}/cancel - Validation Error เมื่อ reason ว่าง")
+    void customerCancelOrder_ValidationError_BlankReason() throws Exception {
+        Long orderId = 1L;
+        Long customerId = 10L;
+
+        String invalidJson = "{\"reason\":\"\"}";
+
+        mockMvc.perform(post("/api/sub-orders/{orderId}/cancel", orderId)
+                        .param("customerId", String.valueOf(customerId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.reason").exists());
+    }
 }

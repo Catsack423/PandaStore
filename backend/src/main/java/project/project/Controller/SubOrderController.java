@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import project.project.ApiResponse.ApiResponse;
+import project.project.DTO.order.CancelOrderRequest;
 import project.project.DTO.order.RejectOrderRequest;
 import project.project.DTO.order.SubOrderResponse;
 import project.project.Entity.order.Order;
@@ -72,5 +73,15 @@ public class SubOrderController {
 
         subOrderService.confirmOrderDelivered(customerId, orderId);
         return ResponseEntity.ok(ApiResponse.success("ยืนยันการรับสินค้าสำเร็จ", null));
+    }
+
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<ApiResponse<Void>> customerCancelOrder(
+            @PathVariable Long orderId,
+            @RequestParam Long customerId,
+            @Valid @RequestBody CancelOrderRequest request) {
+
+        subOrderService.customerCancelOrder(customerId, orderId, request.getReason());
+        return ResponseEntity.ok(ApiResponse.success("ยกเลิกคำสั่งซื้อสำเร็จ", null));
     }
 }
