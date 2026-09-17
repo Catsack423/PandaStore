@@ -239,6 +239,62 @@ public class SubOrderServiceImp implements SubOrderService {
         completeOrder(order);
     }
 
+    /**
+     * ลูกค้าขอยกเลิกคำสั่งซื้อ
+     * - ตรวจสอบความเป็นเจ้าของของ Customer
+     * - ตรวจสถานะ: ต้องเป็น WAITING_SELLER_CONFIRM หรือ PREPARING เท่านั้น (ยังไม่จัดส่ง)
+     * - บันทึกเหตุผลการยกเลิก
+     * - เปลี่ยนสถานะเป็น CANCELLED
+     * - คืนสต็อกสินค้า (restoreStock)
+     * - เรียก PaymentService คืนเงิน (processPartialRefund)
+     * - อัปเดตสถานะ OrderGroup PaymentStatus
+     * - แจ้งเตือนร้านค้า (NotificationService)
+     */
+    @Override
+    @Transactional
+    public void customerCancelOrder(Long customerId, Long orderId, String reason) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("ไม่พบคำสั่งซื้อ orderId: " + orderId));
+
+        Long orderCustomerId = order.getOrderGroup().getCustomer().getCustomerId();
+        if (!orderCustomerId.equals(customerId)) {
+            throw new RuntimeException("คำสั่งซื้อนี้ไม่ใช่ของลูกค้า customerId: " + customerId);
+        }
+
+        if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM &&
+            order.getOrderStatus() != OrderStatus.PREPARING) {
+            throw new RuntimeException(
+                    "ไม่สามารถยกเลิกคำสั่งซื้อได้เนื่องจากอยู่ในสถานะ: " + order.getOrderStatus()
+                            + " (สามารถยกเลิกได้เฉพาะ WAITING_SELLER_CONFIRM หรือ PREPARING เท่านั้น)");
+        }
+
+        order.setRejectionReason(reason);
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+
+        restoreStock(order);
+
+        try {
+            paymentService.processPartialRefund(
+                    orderId, order.getTotalAmount(),
+                    "ลูกค้ายกเลิกคำสั่งซื้อ: " + reason);
+        } catch (Exception e) {
+            // Log error
+        }
+
+        updateOrderGroupPaymentStatus(order.getOrderGroup());
+
+        try {
+            notificationService.sendNotification(
+                    order.getSeller().getUser().getUserId(),
+                    "คำสั่งซื้อถูกยกเลิกโดยลูกค้า",
+                    "คำสั่งซื้อ " + order.getSubOrderNumber() + " ถูกยกเลิกโดยลูกค้า เหตุผล: " + reason,
+                    project.project.Entity.notification.NotificationType.NEW_ORDER_FOR_SELLER);
+        } catch (Exception e) {
+            // Notification error does not block transaction
+        }
+    }
+
     // ==================== Private Helper Methods ====================
 
     /**

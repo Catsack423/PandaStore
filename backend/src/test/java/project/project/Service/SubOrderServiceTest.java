@@ -361,4 +361,104 @@ public class SubOrderServiceTest {
 
         verify(orderRepository, never()).save(order);
     }
+
+    @Test
+    @DisplayName("customerCancelOrder - สำเร็จ: ลูกค้ายกเลิกคำสั่งซื้อก่อนจัดส่ง คืนสต็อกและคืนเงิน")
+    void customerCancelOrder_Success() {
+        Long customerId = 50L;
+        Long orderId = 10L;
+
+        Customer customer = new Customer();
+        customer.setCustomerId(customerId);
+
+        OrderGroup group = new OrderGroup();
+        group.setOrderGroupId(100L);
+        group.setCustomer(customer);
+
+        Product product = new Product();
+        product.setStock(5);
+
+        OrderItem item = new OrderItem();
+        item.setProduct(product);
+        item.setQuantity(2);
+
+        Seller seller = new Seller();
+        seller.setSellerId(1L);
+        User sellerUser = new User();
+        sellerUser.setUserId(200L);
+        seller.setUser(sellerUser);
+
+        Order order = new Order();
+        order.setOrderId(orderId);
+        order.setSeller(seller);
+        order.setOrderStatus(OrderStatus.WAITING_SELLER_CONFIRM);
+        order.setTotalAmount(new java.math.BigDecimal("600.00"));
+        order.setOrderGroup(group);
+        order.setSubOrderNumber("ORD-002");
+        order.setOrderItems(List.of(item));
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(orderRepository.findByOrderGroup_OrderGroupId(100L)).thenReturn(List.of(order));
+
+        subOrderService.customerCancelOrder(customerId, orderId, "เปลี่ยนใจไม่ต้องการสินค้า");
+
+        assertEquals(OrderStatus.CANCELLED, order.getOrderStatus());
+        assertEquals("เปลี่ยนใจไม่ต้องการสินค้า", order.getRejectionReason());
+        assertEquals(7, product.getStock()); // 5 + 2 = 7
+        verify(productRepository, times(1)).save(product);
+        verify(paymentService, times(1)).processPartialRefund(eq(orderId), eq(new java.math.BigDecimal("600.00")), contains("ลูกค้ายกเลิก"));
+        assertEquals(OrderGroupPaymentStatus.REFUNDED, group.getPaymentStatus());
+    }
+
+    @Test
+    @DisplayName("customerCancelOrder - ล้มเหลวเมื่อสถานะเป็น SHIPPED แล้ว")
+    void customerCancelOrder_AlreadyShipped_ThrowsException() {
+        Long customerId = 50L;
+        Long orderId = 10L;
+
+        Customer customer = new Customer();
+        customer.setCustomerId(customerId);
+
+        OrderGroup group = new OrderGroup();
+        group.setCustomer(customer);
+
+        Order order = new Order();
+        order.setOrderId(orderId);
+        order.setOrderStatus(OrderStatus.SHIPPED);
+        order.setOrderGroup(group);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+                subOrderService.customerCancelOrder(customerId, orderId, "ขอยกเลิก")
+        );
+
+        assertTrue(ex.getMessage().contains("ไม่สามารถยกเลิกคำสั่งซื้อได้"));
+    }
+
+    @Test
+    @DisplayName("customerCancelOrder - ล้มเหลวเมื่อลูกค้าไม่ใช่เจ้าของ Order")
+    void customerCancelOrder_NotOwner_ThrowsException() {
+        Long customerId = 50L;
+        Long otherCustomerId = 99L;
+        Long orderId = 10L;
+
+        Customer customer = new Customer();
+        customer.setCustomerId(otherCustomerId);
+
+        OrderGroup group = new OrderGroup();
+        group.setCustomer(customer);
+
+        Order order = new Order();
+        order.setOrderId(orderId);
+        order.setOrderGroup(group);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+                subOrderService.customerCancelOrder(customerId, orderId, "ขอยกเลิก")
+        );
+
+        assertTrue(ex.getMessage().contains("คำสั่งซื้อนี้ไม่ใช่ของลูกค้า"));
+    }
 }

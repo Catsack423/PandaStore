@@ -11,4 +11,5 @@ public interface SubOrderService {
     void sellerRejectOrder(Long sellerId, Long orderId, String reason);
     void confirmOrderDelivered(Long customerId, Long orderId);
     void autoConfirmDelivered(Long orderId);
+    void customerCancelOrder(Long customerId, Long orderId, String reason);
 }
