@@ -1,5 +1,6 @@
 import React from "react";
 import ShopWithoutSidebar from "@/components/ShopWithoutSidebar";
+import { FilterSidebarContextProvider } from "@/app/context/FilterSidebarContext";
 
 import { Metadata } from "next";
 export const metadata: Metadata = {
@@ -11,7 +12,9 @@ export const metadata: Metadata = {
 const ShopWithoutSidebarPage = () => {
   return (
     <main>
-      <ShopWithoutSidebar />
+      <FilterSidebarContextProvider>
+        <ShopWithoutSidebar />
+      </FilterSidebarContextProvider>
     </main>
   );
 };

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Breadcrumb from "../Common/Breadcrumb";
 import CustomSelect from "./CustomSelect";
 import CategoryDropdown from "./CategoryDropdown";
@@ -7,82 +7,134 @@ import GenderDropdown from "./GenderDropdown";
 import SizeDropdown from "./SizeDropdown";
 import ColorsDropdwon from "./ColorsDropdwon";
 import PriceDropdown from "./PriceDropdown";
-import shopData from "../Shop/shopData";
+
 import SingleGridItem from "../Shop/SingleGridItem";
 import SingleListItem from "../Shop/SingleListItem";
+import { Product } from "@/types/product";
+import { Category } from "@/types/category";
+import { useProductContext } from "@/app/context/ProductContext";
+import { useFilterSidebarContext } from "@/app/context/FilterSidebarContext";
 
-const ShopWithSidebar = () => {
+const OPTIONS = [
+  { label: "Latest Products", value: "0" },
+  { label: "Best Selling", value: "1" },
+  { label: "Old Products", value: "2" },
+];
+
+const CATEGORIES: Category[] = [
+  {
+    name: "Desktop",
+    products: 10,
+    isRefined: true,
+  },
+  {
+    name: "Laptop",
+    products: 12,
+    isRefined: false,
+  },
+  {
+    name: "Monitor",
+    products: 30,
+    isRefined: false,
+  },
+  {
+    name: "UPS",
+    products: 23,
+    isRefined: false,
+  },
+  {
+    name: "Phone",
+    products: 10,
+    isRefined: false,
+  },
+  {
+    name: "Watch",
+    products: 13,
+    isRefined: false,
+  },
+];
+
+type param = {
+  initData: Product[];
+};
+
+const ShopWithSidebar = ({ initData }: param) => {
   const [productStyle, setProductStyle] = useState("grid");
   const [productSidebar, setProductSidebar] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
 
-  const handleStickyMenu = () => {
-    if (window.scrollY >= 80) {
-      setStickyMenu(true);
-    } else {
-      setStickyMenu(false);
-    }
-  };
+  const { products, dispatch } = useProductContext();
+  const {
+    category: selectedCategories,
+    priceStart,
+    priceEnd,
+    dispatch: dispatchFilter,
+  } = useFilterSidebarContext();
 
-  const options = [
-    { label: "Latest Products", value: "0" },
-    { label: "Best Selling", value: "1" },
-    { label: "Old Products", value: "2" },
-  ];
+  const filteredProducts = useMemo(() => {
+    const selectedCategoryNames = Array.from(selectedCategories).map((c) =>
+      (c.name || c.title || "").toLowerCase(),
+    );
 
-  const categories = [
-    {
-      name: "Desktop",
-      products: 10,
-      isRefined: true,
-    },
-    {
-      name: "Laptop",
-      products: 12,
-      isRefined: false,
-    },
-    {
-      name: "Monitor",
-      products: 30,
-      isRefined: false,
-    },
-    {
-      name: "UPS",
-      products: 23,
-      isRefined: false,
-    },
-    {
-      name: "Phone",
-      products: 10,
-      isRefined: false,
-    },
-    {
-      name: "Watch",
-      products: 13,
-      isRefined: false,
-    },
-  ];
+    return products.filter((item) => {
+      const itemPrice = item.discountedPrice ?? item.price;
+      const matchesPrice = itemPrice >= priceStart && itemPrice <= priceEnd;
 
-  
+      if (!matchesPrice) return false;
+      if (selectedCategories.size === 0) return true;
+
+      return selectedCategoryNames.some((catName) => {
+        if (!catName) return false;
+        const titleLower = item.title.toLowerCase();
+        if (catName === "desktop")
+          return (
+            titleLower.includes("imac") ||
+            titleLower.includes("desktop") ||
+            titleLower.includes("pc")
+          );
+        if (catName === "phone")
+          return titleLower.includes("iphone") || titleLower.includes("phone");
+        return titleLower.includes(catName);
+      });
+    });
+  }, [products, priceStart, priceEnd, selectedCategories]);
 
   useEffect(() => {
-    window.addEventListener("scroll", handleStickyMenu);
+    if (initData && initData.length > 0 && products.length === 0) {
+      dispatch({ type: "FETCH_SUCCESS", payload: initData });
+    }
+  }, [initData, products.length, dispatch]);
 
-    // closing sidebar while clicking outside
-    function handleClickOutside(event) {
-      if (!event.target.closest(".sidebar-content")) {
+  useEffect(() => {
+    const handleStickyMenu = () => {
+      if (window.scrollY >= 80) {
+        setStickyMenu(true);
+      } else {
+        setStickyMenu(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleStickyMenu);
+    return () => {
+      window.removeEventListener("scroll", handleStickyMenu);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!productSidebar) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && !target.closest(".sidebar-content")) {
         setProductSidebar(false);
       }
-    }
+    };
 
-    if (productSidebar) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  });
+  }, [productSidebar]);
 
   return (
     <>
@@ -139,14 +191,18 @@ const ShopWithSidebar = () => {
                   <div className="bg-white shadow-1 rounded-lg py-4 px-5">
                     <div className="flex items-center justify-between">
                       <p>Filters:</p>
-                      <button className="text-blue">Clean All</button>
+                      <button
+                        type="button"
+                        onClick={() => dispatchFilter({ type: "CLEAN ALL" })}
+                        className="text-blue"
+                      >
+                        Clean All
+                      </button>
                     </div>
                   </div>
 
                   {/* <!-- category box --> */}
-                  <CategoryDropdown categories={categories} />
-
-                 
+                  <CategoryDropdown categories={CATEGORIES} />
 
                   {/* // <!-- size box --> */}
                   {/* <SizeDropdown /> */}
@@ -167,10 +223,13 @@ const ShopWithSidebar = () => {
                 <div className="flex items-center justify-between">
                   {/* <!-- top bar left --> */}
                   <div className="flex flex-wrap items-center gap-4">
-                    <CustomSelect options={options} />
+                    <CustomSelect options={OPTIONS} />
 
                     <p>
-                      Showing <span className="text-dark">9 of 50</span>{" "}
+                      Showing{" "}
+                      <span className="text-dark">
+                        {filteredProducts.length} of {products.length}
+                      </span>{" "}
                       Products
                     </p>
                   </div>
@@ -264,12 +323,12 @@ const ShopWithSidebar = () => {
                     : "flex flex-col gap-7.5"
                 }`}
               >
-                {shopData.map((item, key) =>
+                {filteredProducts.map((item,index) =>
                   productStyle === "grid" ? (
-                    <SingleGridItem item={item} key={key} />
+                    <SingleGridItem item={item} key={`${item.id}-${index}`} />
                   ) : (
-                    <SingleListItem item={item} key={key} />
-                  )
+                    <SingleListItem item={item} key={`${item.id}-${index}`} />
+                  ),
                 )}
               </div>
               {/* <!-- Products Grid Tab Content End --> */}

@@ -1,9 +1,49 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Breadcrumb from "../Common/Breadcrumb";
 import Link from "next/link";
 import Image from "next/image";
+import { Skeleton } from "../ui/skeleton";
+import BreadcrumbSkeleton from "../Common/BreadcrumbSkeleton";
+
+
 
 const Error = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    // จำลองโหลด 1 วินาที แล้วปิด Loading
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+  // 1. ถ้ากำลัง Loading ให้ return หน้าตา Skeleton ออกไป
+  if (isLoading) {
+    return (
+      <>
+        <BreadcrumbSkeleton />
+        <section className="overflow-hidden py-20 bg-gray-2">
+          <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
+            <div className="bg-white rounded-xl shadow-1 px-4 py-10 sm:py-15 lg:py-20 xl:py-25">
+              <div className="flex flex-col items-center text-center">
+                {/* Skeleton ภาพ 404 */}
+                <Skeleton className="mb-8 w-72 h-48 rounded-lg" />
+                {/* Skeleton หัวข้อ */}
+                <Skeleton className="h-8 w-80 max-w-full mb-3" />
+                {/* Skeleton คำอธิบาย */}
+                <Skeleton className="h-4 w-96 max-w-full mb-2" />
+                <Skeleton className="h-4 w-72 max-w-full mb-7.5" />
+                {/* Skeleton ปุ่ม Back to Home */}
+                <Skeleton className="h-12 w-44 rounded-md" />
+              </div>
+            </div>
+          </div>
+        </section>
+      </>
+    );
+  }
+
   return (
     <>
       <Breadcrumb title={"Error"} pages={["error"]} />

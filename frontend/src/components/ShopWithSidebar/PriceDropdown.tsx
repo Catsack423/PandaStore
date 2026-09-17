@@ -1,14 +1,73 @@
-import { useState } from 'react';
-import RangeSlider from 'react-range-slider-input';
-import 'react-range-slider-input/dist/style.css';
+"use client";
+
+import { useState, useEffect, useRef, useCallback, memo } from "react";
+import RangeSlider from "react-range-slider-input";
+import "react-range-slider-input/dist/style.css";
+import { useFilterSidebarContext } from "@/app/context/FilterSidebarContext";
 
 const PriceDropdown = () => {
   const [toggleDropdown, setToggleDropdown] = useState(true);
+  const { priceStart, priceEnd, dispatch } = useFilterSidebarContext();
 
-  const [selectedPrice, setSelectedPrice] = useState({
-    from: 0,
-    to: 10000,
-  });
+  // Local state for high-frequency slider dragging
+  const [localRange, setLocalRange] = useState<[number, number]>([
+    priceStart,
+    priceEnd,
+  ]);
+
+  const rangeRef = useRef<[number, number]>(localRange);
+  rangeRef.current = localRange;
+
+  // Sync local state when context values change externally (e.g., Clean All)
+  useEffect(() => {
+    setLocalRange([priceStart, priceEnd]);
+  }, [priceStart, priceEnd]);
+
+  const commitToContext = useCallback(
+    (range: [number, number]) => {
+      if (range[0] !== priceStart || range[1] !== priceEnd) {
+        dispatch({
+          type: "ADD RANGE",
+          payload: {
+            start: range[0],
+            end: range[1],
+          },
+        });
+      }
+    },
+    [dispatch, priceStart, priceEnd],
+  );
+
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleInput = (e: [number, number]) => {
+    const nextStart = Math.floor(e[0]);
+    const nextEnd = Math.ceil(e[1]);
+    const nextRange: [number, number] = [nextStart, nextEnd];
+    setLocalRange(nextRange);
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      commitToContext(nextRange);
+    }, 250);
+  };
+
+  const handleDragEnd = () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    commitToContext(rangeRef.current);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="bg-white shadow-1 rounded-lg">
@@ -18,11 +77,12 @@ const PriceDropdown = () => {
       >
         <p className="text-dark">Price</p>
         <button
+          type="button"
           onClick={() => setToggleDropdown(!toggleDropdown)}
           id="price-dropdown-btn"
           aria-label="button for price dropdown"
           className={`text-dark ease-out duration-200 ${
-            toggleDropdown && 'rotate-180'
+            toggleDropdown && "rotate-180"
           }`}
         >
           <svg
@@ -44,19 +104,19 @@ const PriceDropdown = () => {
       </div>
 
       {/* // <!-- dropdown menu --> */}
-      <div className={`p-6 ${toggleDropdown ? 'block' : 'hidden'}`}>
+      <div className={`p-6 ${toggleDropdown ? "block" : "hidden"}`}>
         <div id="pricingOne">
           <div className="price-range">
             <RangeSlider
               id="range-slider-gradient"
               className="margin-lg"
-              step={'any'}
-              onInput={(e) =>
-                setSelectedPrice({
-                  from: Math.floor(e[0]),
-                  to: Math.ceil(e[1]),
-                })
-              }
+              step={"any"}
+              min={0}
+              max={10000}
+              value={localRange}
+              onInput={handleInput}
+              onThumbDragEnd={handleDragEnd}
+              onRangeDragEnd={handleDragEnd}
             />
 
             <div className="price-amount flex items-center justify-between pt-4">
@@ -65,7 +125,7 @@ const PriceDropdown = () => {
                   $
                 </span>
                 <span id="minAmount" className="block px-3 py-1.5">
-                  {selectedPrice.from}
+                  {localRange[0]}
                 </span>
               </div>
 
@@ -74,7 +134,7 @@ const PriceDropdown = () => {
                   $
                 </span>
                 <span id="maxAmount" className="block px-3 py-1.5">
-                  {selectedPrice.to}
+                  {localRange[1]}
                 </span>
               </div>
             </div>
@@ -85,4 +145,4 @@ const PriceDropdown = () => {
   );
 };
 
-export default PriceDropdown;
+export default memo(PriceDropdown);

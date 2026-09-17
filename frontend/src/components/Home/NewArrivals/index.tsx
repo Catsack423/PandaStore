@@ -16,6 +16,7 @@ const NewArrival = ({ initialProducts }: { initialProducts: Product[] }) => {
     }
   }, [initialProducts, dispatch]);
 
+ 
 
   return (
     <section className="overflow-hidden pt-15">
@@ -60,7 +61,7 @@ const NewArrival = ({ initialProducts }: { initialProducts: Product[] }) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-7.5 gap-y-9">
           {/* <!-- New Arrivals item --> */}
-          {initialProducts.map((item, key) => (
+          {products.slice(0,5).map((item, key) => (
             <ProductItem item={item} key={key} />
           ))}
         </div>

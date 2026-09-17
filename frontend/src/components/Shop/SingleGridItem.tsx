@@ -26,7 +26,7 @@ const SingleGridItem = ({ item }: { item: Product }) => {
       addItemToCart({
         ...item,
         quantity: 1,
-      })
+      }),
     );
   };
 
@@ -36,7 +36,7 @@ const SingleGridItem = ({ item }: { item: Product }) => {
         ...item,
         status: "available",
         quantity: 1,
-      })
+      }),
     );
   };
 
@@ -159,4 +159,4 @@ const SingleGridItem = ({ item }: { item: Product }) => {
   );
 };
 
-export default SingleGridItem;
+export default React.memo(SingleGridItem);

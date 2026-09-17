@@ -1,24 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
+import { Category } from "@/types/category";
+import { useFilterSidebarContext } from "@/app/context/FilterSidebarContext";
 
-const CategoryItem = ({ category }) => {
-  const [selected, setSelected] = useState(false);
+const CategoryItem = memo(({ category }: { category: Category }) => {
+  const { category: selectedCategories, dispatch } = useFilterSidebarContext();
+
+  const isSelected = Array.from(selectedCategories).some(
+    (c) =>
+      c === category ||
+      (c.id !== undefined &&
+        category.id !== undefined &&
+        c.id === category.id) ||
+      (Boolean(c.name) && Boolean(category.name) && c.name === category.name) ||
+      (Boolean(c.title) &&
+        Boolean(category.title) &&
+        c.title === category.title) ||
+      (Boolean(c.name) &&
+        Boolean(category.title) &&
+        c.name === category.title) ||
+      (Boolean(c.title) && Boolean(category.name) && c.title === category.name),
+  );
+
+  const handleToggle = () => {
+    if (isSelected) {
+      dispatch({ type: "REMOVE CATEGORY", payload: category });
+    } else {
+      dispatch({ type: "ADD CATEGORY", payload: category });
+    }
+  };
+
   return (
     <button
+      type="button"
       className={`${
-        selected && "text-blue"
+        isSelected && "text-blue"
       } group flex items-center justify-between ease-out duration-200 hover:text-blue `}
-      onClick={() => setSelected(!selected)}
+      onClick={handleToggle}
     >
       <div className="flex items-center gap-2">
         <div
           className={`cursor-pointer flex items-center justify-center rounded w-4 h-4 border ${
-            selected ? "border-blue bg-blue" : "bg-white border-gray-3"
+            isSelected ? "border-blue bg-blue" : "bg-white border-gray-3"
           }`}
         >
           <svg
-            className={selected ? "block" : "hidden"}
+            className={isSelected ? "block" : "hidden"}
             width="10"
             height="10"
             viewBox="0 0 10 10"
@@ -35,21 +63,23 @@ const CategoryItem = ({ category }) => {
           </svg>
         </div>
 
-        <span>{category.name}</span>
+        <span>{category.name || category.title}</span>
       </div>
 
-      <span
-        className={`${
-          selected ? "text-white bg-blue" : "bg-gray-2"
-        } inline-flex rounded-[30px] text-custom-xs px-2 ease-out duration-200 group-hover:text-white group-hover:bg-blue`}
-      >
-        {category.products}
-      </span>
+      {category.products !== undefined && (
+        <span
+          className={`${
+            isSelected ? "text-white bg-blue" : "bg-gray-2"
+          } inline-flex rounded-[30px] text-custom-xs px-2 ease-out duration-200 group-hover:text-white group-hover:bg-blue`}
+        >
+          {category.products}
+        </span>
+      )}
     </button>
   );
-};
+});
 
-const CategoryDropdown = ({ categories }) => {
+const CategoryDropdown = ({ categories }: { categories: Category[] }) => {
   const [toggleDropdown, setToggleDropdown] = useState(true);
 
   return (
@@ -65,6 +95,7 @@ const CategoryDropdown = ({ categories }) => {
       >
         <p className="text-dark">Category</p>
         <button
+          type="button"
           aria-label="button for category dropdown"
           className={`text-dark ease-out duration-200 ${
             toggleDropdown && "rotate-180"
@@ -96,11 +127,14 @@ const CategoryDropdown = ({ categories }) => {
         }`}
       >
         {categories.map((category, key) => (
-          <CategoryItem key={key} category={category} />
+          <CategoryItem
+            key={category.id ?? category.name ?? category.title ?? key}
+            category={category}
+          />
         ))}
       </div>
     </div>
   );
 };
 
-export default CategoryDropdown;
+export default memo(CategoryDropdown);

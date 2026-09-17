@@ -26,7 +26,7 @@ const SingleListItem = ({ item }: { item: Product }) => {
       addItemToCart({
         ...item,
         quantity: 1,
-      })
+      }),
     );
   };
 
@@ -36,7 +36,7 @@ const SingleListItem = ({ item }: { item: Product }) => {
         ...item,
         status: "available",
         quantity: 1,
-      })
+      }),
     );
   };
 
@@ -163,4 +163,4 @@ const SingleListItem = ({ item }: { item: Product }) => {
   );
 };
 
-export default SingleListItem;
+export default React.memo(SingleListItem);
