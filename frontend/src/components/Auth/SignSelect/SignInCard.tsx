@@ -19,7 +19,26 @@ export type SignInCardProps = {
   icon?: React.ReactNode;
   features?: string[];
   isPopular?: boolean;
+  hoverbg?: String;
 };
+
+function checkGreenIcon() {
+  return (
+    <svg
+      className="w-4 h-4 text-green shrink-0"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 13l4 4L19 7"
+      />
+    </svg>
+  );
+}
 
 function SignInCard({
   title,
@@ -30,19 +49,12 @@ function SignInCard({
   icon,
   features,
   isPopular = false,
+  hoverbg = "",
 }: SignInCardProps) {
   return (
     <Card
-      className={`w-full max-w-[400px] lg:max-w-[600px] py-4 flex flex-col justify-between transition-all duration-300 hover:shadow-2 hover:-translate-y-1 relative ${
-        isPopular ? "border-blue ring-2 ring-blue/20" : "border-gray-3"
-      }`}
+      className={`w-full max-w-[400px] lg:max-w-[600px] py-4 flex flex-col justify-between transition-all duration-300  rounded-xl bg-white shadow-1 p-4 sm:p-7.5 xl:p-11`}
     >
-      {isPopular && (
-        <span className="absolute -top-3 right-6 bg-blue text-white text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
-          แนะนำ
-        </span>
-      )}
-
       <div>
         <CardHeader className="pb-4">
           <div className="flex items-center gap-3.5 mb-2">
@@ -73,19 +85,7 @@ function SignInCard({
                   key={idx}
                   className="flex items-center text-sm text-dark-3 gap-2.5"
                 >
-                  <svg
-                    className="w-4 h-4 text-green shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
+                  {checkGreenIcon()}
                   <span>{feature}</span>
                 </li>
               ))}
@@ -98,7 +98,7 @@ function SignInCard({
         <Link href={href} className="w-full">
           <Button
             variant={isPopular ? "default" : "outline"}
-            className="w-full h-11 text-base font-medium rounded-lg"
+            className={`w-full h-11 text-base font-medium rounded-lg ${hoverbg}`}
           >
             {buttonText}
           </Button>

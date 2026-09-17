@@ -101,34 +101,37 @@ const CustomerSignup = () => {
     setErrors({});
 
     try {
-      const payload = {
-        username: formData.username.trim(),
-        fullName: formData.fullName.trim(),
-        email: formData.email.trim(),
-        phoneNumber: formData.phoneNumber.replace(/[-\s]/g, ""),
-        password: formData.password,
-      };
+      // const payload = {
+      //   username: formData.username.trim(),
+      //   fullName: formData.fullName.trim(),
+      //   email: formData.email.trim(),
+      //   phoneNumber: formData.phoneNumber.replace(/[-\s]/g, ""),
+      //   password: formData.password,
+      // };
 
-      const res = await fetch("/api/customers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      // const res = await fetch("/api/customers", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify(payload),
+      // });
+      //  setSuccess(true);
+      //   setTimeout(() => {
+      //     router.push("/signin");
+      //   }, 2000);
+      // const data = await res.json().catch(() => null);
 
-      const data = await res.json().catch(() => null);
-
-      if (res.ok) {
-        setSuccess(true);
-        setTimeout(() => {
-          router.push("/signin");
-        }, 2000);
-      } else {
-        setErrors({
-          general:
-            data?.message ||
-            "เกิดข้อผิดพลาดในการสมัครสมาชิก กรุณาลองใหม่อีกครั้ง",
-        });
-      }
+      // if (res.ok) {
+      //   setSuccess(true);
+      //   setTimeout(() => {
+      //     router.push("/signin");
+      //   }, 2000);
+      // } else {
+      //   setErrors({
+      //     general:
+      //       data?.message ||
+      //       "เกิดข้อผิดพลาดในการสมัครสมาชิก กรุณาลองใหม่อีกครั้ง",
+      //   });
+      // }
     } catch (err: any) {
       console.error("Signup error:", err);
       setErrors({
@@ -144,7 +147,7 @@ const CustomerSignup = () => {
       <Breadcrumb title={"Customer Signup"} pages={["Signup", "Customer"]} />
       <section className="overflow-hidden py-16 lg:py-20 bg-gray-2">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
-          <Card className="max-w-[580px] w-full mx-auto bg-white shadow-1 border-gray-3">
+          <Card className="max-w-[680px] lg:max-w-[780px] w-full mx-auto bg-white shadow-1 border-gray-3">
             <CardHeader className="text-center pb-6">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue/10 text-blue mx-auto mb-3">
                 <svg
@@ -169,7 +172,7 @@ const CustomerSignup = () => {
               </CardDescription>
             </CardHeader>
 
-            <CardContent>
+            <CardContent className="pt-4 lg:max-w-[500px] lg:justify-center lg:flex lg:mx-auto w-full">
               {success ? (
                 <div className="text-center py-8">
                   <div className="w-16 h-16 bg-green/10 text-green rounded-full flex items-center justify-center mx-auto mb-4">

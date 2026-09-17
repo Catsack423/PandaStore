@@ -19,14 +19,7 @@ export const Stage2Shop: React.FC<Stage2ShopProps> = ({
 }) => {
   return (
     <div className="space-y-4">
-      <div className="border-b border-gray-3 pb-2.5 mb-4">
-        <h4 className="font-semibold text-base text-dark">
-          Stage 2: ข้อมูลร้านค้า (Shop Information)
-        </h4>
-        <p className="text-xs text-body">
-          ข้อมูลร้านค้าที่จะแสดงให้ลูกค้าเห็นบนแพลตฟอร์ม
-        </p>
-      </div>
+      
 
       {/* Shop Name */}
       <div className="space-y-1.5">

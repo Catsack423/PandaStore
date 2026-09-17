@@ -19,6 +19,7 @@ import { StageIndicator } from "./StageIndicator";
 import { Stage1Account } from "./Stage1Account";
 import { Stage2Shop } from "./Stage2Shop";
 import { Stage3IdentityBank } from "./Stage3IdentityBank";
+import { Spinner } from "@/components/ui/spinner";
 
 const initialFormData: SellerFormData = {
   // Stage 1
@@ -165,9 +166,13 @@ const SellerSignup = () => {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
     if (currentStage === 1) {
       if (validateStage1()) {
+        setErrors({});
         if (!formData.shopEmail) {
           setFormData((prev) => ({ ...prev, shopEmail: prev.email }));
         }
@@ -176,20 +181,25 @@ const SellerSignup = () => {
       }
     } else if (currentStage === 2) {
       if (validateStage2()) {
+        setErrors({});
         setCurrentStage(3);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     }
   };
 
-  const handlePrev = () => {
+  const handlePrev = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     setErrors({});
     setCurrentStage((prev) => Math.max(prev - 1, 1));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
     if (!validateStage3()) return;
 
     setLoading(true);
@@ -240,6 +250,17 @@ const SellerSignup = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (currentStage < 3) {
+        handleNext();
+      } else {
+        handleSubmit();
+      }
     }
   };
 
@@ -309,7 +330,16 @@ const SellerSignup = () => {
                   </p>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4.5 w-full">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (currentStage === 3) {
+                      handleSubmit(e);
+                    }
+                  }}
+                  onKeyDown={handleFormKeyDown}
+                  className="space-y-4.5 w-full"
+                >
                   {errors.general && (
                     <div className="p-3.5 rounded-lg bg-red-light-6 border border-red-light-3 text-red text-sm flex items-center gap-2">
                       <svg
@@ -358,6 +388,7 @@ const SellerSignup = () => {
                   <div className="flex items-center justify-between gap-3 pt-6 border-t border-gray-3 mt-6">
                     {currentStage > 1 ? (
                       <Button
+                        key="btn-prev"
                         type="button"
                         variant="outline"
                         onClick={handlePrev}
@@ -371,6 +402,7 @@ const SellerSignup = () => {
 
                     {currentStage < 3 ? (
                       <Button
+                        key="btn-next"
                         type="button"
                         onClick={handleNext}
                         className="h-11 px-7 text-sm font-medium bg-dark text-white hover:bg-blue ml-auto"
@@ -379,12 +411,18 @@ const SellerSignup = () => {
                       </Button>
                     ) : (
                       <Button
-                        type="submit"
+                        key="btn-submit"
+                        type="button"
                         disabled={loading}
+                        onClick={handleSubmit}
                         className="h-11 px-7 text-sm font-medium bg-dark text-white hover:bg-blue ml-auto"
                       >
                         {loading
-                          ? "กำลังบันทึกข้อมูล..."
+                          ? (<>
+                          <Spinner data-icon="inline-start" className="size-3" /> กำลังนำสมัคสามาชิก
+                          "กำลังบันทึกข้อมูล..."
+                          </>
+                        )
                           : "ยืนยันการเปิดร้านค้า ✔"}
                       </Button>
                     )}

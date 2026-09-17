@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomerFormData, FormErrors } from "./types";
+import { Spinner } from "@/components/ui/spinner";
 
 interface CustomerFormProps {
   formData: CustomerFormData;
@@ -115,7 +116,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       </div>
 
       {/* Password & Confirm Password */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-rows-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="password" className="text-dark font-medium">
             รหัสผ่าน <span className="text-red">*</span>
@@ -160,7 +161,14 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         disabled={loading}
         className="w-full h-11 text-base font-medium rounded-lg bg-dark text-white hover:bg-blue mt-6 transition-all duration-200"
       >
-        {loading ? "กำลังสร้างบัญชี..." : "สมัครสมาชิก"}
+        {loading ? (
+          <>
+            
+            <Spinner data-icon="inline-start" className="size-3" /> กำลังนำสมัคสามาชิก
+          </>
+        ) : (
+          "สมัครสมาชิก"
+        )}
       </Button>
     </form>
   );

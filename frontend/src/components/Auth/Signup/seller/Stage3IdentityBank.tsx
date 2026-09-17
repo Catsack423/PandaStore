@@ -16,15 +16,6 @@ export const Stage3IdentityBank: React.FC<Stage3IdentityBankProps> = ({
 }) => {
   return (
     <div className="space-y-4">
-      <div className="border-b border-gray-3 pb-2.5 mb-4">
-        <h4 className="font-semibold text-base text-dark">
-          Stage 3: ข้อมูลยืนยันตัวตนและการเงิน (Identity & Bank Account)
-        </h4>
-        <p className="text-xs text-body">
-          ตามข้อกำหนด UC3 สำหรับตรวจสอบและโอนเงินรายได้ (Payout)
-        </p>
-      </div>
-
       {/* First Name & Last Name */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">

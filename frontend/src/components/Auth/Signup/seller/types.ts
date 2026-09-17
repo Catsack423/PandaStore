@@ -32,7 +32,7 @@ export interface StageInfo {
 }
 
 export const STAGES: StageInfo[] = [
-  { id: 1, title: "บัญชีผู้ใช้", subtitle: "Account Info" },
-  { id: 2, title: "ข้อมูลร้านค้า", subtitle: "Shop Info" },
-  { id: 3, title: "ยืนยันตัวตนและการเงิน", subtitle: "Identity & Bank" },
+  { id: 1, title: "Account Info", subtitle: "Account Info" },
+  { id: 2, title: "Shop Info", subtitle: "Shop Info" },
+  { id: 3, title: "Identity & Bank", subtitle: "Identity & Bank" },
 ];
