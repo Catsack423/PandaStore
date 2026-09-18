@@ -1,21 +1,8 @@
 package project.project.Repository;
 
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import project.project.Entity.user.Customer;
+import project.project.Entity.user.Address;
 
-import java.util.Optional;
+public interface AddressRepository extends JpaRepository<Address, Long> {
 
-public interface CustomerRepository extends JpaRepository<Customer, Long> {
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("""
-            select c from Customer c
-            where c.customerId = :customerId
-            """)
-    Optional<Customer> findByIdForUpdate(
-            @Param("customerId") Long customerId);
 }
