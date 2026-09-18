@@ -11,24 +11,26 @@ import project.project.Entity.order.OrderGroup;
 import java.util.Optional;
 
 public interface OrderGroupRepository
-        extends JpaRepository<OrderGroup, Long> {
+                extends JpaRepository<OrderGroup, Long> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("""
-            select g from OrderGroup g
-            where g.orderGroupId = :id
-            """)
-    Optional<OrderGroup> findByIdForUpdate(@Param("id") Long id);
+        @Lock(LockModeType.PESSIMISTIC_WRITE)
+        @Query("""
+                        select g from OrderGroup g
+                        where g.orderGroupId = :id
+                        """)
+        Optional<OrderGroup> findByIdForUpdate(@Param("id") Long id);
 
-    @EntityGraph(attributePaths = {
-            "customer.user",
-            "shippingAddress",
-            "payment",
-            "subOrders.seller.user"
-    })
-    @Query("""
-            select g from OrderGroup g
-            where g.orderGroupId = :id
-            """)
-    Optional<OrderGroup> findDetailsById(@Param("id") Long id);
+        @EntityGraph(attributePaths = {
+                        "customer.user",
+                        "shippingAddress",
+                        "payment",
+                        "subOrders.seller.user"
+        })
+        @Query("""
+                        select g from OrderGroup g
+                        where g.orderGroupId = :id
+                        """)
+        Optional<OrderGroup> findDetailsById(@Param("id") Long id);
+
+        boolean existsByShippingAddress_AddressId(Long addressId);
 }
