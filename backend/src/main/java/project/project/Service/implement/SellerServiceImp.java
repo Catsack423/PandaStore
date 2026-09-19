@@ -34,9 +34,9 @@ public class SellerServiceImp implements SellerService {
     private final SellerBankAccountRepository sellerBankAccountRepository;
 
     public SellerServiceImp(UserRepository userRepository,
-            SellerRepository sellerRepository,
-            SellerApplicationService sellerApplicationService,
-            SellerBankAccountRepository sellerBankAccountRepository) {
+                            SellerRepository sellerRepository,
+                            SellerApplicationService sellerApplicationService,
+                            SellerBankAccountRepository sellerBankAccountRepository) {
         this.userRepository = userRepository;
         this.sellerRepository = sellerRepository;
         this.sellerApplicationService = sellerApplicationService;
@@ -44,7 +44,7 @@ public class SellerServiceImp implements SellerService {
     }
 
     @Override
-    public long createSeller(CreateSellerRequest request) {
+    public Seller createSeller(CreateSellerRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new DuplicateUserException("Username '" + request.getUsername() + "' ถูกใช้ไปแล้ว");
         }
@@ -84,27 +84,14 @@ public class SellerServiceImp implements SellerService {
         Seller savedSeller;
         try {
             savedSeller = sellerRepository.save(seller);
+            return savedSeller;
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateUserException("ชื่อร้านค้า '" + request.getShopName() + "' ถูกใช้ไปแล้ว");
         } catch (DataAccessException e) {
             throw new UserCreationException("บันทึกข้อมูล Seller ไม่สำเร็จ", e);
         }
 
-        try {
-            sellerApplicationService.submitApplication(savedUser.getUserId(), request.toSellerApplicationRequest());
-
-            SellerBankAccount bankAccount = new SellerBankAccount();
-            bankAccount.setSeller(savedSeller);
-            bankAccount.setBankName(request.getBankName());
-            bankAccount.setAccountNumber(request.getBankAccountNumber());
-            bankAccount.setAccountName(request.getBankAccountName());
-            bankAccount.setProofImageUrl(request.getProofImageUrl() != null ? request.getProofImageUrl() : "");
-            sellerBankAccountRepository.save(bankAccount);
-
-            return savedSeller.getSellerId();
-        } catch (DataAccessException e) {
-            throw new UserCreationException("บันทึกข้อมูลใบสมัครหรือบัญชีธนาคารร้านค้าไม่สำเร็จ", e);
-        }
+        
     }
 
     @Override
