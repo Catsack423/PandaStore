@@ -11,6 +11,7 @@ public interface CartService {
     Cart getCartByCustomerId(Long customerId);
     CartItem addItemToCart(Long customerId, Long productId, Integer quantity);
     CartItem updateItemQuantity(Long customerId, Long cartItemId, Integer quantity);
+    CartItem updateItemSelection(Long customerId, Long cartItemId, Boolean selected);
     void removeItemFromCart(Long customerId, Long cartItemId);
     void clearCart(Long customerId);
     boolean validateCartStock(Long customerId);
