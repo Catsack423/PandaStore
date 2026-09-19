@@ -19,9 +19,9 @@ import project.project.Entity.seller.Seller;
 import project.project.Entity.user.*;
 import project.project.Repository.*;
 import project.project.Service.api.AuthService;
-import project.project.Service.api.CartService;
 import project.project.Service.api.CustomerService;
 import project.project.Service.api.SellerService;
+import project.project.Service.api.CartService;
 
 @Service
 @Transactional
@@ -64,7 +64,8 @@ public class AuthServiceImp implements AuthService {
         }
         var request = new CreateCustomerRequest(username, email, password, fullName, phoneNumber);
         var violations = validator.validate(request);
-        if (!violations.isEmpty()) throw new ConstraintViolationException(violations);
+        if (!violations.isEmpty())
+            throw new ConstraintViolationException(violations);
         long id = customerService.createCustomer(request);
         Customer customer = customers.findById(id)
                 .orElseThrow(() -> new IllegalStateException("Created customer was not found"));
@@ -95,7 +96,7 @@ public class AuthServiceImp implements AuthService {
         }
 
         var createSellerRequest = CreateSellerRequest.from(request);
-        long sellerId = sellerService.createSeller(createSellerRequest);
+        long sellerId = sellerService.createSeller(createSellerRequest).getSellerId();
         Seller seller = sellers.findById(sellerId)
                 .orElseThrow(() -> new IllegalStateException("Created seller was not found"));
         seller.getUser().setPasswordHash(passwords.hash(request.password()));
@@ -136,7 +137,8 @@ public class AuthServiceImp implements AuthService {
 
     @Override
     public boolean logout(String token) {
-        if (authenticator.authenticate(token).isEmpty()) return false;
+        if (authenticator.authenticate(token).isEmpty())
+            return false;
         sessions.deleteById(tokenHash(token));
         return true;
     }
@@ -146,12 +148,17 @@ public class AuthServiceImp implements AuthService {
         return passwords.isValid(password) && password.equals(confirmPassword);
     }
 
-    /** The caller must authorize the reset for this user ID before calling this method. */
+    /**
+     * The caller must authorize the reset for this user ID before calling this
+     * method.
+     */
     @Override
     public boolean resetPassword(long id, String password, String confirmPassword) {
-        if (id <= 0 || !verifyPassword(password, confirmPassword)) return false;
+        if (id <= 0 || !verifyPassword(password, confirmPassword))
+            return false;
         var existing = users.findById(id);
-        if (existing.isEmpty()) return false;
+        if (existing.isEmpty())
+            return false;
         User user = existing.get();
         user.setPasswordHash(passwords.hash(password));
         users.save(user);

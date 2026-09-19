@@ -11,8 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import project.project.DTO.seller.CreateSellerRequest;
 import project.project.DTO.seller.UpdateSellerRequest;
 import project.project.Entity.seller.Seller;
-import project.project.Entity.seller.SellerApplication;
-import project.project.Entity.seller.SellerApplicationStatus;
 import project.project.Entity.seller.SellerBankAccount;
 import project.project.Entity.seller.SellerStatus;
 import project.project.Entity.user.User;
@@ -20,10 +18,10 @@ import project.project.Entity.user.UserRole;
 import project.project.Entity.user.UserStatus;
 import project.project.Exception.DuplicateUserException;
 import project.project.Exception.UserCreationException;
-import project.project.Repository.SellerApplicationRepository;
 import project.project.Repository.SellerBankAccountRepository;
 import project.project.Repository.SellerRepository;
 import project.project.Repository.UserRepository;
+import project.project.Service.api.SellerApplicationService;
 import project.project.Service.api.SellerService;
 
 @Service
@@ -32,16 +30,16 @@ public class SellerServiceImp implements SellerService {
 
     private final UserRepository userRepository;
     private final SellerRepository sellerRepository;
-    private final SellerApplicationRepository sellerApplicationRepository;
+    private final SellerApplicationService sellerApplicationService;
     private final SellerBankAccountRepository sellerBankAccountRepository;
 
     public SellerServiceImp(UserRepository userRepository,
-                            SellerRepository sellerRepository,
-                            SellerApplicationRepository sellerApplicationRepository,
-                            SellerBankAccountRepository sellerBankAccountRepository) {
+            SellerRepository sellerRepository,
+            SellerApplicationService sellerApplicationService,
+            SellerBankAccountRepository sellerBankAccountRepository) {
         this.userRepository = userRepository;
         this.sellerRepository = sellerRepository;
-        this.sellerApplicationRepository = sellerApplicationRepository;
+        this.sellerApplicationService = sellerApplicationService;
         this.sellerBankAccountRepository = sellerBankAccountRepository;
     }
 
@@ -93,23 +91,7 @@ public class SellerServiceImp implements SellerService {
         }
 
         try {
-            SellerApplication application = new SellerApplication();
-            application.setUser(savedUser);
-            application.setShopName(request.getShopName());
-            application.setShopDescription(request.getShopDescription());
-            application.setShopPhone(request.getShopPhone());
-            application.setShopEmail(request.getShopEmail());
-            application.setShopAddress(request.getShopAddress());
-            application.setSellerFirstName(request.getSellerFirstName());
-            application.setSellerLastName(request.getSellerLastName());
-            application.setIdCardNumber(request.getIdCardNumber());
-            application.setIdCardImageUrl(request.getIdCardImageUrl() != null ? request.getIdCardImageUrl() : "");
-            application.setBankName(request.getBankName());
-            application.setBankAccountName(request.getBankAccountName());
-            application.setBankAccountNumber(request.getBankAccountNumber());
-            application.setBankBookImageUrl(request.getBankBookImageUrl() != null ? request.getBankBookImageUrl() : "");
-            application.setStatus(SellerApplicationStatus.PENDING);
-            sellerApplicationRepository.save(application);
+            sellerApplicationService.submitApplication(savedUser.getUserId(), request.toSellerApplicationRequest());
 
             SellerBankAccount bankAccount = new SellerBankAccount();
             bankAccount.setSeller(savedSeller);
@@ -169,4 +151,3 @@ public class SellerServiceImp implements SellerService {
         return sellerRepository.findAll();
     }
 }
-

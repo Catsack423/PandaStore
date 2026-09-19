@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import project.project.DTO.seller.CreateSellerApplicationRequest;
 import project.project.DTO.seller.CreateSellerRequest;
 import project.project.DTO.seller.UpdateSellerRequest;
 import project.project.Entity.seller.Seller;
@@ -25,10 +26,12 @@ import project.project.Repository.SellerApplicationRepository;
 import project.project.Repository.SellerBankAccountRepository;
 import project.project.Repository.SellerRepository;
 import project.project.Repository.UserRepository;
+import project.project.Service.api.SellerApplicationService;
 import project.project.Service.implement.SellerServiceImp;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,7 +47,7 @@ public class SellerServiceTest {
     private SellerRepository sellerRepository;
 
     @Mock
-    private SellerApplicationRepository sellerApplicationRepository;
+    private SellerApplicationService sellerApplicationService;
 
     @Mock
     private SellerBankAccountRepository sellerBankAccountRepository;
@@ -84,7 +87,7 @@ public class SellerServiceTest {
         assertEquals(10L, sellerId);
         verify(userRepository, times(1)).save(any(User.class));
         verify(sellerRepository, times(1)).save(any(Seller.class));
-        verify(sellerApplicationRepository, times(1)).save(any(SellerApplication.class));
+        verify(sellerApplicationService, times(1)).submitApplication(eq(1L), any(CreateSellerApplicationRequest.class));
         verify(sellerBankAccountRepository, times(1)).save(any(SellerBankAccount.class));
     }
 

@@ -7,7 +7,7 @@ import project.project.DTO.seller.UpdateSellerRequest;
 import project.project.Entity.seller.Seller;
 
 public interface SellerService {
-    long createSeller(CreateSellerRequest request);
+    Seller createSeller(CreateSellerRequest request);
 
     boolean deleteSeller(long id);
 
