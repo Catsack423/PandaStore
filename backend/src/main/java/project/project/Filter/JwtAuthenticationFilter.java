@@ -42,7 +42,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final Set<String> PUBLIC_POST_PATHS = Set.of(
             "/api/auth/login",
             "/api/auth/register/customer",
-            "/api/auth/register/seller"
+            "/api/auth/register/seller",
+            "/api/sellers/register"
     );
 
     public JwtAuthenticationFilter(SessionAuthenticator authenticator, ObjectMapper json) {

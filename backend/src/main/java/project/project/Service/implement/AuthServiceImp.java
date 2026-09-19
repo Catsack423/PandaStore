@@ -12,13 +12,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
+import project.project.DTO.auth.AuthRequests;
 import project.project.DTO.customer.CreateCustomerRequest;
+import project.project.DTO.seller.CreateSellerRequest;
 import project.project.Entity.seller.Seller;
 import project.project.Entity.user.*;
 import project.project.Repository.*;
 import project.project.Service.api.AuthService;
-import project.project.Service.api.CustomerService;
 import project.project.Service.api.CartService;
+import project.project.Service.api.CustomerService;
+import project.project.Service.api.SellerService;
 
 @Service
 @Transactional
@@ -32,10 +35,14 @@ public class AuthServiceImp implements AuthService {
     private final Validator validator;
     private final JwtTokenService jwt;
     private final project.project.Security.SessionAuthenticator authenticator;
+    private final SellerRepository sellers;
+    private final SellerService sellerService;
 
     public AuthServiceImp(UserRepository users, CustomerRepository customers, CartService cartService,
             AuthSessionRepository sessions, CustomerService customerService,
-            PasswordService passwords, Validator validator, JwtTokenService jwt, project.project.Security.SessionAuthenticator authenticator) {
+            PasswordService passwords, Validator validator, JwtTokenService jwt,
+            project.project.Security.SessionAuthenticator authenticator,
+            SellerRepository sellers, SellerService sellerService) {
         this.users = users;
         this.customers = customers;
         this.cartService = cartService;
@@ -45,6 +52,8 @@ public class AuthServiceImp implements AuthService {
         this.validator = validator;
         this.jwt = jwt;
         this.authenticator = authenticator;
+        this.sellers = sellers;
+        this.sellerService = sellerService;
     }
 
     @Override
@@ -67,14 +76,31 @@ public class AuthServiceImp implements AuthService {
     }
 
     @Override
-    public Seller registerSeller(String username, String email, String password, String confirmPassword) {
-        if (!verifyPassword(password, confirmPassword)) {
-            throw new IllegalArgumentException("Passwords are invalid or do not match");
+    public Seller registerSeller(AuthRequests.RegisterSeller request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request body cannot be null");
         }
-        // TODO: connect SellerService and SellerApplicationService after the team agrees on inputs.
-        // createSeller() currently accepts no account details; this interface has no application details.
-        throw new UnsupportedOperationException(
-                "Seller registration is waiting for SellerService parameters and application details");
+        var violations = validator.validate(request);
+        if (!violations.isEmpty()) {
+            throw new ConstraintViolationException(violations);
+        }
+        if (request.confirmPassword() != null && !request.confirmPassword().isBlank()) {
+            if (!verifyPassword(request.password(), request.confirmPassword())) {
+                throw new IllegalArgumentException("Passwords are invalid or do not match");
+            }
+        } else {
+            if (!passwords.isValid(request.password())) {
+                throw new IllegalArgumentException("Password does not meet requirements");
+            }
+        }
+
+        var createSellerRequest = CreateSellerRequest.from(request);
+        long sellerId = sellerService.createSeller(createSellerRequest);
+        Seller seller = sellers.findById(sellerId)
+                .orElseThrow(() -> new IllegalStateException("Created seller was not found"));
+        seller.getUser().setPasswordHash(passwords.hash(request.password()));
+        users.save(seller.getUser());
+        return seller;
     }
 
     @Override
