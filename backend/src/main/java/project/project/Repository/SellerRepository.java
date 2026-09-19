@@ -4,8 +4,8 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import project.project.Entity.seller.Seller;
 
-public interface SellerRepository extends JpaRepository<Seller, Long> {
+import java.util.Optional;
 
-    boolean existsByShopName(String shopName);
+public interface SellerRepository extends JpaRepository<Seller, Long> {
     Optional<Seller> findByUser_UserId(Long userId);
 }
