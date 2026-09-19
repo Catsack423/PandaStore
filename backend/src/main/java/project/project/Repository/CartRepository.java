@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import project.project.Entity.order.Cart;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 import java.util.Optional;
 
@@ -17,4 +19,7 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
             where c.customer.customerId = :customerId
             """)
     Optional<Cart> findByCustomerIdForUpdate(@Param("customerId") Long customerId);
+
+    @EntityGraph(attributePaths = {"items", "items.product", "items.product.seller", "items.product.seller.user"})
+    Optional<Cart> findByCustomer_CustomerId(Long customerId);
 }

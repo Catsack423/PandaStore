@@ -1,0 +1,4 @@
+**/.next/
+frontend/.next/
+.next/
+node_modules/
