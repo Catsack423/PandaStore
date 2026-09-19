@@ -31,22 +31,27 @@ public class AuthController {
     }
 
     @PostMapping("/register/customer")
-    public ResponseEntity<ApiResponse<CustomerResponse>> registerCustomer(@Valid @RequestBody AuthRequests.RegisterCustomer request) {
+    public ResponseEntity<ApiResponse<CustomerResponse>> registerCustomer(
+            @Valid @RequestBody AuthRequests.RegisterCustomer request) {
         var customer = auth.registerCustomer(request.username(), request.email(), request.password(),
                 request.confirmPassword(), request.fullName(), request.phoneNumber());
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("สมัครสมาชิกสำเร็จ", CustomerResponse.fromEntity(customer)));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("สมัครสมาชิกสำเร็จ", CustomerResponse.fromEntity(customer)));
     }
 
     @PostMapping("/register/seller")
-    public ResponseEntity<ApiResponse<Map<String, Long>>> registerSeller(@Valid @RequestBody AuthRequests.RegisterSeller request) {
-        var seller = auth.registerSeller(request.username(), request.email(), request.password(), request.confirmPassword());
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("สมัครผู้ขายสำเร็จ", Map.of("sellerId", seller.getSellerId())));
+    public ResponseEntity<ApiResponse<Map<String, Long>>> registerSeller(
+            @Valid @RequestBody AuthRequests.RegisterSeller request) {
+        var seller = auth.registerSeller(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("สมัครผู้ขายสำเร็จ", Map.of("sellerId", seller.getSellerId())));
     }
 
     @PostMapping("/login")
     public ApiResponse<Map<String, String>> login(@Valid @RequestBody AuthRequests.Login request) {
         try {
-            return ApiResponse.success("เข้าสู่ระบบสำเร็จ", Map.of("token", auth.login(request.usernameOrEmail(), request.password()), "tokenType", "Bearer"));
+            return ApiResponse.success("เข้าสู่ระบบสำเร็จ",
+                    Map.of("token", auth.login(request.usernameOrEmail(), request.password()), "tokenType", "Bearer"));
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
         }
@@ -60,14 +65,17 @@ public class AuthController {
     }
 
     @GetMapping("/token")
-    public ApiResponse<Map<String, Boolean>> validateToken(@RequestHeader(value = "Authorization", required = false) String authorization) {
-        return ApiResponse.success("ตรวจสอบโทเคนสำเร็จ", Map.of("valid", auth.validateToken(project.project.Security.BearerTokens.requireToken(authorization))));
+    public ApiResponse<Map<String, Boolean>> validateToken(
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        return ApiResponse.success("ตรวจสอบโทเคนสำเร็จ",
+                Map.of("valid", auth.validateToken(project.project.Security.BearerTokens.requireToken(authorization))));
     }
 
     @PostMapping("/logout")
     public ApiResponse<Void> logout(
             @RequestHeader(value = "Authorization", required = false) String authorization) {
-        // The bearer token identifies this session, not every login belonging to the user.
+        // The bearer token identifies this session, not every login belonging to the
+        // user.
         if (!auth.logout(BearerTokens.requireToken(authorization))) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "โทเคนไม่ถูกต้องหรือหมดอายุ");
         }

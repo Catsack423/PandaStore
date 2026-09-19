@@ -37,7 +37,6 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest
 public class CustomerServiceTest {
     @InjectMocks
     private CustomerServiceImp customerService;

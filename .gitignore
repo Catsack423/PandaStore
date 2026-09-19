@@ -58,57 +58,40 @@ nbdist/
 .env
 .env.*
 !.env.example
+
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
 *.pem
-*.key
 
-# ------------------------------------------
-# Backend (Java / Spring Boot / Maven)
-# ------------------------------------------
-target/
-**/target/
-*.class
-*.jar
-*.war
-*.ear
-*.nar
-*.zip
-*.tar.gz
-*.rar
-
-# Logs
-*.log
-logs/
-**/logs/
-
-# H2 / Embedded DB files
-*.mv.db
-*.trace.db
-
-# ------------------------------------------
-# Frontend (Node.js / React / Vue / Angular)
-# ------------------------------------------
-node_modules/
-**/node_modules/
-.npm/
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-.pnpm-debug.log*
 
-# Frontend Build Output
-frontend/dist/
-frontend/build/
-**/dist/
-**/build/
-.next/
-.nuxt/
+# local env files
+.env*.local
 
-# ------------------------------------------
-# Misc & Temporary Files
-# ------------------------------------------
-tmp/
-temp/
-.cache/
-PROGRESS_TRACKING.md
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
 

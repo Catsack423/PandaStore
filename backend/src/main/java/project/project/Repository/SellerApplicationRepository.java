@@ -7,6 +7,8 @@ import project.project.Entity.seller.SellerApplicationStatus;
 import java.util.List;
 
 public interface SellerApplicationRepository extends JpaRepository<SellerApplication, Long> {
+
     List<SellerApplication> findByStatus(SellerApplicationStatus status);
+
     List<SellerApplication> findByUser_UserId(Long userId);
 }
