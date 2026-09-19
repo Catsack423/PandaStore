@@ -223,7 +223,7 @@ const SellerSignup = () => {
         bankAccountNumber: formData.bankAccountNumber.replace(/[-\s]/g, ""),
       };
 
-      const res = await fetch("/api/sellers/register", {
+      const res = await fetch("/api/auth/register/seller", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -417,13 +417,17 @@ const SellerSignup = () => {
                         onClick={handleSubmit}
                         className="h-11 px-7 text-sm font-medium bg-dark text-white hover:bg-blue ml-auto"
                       >
-                        {loading
-                          ? (<>
-                          <Spinner data-icon="inline-start" className="size-3" /> กำลังนำสมัคสามาชิก
-                          "กำลังบันทึกข้อมูล..."
+                        {loading ? (
+                          <>
+                            <Spinner
+                              data-icon="inline-start"
+                              className="size-3"
+                            />{" "}
+                            กำลังนำสมัคสามาชิก "กำลังบันทึกข้อมูล..."
                           </>
-                        )
-                          : "ยืนยันการเปิดร้านค้า ✔"}
+                        ) : (
+                          "ยืนยันการเปิดร้านค้า ✔"
+                        )}
                       </Button>
                     )}
                   </div>
