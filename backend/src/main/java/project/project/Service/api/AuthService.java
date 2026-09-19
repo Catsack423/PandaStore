@@ -17,6 +17,9 @@ public interface AuthService {
 
     boolean validateToken(String token);
 
+    /** Revoke only the session identified by this token; false if it is no longer valid. */
+    boolean logout(String token);
+
     boolean verifyPassword(String password, String confirmPassword);
     
     boolean resetPassword(long id, String password, String confirmPassword);

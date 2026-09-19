@@ -22,6 +22,10 @@ public class ApiResponse<T> {
         return res;
     }
 
+    public boolean isSuccess() {
+        return success;
+    }
+
     public T getData() {
         return data;
     }
@@ -40,6 +44,10 @@ public class ApiResponse<T> {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public boolean isSuccess() {
+        return success;
     }
 
     public void setSuccess(boolean success) {
