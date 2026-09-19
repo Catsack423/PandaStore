@@ -5,5 +5,6 @@ public enum NotificationType {
     NEW_ORDER_FOR_SELLER,
     ORDER_SHIPPED,
     NEW_REVIEW,
-    SELLER_APPROVED
+    SELLER_APPROVED,
+    NEW_SELLER_APPLICATION
 }
