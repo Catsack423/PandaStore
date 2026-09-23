@@ -1,19 +1,25 @@
 package project.project.Service.implement;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import project.project.DTO.product.ProductResponse;
 import project.project.Entity.product.Category;
 import project.project.Repository.CategoryRepository;
 import project.project.Service.api.CategoryService;
+import project.project.Service.api.ProductService;
 
 @Service
 public class CategoryServiceImp implements CategoryService {
     private final CategoryRepository categories;
+    private final ProductService products;
 
-    public CategoryServiceImp(CategoryRepository categories) {
+    public CategoryServiceImp(CategoryRepository categories, ProductService products) {
         this.categories = categories;
+        this.products = products;
     }
 
     @Override
@@ -44,5 +50,17 @@ public class CategoryServiceImp implements CategoryService {
         Sort order = Sort.by("categoryName").ascending()
                 .and(Sort.by("categoryId").ascending());
         return categories.findAll(order);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> getProductsByCategory(Long categoryId, int page, int size) {
+        if (categoryId == null || categoryId <= 0) {
+            throw new IllegalArgumentException("categoryId ต้องมากกว่า 0");
+        }
+        if (!categories.existsById(categoryId)) {
+            throw new EntityNotFoundException("ไม่พบหมวดหมู่ที่ต้องการ");
+        }
+        return products.searchProductsPage(null, categoryId, page, size);
     }
 }
