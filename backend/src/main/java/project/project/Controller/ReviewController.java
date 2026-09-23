@@ -11,6 +11,7 @@ import project.project.DTO.review.ReviewResponse;
 import project.project.DTO.review.UpdateReviewRequest;
 import project.project.Entity.review.Review;
 import project.project.Service.api.ReviewService;
+import project.project.Security.CurrentUser;
 
 import java.util.List;
 
@@ -19,15 +20,17 @@ import java.util.List;
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private final CurrentUser currentUser;
 
-    public ReviewController(ReviewService reviewService) {
+    public ReviewController(ReviewService reviewService, CurrentUser currentUser) {
         this.reviewService = reviewService;
+        this.currentUser = currentUser;
     }
 
     @PostMapping
     public ResponseEntity<ApiResponse<ReviewResponse>> createReview(
-            @RequestParam Long customerId,
             @Valid @RequestBody CreateReviewRequest request) {
+        Long customerId = currentUser.requireCustomerId();
         Review review = reviewService.createReview(
                 customerId,
                 request.getOrderItemId(),
@@ -41,8 +44,8 @@ public class ReviewController {
     @PutMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<ReviewResponse>> updateReview(
             @PathVariable Long reviewId,
-            @RequestParam Long customerId,
             @Valid @RequestBody UpdateReviewRequest request) {
+        Long customerId = currentUser.requireCustomerId();
         Review updated = reviewService.updateReview(
                 customerId,
                 reviewId,
@@ -78,8 +81,8 @@ public class ReviewController {
 
     @GetMapping("/check-eligibility")
     public ResponseEntity<ApiResponse<Boolean>> checkEligibility(
-            @RequestParam Long customerId,
             @RequestParam Long orderItemId) {
+        Long customerId = currentUser.requireCustomerId();
         boolean eligible = reviewService.isEligibleToReview(customerId, orderItemId);
         return ResponseEntity.ok(ApiResponse.success("ตรวจสอบสิทธิ์การรีวิวสำเร็จ", eligible));
     }
