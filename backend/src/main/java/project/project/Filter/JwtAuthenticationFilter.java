@@ -35,7 +35,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final ObjectMapper json;
     private static final List<String> MONITORED_PATH_PREFIXES = List.of(
             "/api/cart",
-            "/api/auth");
+            "/api/auth",
+            "/api/seller-applications");
 
     // Endpoint เมธอด POST ที่อนุญาตให้ผ่านได้โดยไม่ต้องมี Token
     private static final Set<String> PUBLIC_POST_PATHS = Set.of(
