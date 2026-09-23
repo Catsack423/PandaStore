@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MapPin, Package, UserRound } from "lucide-react";
+import { LogOut, MapPin, Package, UserRound } from "lucide-react";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import { useAuth } from "@/app/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ type Address = { recipient: string; phone: string; street: string; city: string;
 const emptyAddress: Address = { recipient: "", phone: "", street: "", city: "", region: "", postalCode: "" };
 
 export default function MyAccount() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const [tab, setTab] = useState<"profile" | "address">("profile");
   const [profile, setProfile] = useState<Profile>({ name: "", email: "", phone: "" });
   const [address, setAddress] = useState<Address>(emptyAddress);
@@ -54,6 +54,7 @@ export default function MyAccount() {
               <Button type="button" variant={tab === "profile" ? "default" : "ghost"} className={`h-11 w-full justify-start gap-3 ${tab === "profile" ? "bg-blue text-white hover:bg-blue-dark" : ""}`} onClick={() => { setTab("profile"); setMessage(""); }}><UserRound className="size-4" />Profile</Button>
               <Button type="button" variant={tab === "address" ? "default" : "ghost"} className={`h-11 w-full justify-start gap-3 ${tab === "address" ? "bg-blue text-white hover:bg-blue-dark" : ""}`} onClick={() => { setTab("address"); setMessage(""); }}><MapPin className="size-4" />Addresses</Button>
               <Link href="/order-history" className="flex h-11 items-center gap-3 rounded-lg px-2.5 text-sm font-medium text-dark hover:bg-gray-1"><Package className="size-4" />Order history</Link>
+              {user && <button type="button" onClick={() => void logout()} className="flex h-11 w-full items-center gap-3 rounded-lg px-2.5 text-left text-sm font-medium text-dark hover:bg-gray-1"><LogOut className="size-4" />Sign out</button>}
             </CardContent></Card>
           </aside>
           <div>
