@@ -1,14 +1,12 @@
-type PageProps = {
-    
-    children?: React.ReactNode
-}
+import type { Metadata } from "next";
+import OrderHistory from "@/components/OrderHistory";
 
-function OrderHistoryPage({ children }: PageProps) {
-    return (
-        <div>
-            
-        </div>
-    )
-}
+export const metadata: Metadata = {
+  title: "Order History | NextMerce",
+  description: "View your orders and delivery progress.",
+};
 
-export default OrderHistoryPage
+export default function OrderHistoryPage() {
+  // The backend does not provide a customer order list yet.
+  return <OrderHistory orders={[]} />;
+}

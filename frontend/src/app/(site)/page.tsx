@@ -4,6 +4,7 @@ import Home from "@/components/Home";
 import { Metadata } from "next";
 
 import { getProducts } from "@/ServerAction/products";
+import shopData from "@/components/Shop/shopData";
 import { useProductContext } from "../context/ProductContext";
 
  const metadata: Metadata = {
@@ -15,15 +16,14 @@ import { useProductContext } from "../context/ProductContext";
 export default async function HomePage() {
  
   const response = await getProducts();
-  console.log("loadingสำเร็จ",response);
   
   const initialProducts =
-    response.success && response.data ? response.data : [];
+    response.success && response.data ? response.data : shopData;
 
   
   return (
     <>
-      <Home initialProducts={initialProducts}></Home>
+      <Home initialProducts={initialProducts} preview={!response.success}></Home>
     </>
   );
 }

@@ -19,7 +19,8 @@ import { StageIndicator } from "./StageIndicator";
 import { Stage1Account } from "./Stage1Account";
 import { Stage2Shop } from "./Stage2Shop";
 import { Stage3IdentityBank } from "./Stage3IdentityBank";
-import { Spinner } from "@/components/ui/spinner";
+import { useSellerPreview } from "@/app/context/SellerPreviewContext";
+import { DemoNotice } from "@/components/Seller/Shared";
 
 const initialFormData: SellerFormData = {
   // Stage 1
@@ -46,11 +47,18 @@ const initialFormData: SellerFormData = {
 
 const SellerSignup = () => {
   const router = useRouter();
+  const { application, createApplication } = useSellerPreview();
+  const isReapplying = application?.status === "REJECTED";
   const [currentStage, setCurrentStage] = useState(1);
-  const [formData, setFormData] = useState<SellerFormData>(initialFormData);
+  const [formData, setFormData] = useState<SellerFormData>(() => application?.status === "REJECTED" ? {
+    ...initialFormData,
+    shopName: application.shopName,
+    shopDescription: application.shopDescription,
+    shopPhone: application.shopPhone,
+    shopEmail: application.shopEmail,
+    shopAddress: application.shopAddress,
+  } : initialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   // Validate Stage 1
   const validateStage1 = (): boolean => {
@@ -196,61 +204,21 @@ const SellerSignup = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+  const handleSubmit = (e?: React.FormEvent | React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
 
     if (!validateStage3()) return;
 
-    setLoading(true);
     setErrors({});
-
-    try {
-      const payload = {
-        username: formData.username.trim(),
-        email: formData.email.trim(),
-        password: formData.password,
-        shopName: formData.shopName.trim(),
-        shopDescription: formData.shopDescription.trim(),
-        shopPhone: formData.shopPhone.replace(/[-\s]/g, ""),
-        shopEmail: formData.shopEmail.trim(),
-        shopAddress: formData.shopAddress.trim(),
-        sellerFirstName: formData.sellerFirstName.trim(),
-        sellerLastName: formData.sellerLastName.trim(),
-        idCardNumber: formData.idCardNumber.replace(/[-\s]/g, ""),
-        bankName: formData.bankName.trim(),
-        bankAccountName: formData.bankAccountName.trim(),
-        bankAccountNumber: formData.bankAccountNumber.replace(/[-\s]/g, ""),
-      };
-
-      const res = await fetch("/api/auth/register/seller", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json().catch(() => null);
-
-      if (res.ok) {
-        setSuccess(true);
-        setTimeout(() => {
-          router.push("/signin");
-        }, 3000);
-      } else {
-        setErrors({
-          general:
-            data?.message ||
-            "เกิดข้อผิดพลาดในการส่งคำขอสมัครร้านค้า กรุณาตรวจสอบข้อมูลอีกครั้ง",
-        });
-      }
-    } catch (err) {
-      console.error("Seller signup error:", err);
-      setErrors({
-        general: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่อ",
-      });
-    } finally {
-      setLoading(false);
-    }
+    createApplication({
+      shopName: formData.shopName.trim(),
+      shopDescription: formData.shopDescription.trim(),
+      shopPhone: formData.shopPhone.trim(),
+      shopEmail: formData.shopEmail.trim(),
+      shopAddress: formData.shopAddress.trim(),
+    });
+    router.push("/seller-application");
   };
 
   const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
@@ -269,6 +237,7 @@ const SellerSignup = () => {
       <Breadcrumb title={"Seller Signup"} pages={["Signup", "Seller"]} />
       <section className="overflow-hidden py-14 lg:py-20 bg-gray-2">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
+          <div className="mx-auto max-w-[780px]"><DemoNotice>This signup creates a local application preview only. Use sample details. Your password, identity number and bank details are not submitted or saved.</DemoNotice></div>
           <Card className="max-w-[680px] lg:max-w-[780px] w-full mx-auto bg-white shadow-1 border-gray-3">
             <CardHeader className="text-center pb-4 lg:max-w-[500px] lg:justify-center lg:flex lg:mx-auto w-full">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue/10 text-blue mx-auto mb-3">
@@ -287,50 +256,19 @@ const SellerSignup = () => {
                 </svg>
               </div>
               <CardTitle className="text-2xl font-bold text-dark">
-                สมัครเปิดร้านค้า (Seller Registration)
+                {isReapplying ? "Revise your seller application" : "สมัครเปิดร้านค้า (Seller Registration)"}
               </CardTitle>
               <CardDescription className="text-body text-sm mt-1">
-                กรอกข้อมูล 3 ขั้นตอนเพื่อยื่นขอเปิดร้านค้าบน PandaStore
+                {isReapplying ? "Your shop details are prefilled. Review the rejection reason, correct the information, and complete all three steps to submit again." : "กรอกข้อมูล 3 ขั้นตอนเพื่อยื่นขอเปิดร้านค้าบน PandaStore"}
               </CardDescription>
+              {isReapplying && application?.adminNote && <div className="mt-4 w-full rounded-lg border border-yellow/30 bg-yellow-light-4 px-4 py-3 text-left text-sm text-dark"><strong>Previous review note</strong><p className="mt-1">{application.adminNote}</p></div>}
 
               {/* Stepper Progress Bar */}
               <StageIndicator currentStage={currentStage} />
             </CardHeader>
 
             <CardContent className="pt-4 lg:max-w-[500px] lg:justify-center lg:flex lg:mx-auto w-full">
-              {success ? (
-                <div className="text-center py-10">
-                  <div className="w-16 h-16 bg-green/10 text-green rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold text-dark mb-2">
-                    ส่งคำขอเปิดร้านค้าสำเร็จ!
-                  </h3>
-                  <p className="text-body text-sm max-w-[420px] mx-auto mb-2">
-                    คำขอเปิดร้านค้าของคุณอยู่ในสถานะ{" "}
-                    <span className="font-semibold text-yellow-dark">
-                      รอการอนุมัติ (PENDING)
-                    </span>{" "}
-                    จากทีมงาน Admin
-                  </p>
-                  <p className="text-xs text-dark-4">
-                    กำลังนำคุณไปยังหน้าเข้าสู่ระบบ...
-                  </p>
-                </div>
-              ) : (
-                <form
+              <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     if (currentStage === 3) {
@@ -413,26 +351,14 @@ const SellerSignup = () => {
                       <Button
                         key="btn-submit"
                         type="button"
-                        disabled={loading}
                         onClick={handleSubmit}
                         className="h-11 px-7 text-sm font-medium bg-dark text-white hover:bg-blue ml-auto"
                       >
-                        {loading ? (
-                          <>
-                            <Spinner
-                              data-icon="inline-start"
-                              className="size-3"
-                            />{" "}
-                            กำลังนำสมัคสามาชิก "กำลังบันทึกข้อมูล..."
-                          </>
-                        ) : (
-                          "ยืนยันการเปิดร้านค้า ✔"
-                        )}
+                        {isReapplying ? "Resubmit demo application" : "Create demo application"}
                       </Button>
                     )}
                   </div>
                 </form>
-              )}
             </CardContent>
 
             <CardFooter className="flex flex-col items-center gap-2 pt-2 border-t border-gray-3 mt-4">

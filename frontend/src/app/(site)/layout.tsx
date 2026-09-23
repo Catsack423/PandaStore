@@ -17,6 +17,8 @@ import PreviewSliderModal from "@/components/Common/PreviewSlider";
 import ScrollToTop from "@/components/Common/ScrollToTop";
 import PreLoader from "@/components/Common/PreLoader";
 import { ProductContextProvider } from "../context/ProductContext";
+import { AuthProvider } from "../context/AuthContext";
+import { SellerPreviewProvider } from "../context/SellerPreviewContext";
 
 export default function RootLayout({
   children,
@@ -36,6 +38,8 @@ export default function RootLayout({
           <PreLoader />
         ) : (
           <>
+            <AuthProvider>
+            <SellerPreviewProvider>
             <ReduxProvider>
               <CartModalProvider>
                 <ModalProvider>
@@ -51,6 +55,8 @@ export default function RootLayout({
                 </ModalProvider>
               </CartModalProvider>
             </ReduxProvider>
+            </SellerPreviewProvider>
+            </AuthProvider>
             <ScrollToTop />
             <Footer />
           </>
