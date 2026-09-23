@@ -5,6 +5,7 @@ import project.project.DTO.customer.CreateCustomerRequest;
 import project.project.Entity.seller.Seller;
 import project.project.Entity.user.Customer;
 import project.project.Entity.user.User;
+import project.project.DTO.auth.LoginResponse;
 
 public interface AuthService {
     // Edit Parameter as You want for this function
@@ -19,6 +20,8 @@ public interface AuthService {
     Seller registerSeller(RegisterSeller request);
 
     String login(String usernameOrEmail, String password);
+
+    LoginResponse loginWithUser(String usernameOrEmail, String password);
 
     boolean validateToken(String token);
 

@@ -58,6 +58,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI().substring(request.getContextPath().length());
         String method = request.getMethod();
 
+        // การเขียนรีวิวและตรวจสิทธิ์รีวิวต้องรู้ว่าลูกค้าคนไหนเป็นผู้เรียก
+        if (("POST".equalsIgnoreCase(method) && "/api/reviews".equals(path))
+                || ("PUT".equalsIgnoreCase(method) && path.matches("/api/reviews/[^/]+"))
+                || ("GET".equalsIgnoreCase(method) && "/api/reviews/check-eligibility".equals(path))) {
+            return false;
+        }
+
         // 2. ถ้าไม่ใช่ Path ที่ Filter นี้ดูแล ให้ข้ามการตรวจได้เลย
         boolean isMonitored = MONITORED_PATH_PREFIXES.stream()
                 .anyMatch(prefix -> path.equals(prefix) || path.startsWith(prefix + "/"));

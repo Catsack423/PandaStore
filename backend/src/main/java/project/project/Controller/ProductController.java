@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import project.project.ApiResponse.ApiResponse;
 import project.project.DTO.product.CreateProductRequest;
 import project.project.DTO.product.ProductResponse;
+import project.project.DTO.product.PageResponse;
 import project.project.DTO.product.UpdateProductRequest;
 import project.project.Entity.product.Product;
 import project.project.Service.api.ProductService;
@@ -64,14 +65,22 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<ProductResponse>>> searchProducts(
+    public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> searchProducts(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Long categoryId) {
-        List<Product> products = productService.searchProducts(keyword, categoryId);
-        List<ProductResponse> responses = products.stream()
-                .map(ProductResponse::fromEntity)
-                .toList();
-        return ResponseEntity.ok(ApiResponse.success("ค้นหาสินค้าสำเร็จ", responses));
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        var result = productService.searchProductsPage(keyword, categoryId, page, size);
+        return ResponseEntity.ok(ApiResponse.success("ค้นหาสินค้าสำเร็จ", PageResponse.from(result)));
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getProductsByCategory(
+            @PathVariable Long categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        var result = productService.searchProductsPage(null, categoryId, page, size);
+        return ResponseEntity.ok(ApiResponse.success("ดึงสินค้าตามหมวดหมู่สำเร็จ", PageResponse.from(result)));
     }
 
     @PutMapping("/{id}")

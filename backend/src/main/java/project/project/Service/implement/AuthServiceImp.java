@@ -14,6 +14,7 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import project.project.DTO.auth.AuthRequests;
 import project.project.DTO.customer.CreateCustomerRequest;
+import project.project.DTO.auth.LoginResponse;
 import project.project.DTO.seller.CreateSellerRequest;
 import project.project.Entity.seller.Seller;
 import project.project.Entity.user.*;
@@ -106,6 +107,11 @@ public class AuthServiceImp implements AuthService {
 
     @Override
     public String login(String usernameOrEmail, String password) {
+        return loginWithUser(usernameOrEmail, password).token();
+    }
+
+    @Override
+    public LoginResponse loginWithUser(String usernameOrEmail, String password) {
         if (usernameOrEmail == null || usernameOrEmail.isBlank()) {
             throw new IllegalArgumentException("Invalid credentials");
         }
@@ -126,7 +132,7 @@ public class AuthServiceImp implements AuthService {
         String token = jwt.issue(user.getUserId(), now, expiresAt);
         sessions.deleteByExpiresAtBefore(now);
         sessions.save(new AuthSession(tokenHash(token), user, expiresAt));
-        return token;
+        return LoginResponse.from(token, user);
     }
 
     @Override
