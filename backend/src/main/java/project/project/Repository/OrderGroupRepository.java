@@ -8,29 +8,33 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import project.project.Entity.order.OrderGroup;
 
+import java.util.List;
 import java.util.Optional;
 
-public interface OrderGroupRepository
-                extends JpaRepository<OrderGroup, Long> {
+public interface OrderGroupRepository extends JpaRepository<OrderGroup, Long> {
 
-        @Lock(LockModeType.PESSIMISTIC_WRITE)
-        @Query("""
-                        select g from OrderGroup g
-                        where g.orderGroupId = :id
-                        """)
-        Optional<OrderGroup> findByIdForUpdate(@Param("id") Long id);
+    Optional<OrderGroup> findByGroupNumber(String groupNumber);
 
-        @EntityGraph(attributePaths = {
-                        "customer.user",
-                        "shippingAddress",
-                        "payment",
-                        "subOrders.seller.user"
-        })
-        @Query("""
-                        select g from OrderGroup g
-                        where g.orderGroupId = :id
-                        """)
-        Optional<OrderGroup> findDetailsById(@Param("id") Long id);
+    List<OrderGroup> findByCustomer_CustomerId(Long customerId);
 
-        boolean existsByShippingAddress_AddressId(Long addressId);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select g from OrderGroup g
+            where g.orderGroupId = :id
+            """)
+    Optional<OrderGroup> findByIdForUpdate(@Param("id") Long id);
+
+    @EntityGraph(attributePaths = {
+            "customer.user",
+            "shippingAddress",
+            "payment",
+            "subOrders.seller.user"
+    })
+    @Query("""
+            select g from OrderGroup g
+            where g.orderGroupId = :id
+            """)
+    Optional<OrderGroup> findDetailsById(@Param("id") Long id);
+
+    boolean existsByShippingAddress_AddressId(Long addressId);
 }
