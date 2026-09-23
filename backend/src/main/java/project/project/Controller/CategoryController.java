@@ -1,0 +1,40 @@
+package project.project.Controller;
+
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import project.project.ApiResponse.ApiResponse;
+import project.project.DTO.product.CategoryResponse;
+import project.project.DTO.product.CreateCategoryRequest;
+import project.project.Entity.user.UserRole;
+import project.project.Security.CurrentUser;
+import project.project.Service.api.CategoryService;
+
+@RestController
+@RequestMapping("/api/categories")
+public class CategoryController {
+    private final CategoryService categories;
+    private final CurrentUser currentUser;
+
+    public CategoryController(CategoryService categories, CurrentUser currentUser) {
+        this.categories = categories;
+        this.currentUser = currentUser;
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(
+            @Valid @RequestBody CreateCategoryRequest request) {
+        if (currentUser.requireIdentity().role() != UserRole.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "เฉพาะผู้ดูแลระบบเท่านั้น");
+        }
+
+        var category = categories.createCategory(request.categoryName(), request.description());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("เพิ่มหมวดหมู่สำเร็จ", CategoryResponse.fromEntity(category)));
+    }
+}
