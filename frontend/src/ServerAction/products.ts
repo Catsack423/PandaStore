@@ -2,7 +2,6 @@
 
 import { ApiResponse } from "@/types/apiresponse";
 import { Product, productSchema } from "@/types/product";
-import { redirect } from "next/navigation";
 import z from "zod";
 
 export async function getProducts(): Promise<ApiResponse<Product[]>> {
@@ -42,10 +41,9 @@ export async function getProducts(): Promise<ApiResponse<Product[]>> {
     };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";
-    redirect("/error");
     return {
       data: null,
-      error: true, // ดูจาก type ApiResponse น่าจะควรเป็น unknown/null ไม่ใช่ boolean แล้วแต่ definition ของคุณ
+      error: message,
       message: message,
       success: false,
     };

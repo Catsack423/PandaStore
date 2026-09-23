@@ -74,6 +74,24 @@ export const menuData: Menu[] = [
         path: "/my-account",
       },
       {
+        id: 74,
+        title: "Become a Seller",
+        newTab: false,
+        path: "/signup/seller",
+      },
+      {
+        id: 75,
+        title: "Seller Application",
+        newTab: false,
+        path: "/seller-application",
+      },
+      {
+        id: 76,
+        title: "Shop Dashboard",
+        newTab: false,
+        path: "/seller-dashboard",
+      },
+      {
         id: 70,
         title: "Contact",
         newTab: false,

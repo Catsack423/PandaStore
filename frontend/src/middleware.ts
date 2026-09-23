@@ -11,6 +11,11 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Only the order detail preview is public. It uses local demo data and never calls seller APIs.
+  if (/^\/seller\/[^/]+$/.test(pathname) && request.nextUrl.searchParams.get("demo") === "1") {
+    return NextResponse.next();
+  }
   
   // 1. à¸”à¸¶à¸‡ Token à¹à¸¥à¸° Role à¸ˆà¸²à¸ Cookie
   const token = request.cookies.get("auth_token")?.value;
@@ -18,7 +23,7 @@ export function middleware(request: NextRequest) {
 
   // 2. à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸§à¹ˆà¸²à¸«à¸™à¹‰à¸²à¸™à¸µà¹‰à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸ªà¸´à¸—à¸˜à¸´à¹Œà¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆ
   const matchedPath = Object.keys(ROLE_PERMISSIONS).find((route) =>
-    pathname.startsWith(route)
+    pathname === route || pathname.startsWith(route + "/")
   );
 
   if (matchedPath) {

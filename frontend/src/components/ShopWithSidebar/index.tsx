@@ -56,9 +56,10 @@ const CATEGORIES: Category[] = [
 
 type param = {
   initData: Product[];
+  preview?: boolean;
 };
 
-const ShopWithSidebar = ({ initData }: param) => {
+const ShopWithSidebar = ({ initData, preview = false }: param) => {
   const [productStyle, setProductStyle] = useState("grid");
   const [productSidebar, setProductSidebar] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
@@ -144,6 +145,7 @@ const ShopWithSidebar = ({ initData }: param) => {
       />
       <section className="overflow-hidden relative pb-20 pt-5 lg:pt-20 xl:pt-28 bg-[#f3f4f6]">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
+          {preview && <div role="status" className="mb-6 rounded-lg border border-blue/20 bg-white px-5 py-4 text-sm text-dark">Preview catalog: these are sample products from the template while the product API is unavailable.</div>}
           <div className="flex gap-7.5">
             {/* <!-- Sidebar Start --> */}
             <div
