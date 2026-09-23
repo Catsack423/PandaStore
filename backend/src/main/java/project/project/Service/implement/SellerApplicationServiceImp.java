@@ -2,6 +2,8 @@ package project.project.Service.implement;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 import project.project.DTO.seller.CreateSellerApplicationRequest;
 import project.project.DTO.seller.SellerApplicationResponse;
@@ -34,6 +36,15 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
     private final SellerBankAccountRepository sellerBankAccountRepository;
     private final NotificationService notificationService;
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<SellerApplicationResponse> getApplicationsForUser(Long userId) {
+        return applicationRepository.findByUser_UserId(userId).stream()
+                .map(SellerApplicationResponse::fromEntity)
+                .sorted((a, b) -> b.getApplicationId().compareTo(a.getApplicationId()))
+                .toList();
+    }
+
     public SellerApplicationServiceImp(SellerApplicationRepository applicationRepository,
                                        UserRepository userRepository,
                                        SellerRepository sellerRepository,
@@ -61,6 +72,13 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        boolean alreadyOpen = applicationRepository.findByUser_UserId(userId).stream()
+                .anyMatch(existing -> existing.getStatus() == SellerApplicationStatus.PENDING
+                        || existing.getStatus() == SellerApplicationStatus.APPROVED);
+        if (alreadyOpen) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "มีคำขอที่รอตรวจสอบหรือได้รับอนุมัติแล้ว");
+        }
 
         SellerApplication application = new SellerApplication();
         application.setUser(user);
