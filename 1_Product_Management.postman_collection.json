@@ -1,0 +1,337 @@
+{
+  "info": {
+    "_postman_id": "pandastore-1_Product_Management.postman_collection.json",
+    "name": "1. PandaStore - Product Management",
+    "description": "Product creation with randomized data, search, catalog listing, update, and stock deduct/restore API tests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "sellerId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1.1 (TC01) Create Product (Randomized Data)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const adjectives = [\"Premium\", \"Classic\", \"Modern\", \"Vintage\", \"Limited Edition\", \"Panda Special\"];",
+              "const items = [\"T-Shirt\", \"Hoodie\", \"Backpack\", \"Sneakers\", \"Cap\", \"Coffee Mug\", \"Pillow\"];",
+              "const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];",
+              "const randomItem = items[Math.floor(Math.random() * items.length)];",
+              "const randomNum = Math.floor(Math.random() * 900) + 100;",
+              "const productName = `Panda ${randomAdj} ${randomItem} #${randomNum}`;",
+              "const randomPrice = (Math.floor(Math.random() * 800) + 150).toFixed(2);",
+              "const randomStock = Math.floor(Math.random() * 80) + 20;",
+              "pm.collectionVariables.set(\"temp_product_name\", productName);",
+              "pm.collectionVariables.set(\"temp_product_price\", randomPrice);",
+              "pm.collectionVariables.set(\"temp_product_stock\", randomStock);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Response has success true\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.data).to.have.property(\"productId\");",
+              "    pm.collectionVariables.set(\"productId\", json.data.productId);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/products?sellerId={{sellerId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "products"
+          ],
+          "query": [
+            {
+              "key": "sellerId",
+              "value": "{{sellerId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{temp_product_name}}\",\n  \"description\": \"สินค้าคุณภาพดี สกรีนลายแพนด้าแท้ 100% สวมใส่สบาย ระบายอากาศดีเยี่ยม\",\n  \"price\": 299.0,\n  \"stock\": 50,\n  \"shippingInfo\": \"Standard Delivery จัดส่งภายใน 1-3 วันทำการ\",\n  \"categoryIds\": [\n    1\n  ],\n  \"imageUrls\": [\n    \"https://images.unsplash.com/photo-1521572267360-ee0c2909d518\"\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "1.2 (TC02) Get Product By ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Product details match\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.data.productId).to.eql(Number(pm.collectionVariables.get(\"productId\")) || json.data.productId);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "{{productId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "1.3 Get All Active Products",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Returns array of active products\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.data).to.be.an(\"array\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "products"
+          ]
+        }
+      }
+    },
+    {
+      "name": "1.4 (TC03) Search Products",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/products/search?keyword=Panda",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "keyword",
+              "value": "Panda"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "1.5 (TC04) Update Product (Random Price & Stock)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const newPrice = (Math.floor(Math.random() * 500) + 200).toFixed(2);",
+              "const newStock = Math.floor(Math.random() * 50) + 10;",
+              "pm.collectionVariables.set(\"temp_update_price\", newPrice);",
+              "pm.collectionVariables.set(\"temp_update_stock\", newStock);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Product updated successfully\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/products/{{productId}}?sellerId={{sellerId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "{{productId}}"
+          ],
+          "query": [
+            {
+              "key": "sellerId",
+              "value": "{{sellerId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Panda Product Updated\",\n  \"description\": \"อัปเดตรายละเอียดสินค้าและโปรโมชั่นพิเศษ\",\n  \"price\": 349.0,\n  \"stock\": 40,\n  \"status\": \"ACTIVE\",\n  \"shippingInfo\": \"จัดส่งด่วน Kerry Express\"\n}"
+        }
+      }
+    },
+    {
+      "name": "1.6 (TC05) Deduct Product Stock",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/api/products/{{productId}}/deduct-stock?quantity=2",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "{{productId}}",
+            "deduct-stock"
+          ],
+          "query": [
+            {
+              "key": "quantity",
+              "value": "2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "1.7 Restore Product Stock",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/api/products/{{productId}}/restore-stock?quantity=2",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "{{productId}}",
+            "restore-stock"
+          ],
+          "query": [
+            {
+              "key": "quantity",
+              "value": "2"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

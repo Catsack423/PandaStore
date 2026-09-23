@@ -18,7 +18,6 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     Optional<Customer> findByUser_UserId(Long userId);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from Customer c where c.customerId = :customerId")
     Optional<Customer> findByIdForUpdate(@Param("customerId") Long customerId);
 }

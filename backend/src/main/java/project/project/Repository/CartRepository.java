@@ -13,7 +13,6 @@ import java.util.Optional;
 
 public interface CartRepository extends JpaRepository<Cart, Long> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select c from Cart c
             where c.customer.customerId = :customerId
