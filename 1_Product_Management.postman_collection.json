@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "pandastore-1_Product_Management.postman_collection.json",
-    "name": "1. PandaStore - Product Management",
+    "name": "1. Product Management (ProductController -> ProductServiceImp)",
     "description": "Product creation with randomized data, search, catalog listing, update, and stock deduct/restore API tests.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
