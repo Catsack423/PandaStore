@@ -74,6 +74,15 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.success("ค้นหาสินค้าสำเร็จ", PageResponse.from(result)));
     }
 
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getProductsByCategory(
+            @PathVariable Long categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        var result = productService.searchProductsPage(null, categoryId, page, size);
+        return ResponseEntity.ok(ApiResponse.success("ดึงสินค้าตามหมวดหมู่สำเร็จ", PageResponse.from(result)));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(
             @PathVariable Long id,
