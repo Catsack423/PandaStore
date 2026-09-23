@@ -17,7 +17,6 @@ public interface OrderGroupRepository extends JpaRepository<OrderGroup, Long> {
 
     List<OrderGroup> findByCustomer_CustomerId(Long customerId);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select g from OrderGroup g
             where g.orderGroupId = :id
