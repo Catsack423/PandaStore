@@ -1,8 +1,12 @@
 package project.project.Service.implement;
 
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import project.project.Entity.product.Category;
+import project.project.DTO.product.ProductResponse;
 import project.project.Entity.product.Product;
 import project.project.Entity.product.ProductImage;
 import project.project.Entity.product.ProductStatus;
@@ -165,6 +169,24 @@ public class ProductServiceImp implements ProductService {
     public List<Product> searchProducts(String keyword, Long categoryId) {
         String cleanKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
         return productRepository.searchProducts(cleanKeyword, categoryId, ProductStatus.ACTIVE);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> searchProductsPage(String keyword, Long categoryId, int page, int size) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new IllegalArgumentException("page ต้องไม่ติดลบ และ size ต้องอยู่ระหว่าง 1 ถึง 100");
+        }
+        if (categoryId != null && categoryId <= 0) {
+            throw new IllegalArgumentException("categoryId ต้องมากกว่า 0");
+        }
+
+        String cleanKeyword = keyword == null || keyword.isBlank() ? null : keyword.trim();
+        var sort = Sort.by("productId").ascending();
+        var pageable = PageRequest.of(page, size, sort);
+        Page<Product> products = productRepository.searchProductsPage(
+                cleanKeyword, categoryId, ProductStatus.ACTIVE, pageable);
+        return products.map(ProductResponse::fromEntity);
     }
 
     @Override
