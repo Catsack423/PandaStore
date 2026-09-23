@@ -1,4 +1,5 @@
 import { Product } from "@/types/product";
+import { templateShopName } from "@/lib/templateShops";
 const shopData: Product[] = [
   {
     title: "Havit HV-G69 USB Gamepad",
@@ -138,4 +139,7 @@ const shopData: Product[] = [
   },
 ];
 
-export default shopData;
+export default shopData.map((product) => ({
+  ...product,
+  sellerShopName: product.sellerShopName || templateShopName(product),
+}));

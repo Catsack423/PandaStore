@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import PublicShop, { type PublicShopData } from "@/components/Seller/PublicShop";
+import { getSellerProducts } from "@/ServerAction/products";
 
 export const metadata: Metadata = { title: "Shop | PandaStore" };
 
@@ -20,5 +21,7 @@ export default async function PublicShopPage({ params }: { params: Promise<{ sho
   const { shopId } = await params;
   const id = Number(shopId);
   const validId = Number.isSafeInteger(id) && id >= 0 && String(id) === shopId;
-  return <PublicShop shopId={validId ? id : -1} shop={validId ? await getPublicShop(id) : null} />;
+  const shop = validId ? await getPublicShop(id) : null;
+  const products = shop?.status === "ACTIVE" ? await getSellerProducts(id) : null;
+  return <PublicShop shopId={validId ? id : -1} shop={shop} products={products} />;
 }

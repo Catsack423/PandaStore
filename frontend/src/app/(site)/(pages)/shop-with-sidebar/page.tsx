@@ -21,7 +21,7 @@ async function ShopWithSidebarPage() {
     <main>
       <ProductContextProvider>
         <FilterSidebarContextProvider>
-          <ShopWithSidebar initData={initialProducts} preview={!response.success} />
+          <ShopWithSidebar initData={initialProducts} preview={!response.success || response.message === "Template products loaded"} />
         </FilterSidebarContextProvider>
       </ProductContextProvider>
     </main>
