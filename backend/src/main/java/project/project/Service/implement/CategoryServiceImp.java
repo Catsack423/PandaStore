@@ -1,5 +1,7 @@
 package project.project.Service.implement;
 
+import java.util.List;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.project.Entity.product.Category;
@@ -34,5 +36,13 @@ public class CategoryServiceImp implements CategoryService {
             throw new IllegalArgumentException("คำอธิบายต้องไม่เกิน 255 ตัวอักษร");
         }
         return categories.save(new Category(null, name, detail));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Category> getAllCategories() {
+        Sort order = Sort.by("categoryName").ascending()
+                .and(Sort.by("categoryId").ascending());
+        return categories.findAll(order);
     }
 }

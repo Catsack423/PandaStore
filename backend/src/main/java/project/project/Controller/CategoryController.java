@@ -1,8 +1,10 @@
 package project.project.Controller;
 
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,5 +38,13 @@ public class CategoryController {
         var category = categories.createCategory(request.categoryName(), request.description());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("เพิ่มหมวดหมู่สำเร็จ", CategoryResponse.fromEntity(category)));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getAllCategories() {
+        List<CategoryResponse> result = categories.getAllCategories().stream()
+                .map(CategoryResponse::fromEntity)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.success("ดึงหมวดหมู่ทั้งหมดสำเร็จ", result));
     }
 }

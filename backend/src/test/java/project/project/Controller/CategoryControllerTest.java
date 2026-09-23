@@ -1,9 +1,11 @@
 package project.project.Controller;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -60,5 +62,19 @@ class CategoryControllerTest {
                 .content("{\"categoryName\":\"Keyboard\"}"))
                 .andExpect(status().isUnauthorized());
         verifyNoInteractions(categories);
+    }
+
+    @Test
+    void anyoneCanGetAllCategories() throws Exception {
+        when(categories.getAllCategories()).thenReturn(List.of(
+                new Category(1L, "Keyboard", "Devices"),
+                new Category(2L, "Mouse", null)));
+
+        mvc.perform(get("/api/categories"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].categoryName").value("Keyboard"))
+                .andExpect(jsonPath("$.data[1].categoryId").value(2));
+
+        verifyNoInteractions(currentUser);
     }
 }
