@@ -82,9 +82,9 @@ public class SellerServiceTest {
         savedSeller.setRating(BigDecimal.ZERO);
         when(sellerRepository.save(any(Seller.class))).thenReturn(savedSeller);
 
-        long sellerId = sellerService.createSeller(request);
+        Seller created = sellerService.createSeller(request);
 
-        assertEquals(10L, sellerId);
+        assertEquals(10L, created.getSellerId());
         verify(userRepository, times(1)).save(any(User.class));
         verify(sellerRepository, times(1)).save(any(Seller.class));
         verify(sellerApplicationService, times(1)).submitApplication(eq(1L), any(CreateSellerApplicationRequest.class));

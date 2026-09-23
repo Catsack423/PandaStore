@@ -17,7 +17,7 @@ public interface AuthService {
    
 
     Seller registerSeller(RegisterSeller request);
-
+    
     String login(String usernameOrEmail, String password);
 
     boolean validateToken(String token);

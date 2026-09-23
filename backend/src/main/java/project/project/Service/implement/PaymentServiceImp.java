@@ -90,11 +90,12 @@ public class PaymentServiceImp implements PaymentService {
             payment.setGatewayTransactionId("GW-TXN-" + UUID.randomUUID().toString());
         }
 
-        orderGroup.setPayment(payment);
+        Payment savedPayment = paymentRepository.save(payment);
+        orderGroup.setPayment(savedPayment);
         orderGroup.setPaymentStatus(OrderGroupPaymentStatus.PENDING);
         orderGroupRepository.save(orderGroup);
 
-        return paymentRepository.save(payment);
+        return savedPayment;
     }
 
     @Override
