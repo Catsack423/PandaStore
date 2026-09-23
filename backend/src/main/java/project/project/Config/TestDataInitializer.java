@@ -65,9 +65,15 @@ public class TestDataInitializer implements CommandLineRunner {
         this.paymentRepository = paymentRepository;
     }
 
+    @org.springframework.beans.factory.annotation.Value("${app.seed-data:true}")
+    private boolean seedOnStartup;
+
     @Override
     @Transactional
     public void run(String... args) {
+        if (!seedOnStartup) {
+            return;
+        }
         if (sellerRepository.count() > 0) {
             return;
         }

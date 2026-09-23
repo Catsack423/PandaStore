@@ -91,10 +91,7 @@ public class SubOrderServiceImp implements SubOrderService {
     public void sellerAcceptOrder(Long sellerId, Long orderId) {
         Order order = findAndValidateSellerOrder(sellerId, orderId);
 
-        // ตรวจสถานะ — ต้อง WAITING_SELLER_CONFIRM หรือถ้า PREPARING อยู่แล้ว (idempotent)
-        if (order.getOrderStatus() == OrderStatus.PREPARING) {
-            return;
-        }
+        // ตรวจสถานะ — ต้อง WAITING_SELLER_CONFIRM
         if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM) {
             throw new IllegalArgumentException(
                     "ไม่สามารถยืนยันคำสั่งซื้อได้ สถานะปัจจุบัน: " + order.getOrderStatus()
@@ -268,6 +265,10 @@ public class SubOrderServiceImp implements SubOrderService {
         Long orderCustomerId = order.getOrderGroup().getCustomer().getCustomerId();
         if (!orderCustomerId.equals(customerId)) {
             throw new RuntimeException("คำสั่งซื้อนี้ไม่ใช่ของลูกค้า customerId: " + customerId);
+        }
+
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new IllegalArgumentException("กรุณาระบุเหตุผลในการยกเลิกคำสั่งซื้อ");
         }
 
         if (order.getOrderStatus() == OrderStatus.CANCELLED) {
