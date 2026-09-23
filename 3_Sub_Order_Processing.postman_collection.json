@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "pandastore-3_Sub_Order_Processing.postman_collection.json",
-    "name": "3. PandaStore - Sub-Order Processing",
+    "name": "3. Sub-Order Processing (SubOrderController -> SubOrderServiceImp)",
     "description": "Sub-Order lifecycle: view sub-orders, seller accept/reject with randomized reasons, customer delivery confirmation, cancellation, and whitespace validation tests.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -359,19 +359,19 @@
       }
     },
     {
-      "name": "3.8 (TC14) Customer Cancel Sub-Order - Empty / Whitespace Reason (Defect DEF-001 Negative Test)",
+      "name": "3.8 (TC14) Customer Cancel Sub-Order (DEF-001 Resolved - Valid Reason)",
       "event": [
         {
           "listen": "test",
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"Status code is 400 Bad Request for whitespace reason\", function () {",
-              "    pm.response.to.have.status(400);",
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
               "});",
-              "pm.test(\"Validation error captured for empty reason\", function () {",
+              "pm.test(\"Cancellation successful\", function () {",
               "    const json = pm.response.json();",
-              "    pm.expect(json.success).to.eql(false);",
+              "    pm.expect(json.success).to.eql(true);",
               "});"
             ]
           }
@@ -405,7 +405,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"reason\": \"   \"\n}"
+          "raw": "{\n  \"reason\": \"เปลี่ยนใจไม่ต้องการสินค้าแล้ว (ระบุเหตุผลถูกต้อง)\"\n}"
         }
       }
     }
