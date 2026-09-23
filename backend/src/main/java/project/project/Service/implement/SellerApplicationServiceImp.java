@@ -62,6 +62,10 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
+        if (user.getRole() == UserRole.SELLER || sellerRepository.findByUser_UserId(userId).isPresent()) {
+            throw new IllegalStateException("ผู้ใช้งานนี้เป็นผู้ขาย (Seller) ในระบบอยู่แล้ว");
+        }
+
         SellerApplication application = new SellerApplication();
         application.setUser(user);
         application.setShopName(request.getShopName());
@@ -102,6 +106,10 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
+        if (user.getRole() == UserRole.SELLER || sellerRepository.findByUser_UserId(userId).isPresent()) {
+            throw new IllegalStateException("ผู้ใช้งานนี้เป็นผู้ขาย (Seller) ในระบบอยู่แล้ว");
+        }
+
         application.setUser(user);
         application.setStatus(SellerApplicationStatus.PENDING);
         if (application.getCreatedAt() == null) {
@@ -133,12 +141,16 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
             throw new IllegalStateException("Application has already been approved");
         }
 
+        User user = application.getUser();
+        if (user != null && (user.getRole() == UserRole.SELLER || sellerRepository.findByUser_UserId(user.getUserId()).isPresent())) {
+            throw new IllegalStateException("ผู้ใช้งานของใบสมัครนี้เป็นผู้ขาย (Seller) อยู่แล้ว");
+        }
+
         application.setStatus(SellerApplicationStatus.APPROVED);
         application.setReviewedBy(admin);
         application.setReviewedAt(LocalDateTime.now());
         applicationRepository.save(application);
 
-        User user = application.getUser();
         user.setRole(UserRole.SELLER);
         userRepository.save(user);
 

@@ -236,6 +236,53 @@ public class SellerApplicationServiceTest {
     }
 
     @Test
+    @DisplayName("UC3: แอดมินอนุมัติใบสมัครของผู้ที่เป็น SELLER อยู่แล้ว ต้องโยน IllegalStateException")
+    void testApproveApplication_UserAlreadySeller_ThrowsException() {
+        sampleUser.setRole(UserRole.SELLER);
+        sampleApplication.setUser(sampleUser);
+        sampleApplication.setStatus(SellerApplicationStatus.PENDING);
+
+        when(applicationRepository.findById(501L)).thenReturn(Optional.of(sampleApplication));
+        when(userRepository.findById(99L)).thenReturn(Optional.of(adminUser));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+            sellerApplicationService.approveApplication(501L, 99L);
+        });
+
+        assertTrue(ex.getMessage().contains("เป็นผู้ขาย"));
+        verify(sellerRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("UC3: ผู้ใช้ที่เป็น SELLER อยู่แล้วยื่นคำขอ ต้องโยน IllegalStateException")
+    void testSubmitApplication_UserAlreadySeller_ThrowsException() {
+        sampleUser.setRole(UserRole.SELLER);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+            sellerApplicationService.submitApplication(1L, sampleApplication);
+        });
+
+        assertTrue(ex.getMessage().contains("เป็นผู้ขาย"));
+        verify(applicationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("UC3: ผู้ใช้ที่มีประวัติร้านค้า (Seller) อยู่แล้วยื่นคำขอ ต้องโยน IllegalStateException")
+    void testSubmitApplication_UserAlreadyHasSellerRecord_ThrowsException() {
+        sampleUser.setRole(UserRole.CUSTOMER);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+        when(sellerRepository.findByUser_UserId(1L)).thenReturn(Optional.of(new Seller()));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+            sellerApplicationService.submitApplication(1L, sampleApplication);
+        });
+
+        assertTrue(ex.getMessage().contains("เป็นผู้ขาย"));
+        verify(applicationRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("UC3: แอดมินปฏิเสธคำขอเปิดร้าน พร้อมบันทึกเหตุผลและแจ้งเตือนผู้ใช้")
     void testRejectApplication_Success() {
         sampleApplication.setApplicationId(501L);
