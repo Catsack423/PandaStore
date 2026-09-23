@@ -2,6 +2,7 @@ package project.project.Controller;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -104,5 +105,44 @@ class CategoryControllerTest {
 
         mvc.perform(get("/api/categories/99/products"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void adminCanDeleteCategory() throws Exception {
+        when(currentUser.requireIdentity()).thenReturn(new AuthenticatedUser(1, UserRole.ADMIN));
+
+        mvc.perform(delete("/api/categories/3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+        verify(categories).deleteCategory(3L);
+    }
+
+    @Test
+    void otherUsersCannotDeleteCategory() throws Exception {
+        when(currentUser.requireIdentity()).thenReturn(new AuthenticatedUser(2, UserRole.CUSTOMER));
+
+        mvc.perform(delete("/api/categories/3"))
+                .andExpect(status().isForbidden());
+        verify(categories, never()).deleteCategory(anyLong());
+    }
+
+    @Test
+    void anonymousUsersCannotDeleteCategory() throws Exception {
+        when(currentUser.requireIdentity()).thenThrow(
+                new ResponseStatusException(HttpStatus.UNAUTHORIZED, "กรุณาเข้าสู่ระบบ"));
+
+        mvc.perform(delete("/api/categories/3"))
+                .andExpect(status().isUnauthorized());
+        verify(categories, never()).deleteCategory(anyLong());
+    }
+
+    @Test
+    void categoryWithProductsReturnsConflict() throws Exception {
+        when(currentUser.requireIdentity()).thenReturn(new AuthenticatedUser(1, UserRole.ADMIN));
+        doThrow(new IllegalStateException("ไม่สามารถลบหมวดหมู่ที่มีสินค้าอยู่"))
+                .when(categories).deleteCategory(3L);
+
+        mvc.perform(delete("/api/categories/3"))
+                .andExpect(status().isConflict());
     }
 }

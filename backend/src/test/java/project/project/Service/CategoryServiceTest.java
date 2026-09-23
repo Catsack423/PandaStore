@@ -10,14 +10,17 @@ import org.springframework.data.domain.PageRequest;
 import project.project.DTO.product.ProductResponse;
 import project.project.Entity.product.Category;
 import project.project.Repository.CategoryRepository;
+import project.project.Repository.ProductRepository;
 import project.project.Service.api.ProductService;
 import project.project.Service.implement.CategoryServiceImp;
 import java.util.List;
+import java.util.Optional;
 
 class CategoryServiceTest {
     private final CategoryRepository repository = mock(CategoryRepository.class);
     private final ProductService products = mock(ProductService.class);
-    private final CategoryServiceImp service = new CategoryServiceImp(repository, products);
+    private final ProductRepository productRepository = mock(ProductRepository.class);
+    private final CategoryServiceImp service = new CategoryServiceImp(repository, products, productRepository);
 
     @Test
     void trimsNameBeforeCheckingAndSaving() {
@@ -54,5 +57,31 @@ class CategoryServiceTest {
         assertThrows(EntityNotFoundException.class,
                 () -> service.getProductsByCategory(99L, 0, 20));
         verifyNoInteractions(products);
+    }
+
+    @Test
+    void deletesCategoryWithoutProducts() {
+        Category category = new Category(3L, "Keyboard", null);
+        when(repository.findById(3L)).thenReturn(Optional.of(category));
+
+        service.deleteCategory(3L);
+
+        verify(repository).delete(category);
+    }
+
+    @Test
+    void categoryWithProductsCannotBeDeleted() {
+        Category category = new Category(3L, "Keyboard", null);
+        when(repository.findById(3L)).thenReturn(Optional.of(category));
+        when(productRepository.existsByCategories_CategoryId(3L)).thenReturn(true);
+
+        assertThrows(IllegalStateException.class, () -> service.deleteCategory(3L));
+        verify(repository, never()).delete(any());
+    }
+
+    @Test
+    void missingCategoryCannotBeDeleted() {
+        assertThrows(EntityNotFoundException.class, () -> service.deleteCategory(99L));
+        verify(repository, never()).delete(any());
     }
 }

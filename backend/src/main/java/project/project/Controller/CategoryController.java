@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -59,5 +60,15 @@ public class CategoryController {
             @RequestParam(defaultValue = "20") int size) {
         var result = categories.getProductsByCategory(categoryId, page, size);
         return ResponseEntity.ok(ApiResponse.success("ดึงสินค้าตามหมวดหมู่สำเร็จ", PageResponse.from(result)));
+    }
+
+    @DeleteMapping("/{categoryId}")
+    public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long categoryId) {
+        if (currentUser.requireIdentity().role() != UserRole.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "เฉพาะผู้ดูแลระบบเท่านั้น");
+        }
+
+        categories.deleteCategory(categoryId);
+        return ResponseEntity.ok(ApiResponse.success("ลบหมวดหมู่สำเร็จ", null));
     }
 }

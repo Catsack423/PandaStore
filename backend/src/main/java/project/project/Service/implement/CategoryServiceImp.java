@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import project.project.DTO.product.ProductResponse;
 import project.project.Entity.product.Category;
 import project.project.Repository.CategoryRepository;
+import project.project.Repository.ProductRepository;
 import project.project.Service.api.CategoryService;
 import project.project.Service.api.ProductService;
 
@@ -16,10 +17,13 @@ import project.project.Service.api.ProductService;
 public class CategoryServiceImp implements CategoryService {
     private final CategoryRepository categories;
     private final ProductService products;
+    private final ProductRepository productRepository;
 
-    public CategoryServiceImp(CategoryRepository categories, ProductService products) {
+    public CategoryServiceImp(CategoryRepository categories, ProductService products,
+                              ProductRepository productRepository) {
         this.categories = categories;
         this.products = products;
+        this.productRepository = productRepository;
     }
 
     @Override
@@ -62,5 +66,20 @@ public class CategoryServiceImp implements CategoryService {
             throw new EntityNotFoundException("ไม่พบหมวดหมู่ที่ต้องการ");
         }
         return products.searchProductsPage(null, categoryId, page, size);
+    }
+
+    @Override
+    @Transactional
+    public void deleteCategory(Long categoryId) {
+        if (categoryId == null || categoryId <= 0) {
+            throw new IllegalArgumentException("categoryId ต้องมากกว่า 0");
+        }
+
+        Category category = categories.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("ไม่พบหมวดหมู่ที่ต้องการ"));
+        if (productRepository.existsByCategories_CategoryId(categoryId)) {
+            throw new IllegalStateException("ไม่สามารถลบหมวดหมู่ที่มีสินค้าอยู่");
+        }
+        categories.delete(category);
     }
 }
