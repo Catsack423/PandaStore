@@ -51,9 +51,9 @@ export const menuData: Menu[] = [
       },
       {
         id: 66,
-        title: "Wishlist",
+        title: "Seller Applications",
         newTab: false,
-        path: "/wishlist",
+        path: "/seller-application",
       },
       {
         id: 67,
@@ -77,7 +77,7 @@ export const menuData: Menu[] = [
         id: 74,
         title: "Become a Seller",
         newTab: false,
-        path: "/signup/seller",
+        path: "/seller-application",
       },
       {
         id: 75,
