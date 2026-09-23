@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "pandastore-4_Shipping_Logistics.postman_collection.json",
-    "name": "4. PandaStore - Shipping Logistics",
+    "name": "4. Shipping Logistics (ShippingController -> ShippingServiceImp)",
     "description": "Shipping fee calculation, tracking number assignment (random courier and tracking code), shipment status tracking and delivery updates.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
