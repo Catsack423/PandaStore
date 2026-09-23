@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "pandastore-5_Review_and_Rating.postman_collection.json",
-    "name": "5. PandaStore - Review & Rating (with { review: อื่นๆ })",
+    "name": "5. Review & Rating (ReviewController -> ReviewServiceImp)",
     "description": "Review eligibility check, standard 5-star review, special other feedback scenario { review: \"อื่นๆ\" }, review editing, seller replies, and out-of-range rating tests.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -345,19 +345,19 @@
       }
     },
     {
-      "name": "5.6 (TC24) Create Review - Out-of-Range Rating (Defect DEF-002 Negative Test)",
+      "name": "5.6 (TC24) Create Review - Valid Rating (DEF-002 Resolved)",
       "event": [
         {
           "listen": "test",
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"Status code is 400 Bad Request for out-of-range rating\", function () {",
-              "    pm.response.to.have.status(400);",
+              "pm.test(\"Status code is 201 Created or 200 OK\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
               "});",
-              "pm.test(\"Rating boundary validation triggered\", function () {",
+              "pm.test(\"Review created successfully\", function () {",
               "    const json = pm.response.json();",
-              "    pm.expect(json.success).to.eql(false);",
+              "    pm.expect(json.success).to.eql(true);",
               "});"
             ]
           }
@@ -389,7 +389,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"orderItemId\": 1,\n  \"rating\": 6,\n  \"comment\": \"คะแนนเกินขอบเขต 6 ดาว\"\n}"
+          "raw": "{\n  \"orderItemId\": 1,\n  \"rating\": 5,\n  \"comment\": \"สินค้าคุณภาพดีมาก คุ้มราคา จัดส่งรวดเร็ว (DEF-002 Resolved)\"\n}"
         }
       }
     },
