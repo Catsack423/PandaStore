@@ -81,11 +81,11 @@ public class ShippingServiceImp implements ShippingService {
                     "คำสั่งซื้อนี้ไม่ใช่ของร้านค้า sellerId: " + sellerId);
         }
 
-        // 3. ตรวจสถานะ — ต้อง PREPARING เท่านั้นจึงจะกรอก Tracking ได้
-        if (order.getOrderStatus() != OrderStatus.PREPARING) {
-            throw new RuntimeException(
+        // 3. ตรวจสถานะ — ต้อง PREPARING หรือ SHIPPED (อนุญาตให้อัปเดต tracking ซ้ำได้)
+        if (order.getOrderStatus() != OrderStatus.PREPARING && order.getOrderStatus() != OrderStatus.SHIPPED) {
+            throw new IllegalArgumentException(
                     "ไม่สามารถกรอก Tracking ได้ สถานะปัจจุบัน: " + order.getOrderStatus()
-                            + " (ต้องเป็น PREPARING)");
+                            + " (ต้องเป็น PREPARING หรือ SHIPPED)");
         }
 
         // 4. ตรวจว่า courierName และ trackingNumber ไม่ว่าง (UC1-41A)

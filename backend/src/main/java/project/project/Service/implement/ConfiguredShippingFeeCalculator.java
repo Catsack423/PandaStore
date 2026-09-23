@@ -37,6 +37,10 @@ public class ConfiguredShippingFeeCalculator
         String configuredFee = environment.getProperty(propertyName);
 
         if (configuredFee == null || configuredFee.isBlank()) {
+            configuredFee = environment.getProperty("shipping.fees.default." + method);
+        }
+
+        if (configuredFee == null || configuredFee.isBlank()) {
             throw new IllegalArgumentException(
                     "Shipping method is unavailable for seller: " + sellerId);
         }
