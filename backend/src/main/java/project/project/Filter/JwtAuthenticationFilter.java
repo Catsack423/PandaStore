@@ -35,15 +35,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final ObjectMapper json;
     private static final List<String> MONITORED_PATH_PREFIXES = List.of(
             "/api/cart",
-            "/api/auth"
-    );
+            "/api/auth");
 
     // Endpoint เมธอด POST ที่อนุญาตให้ผ่านได้โดยไม่ต้องมี Token
     private static final Set<String> PUBLIC_POST_PATHS = Set.of(
             "/api/auth/login",
             "/api/auth/register/customer",
-            "/api/auth/register/seller"
-    );
+            "/api/auth/register/seller",
+            "/api/sellers/register");
 
     public JwtAuthenticationFilter(SessionAuthenticator authenticator, ObjectMapper json) {
         this.authenticator = authenticator;
@@ -113,7 +112,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return authenticator.authenticate(token);
     }
 
-    //return Error Unauthorized
+    // return Error Unauthorized
     private void unauthorized(HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer");

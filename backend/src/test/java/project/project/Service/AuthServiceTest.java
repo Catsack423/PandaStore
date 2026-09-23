@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import jakarta.validation.ConstraintViolationException;
+import project.project.Entity.seller.*;
 import project.project.Entity.user.*;
 import project.project.Exception.DuplicateUserException;
 import project.project.Repository.*;
@@ -32,6 +33,7 @@ class AuthServiceTest {
     CartRepository carts;
     @Autowired SellerRepository sellers;
     @Autowired SellerApplicationRepository applications;
+    @Autowired SellerBankAccountRepository bankAccounts;
     @Autowired AuthSessionRepository sessions;
 
     @BeforeEach
@@ -39,6 +41,7 @@ class AuthServiceTest {
         sessions.deleteAll();
         carts.deleteAll();
         customers.deleteAll();
+        bankAccounts.deleteAll();
         applications.deleteAll();
         sellers.deleteAll();
         users.deleteAll();
@@ -93,14 +96,76 @@ class AuthServiceTest {
     }
 
     @Test
-    void sellerRegistrationWaitsForInterfaceWithoutWritingData() {
-        assertThrows(UnsupportedOperationException.class,
-                () -> auth.registerSeller("seller", "seller@example.com", "password123", "password123"));
-        assertThrows(IllegalArgumentException.class,
-                () -> auth.registerSeller("seller", "seller@example.com", "password123", "different"));
+    void sellerRegistrationRejectsPasswordMismatch() {
+        var request = new project.project.DTO.auth.AuthRequests.RegisterSeller(
+                "seller", "seller@example.com", "password123", "different",
+                "Shop", "Desc", "0812345678", "shop@example.com", "Bangkok",
+                "Somchai", "Jaidee", "1234567890123",
+                "Kasikorn", "Somchai Jaidee", "1234567890",
+                null, null, null
+        );
+        assertThrows(IllegalArgumentException.class, () -> auth.registerSeller(request));
         assertEquals(0, users.count());
         assertEquals(0, sellers.count());
         assertEquals(0, applications.count());
+        assertEquals(0, bankAccounts.count());
+    }
+
+    @Test
+    void sellerRegistrationWithFullDetailsCreatesUserSellerApplicationAndBankAccount() {
+        var request = new project.project.DTO.auth.AuthRequests.RegisterSeller(
+                "newSeller", "newseller@example.com", "password123", "password123",
+                "My Shop", "Shop description", "0812345678", "shop@example.com",
+                "Bangkok", "Somchai", "Jaidee", "1234567890123",
+                "Kasikorn", "Somchai Jaidee", "1234567890",
+                null, null, null
+        );
+        Seller seller = auth.registerSeller(request);
+        assertNotNull(seller.getSellerId());
+        assertEquals("My Shop", seller.getShopName());
+        assertEquals(project.project.Entity.seller.SellerStatus.PENDING, seller.getStatus());
+
+        assertEquals(1, users.count());
+        assertEquals(1, sellers.count());
+        assertEquals(1, applications.count());
+        assertEquals(1, bankAccounts.count());
+
+        User user = users.findByUsername("newSeller").orElseThrow();
+        assertEquals(UserRole.SELLER, user.getRole());
+        assertTrue(passwords.matches("password123", user.getPasswordHash()));
+
+        project.project.Entity.seller.SellerApplication app = applications.findByUser_UserId(user.getUserId()).orElseThrow();
+        assertEquals("My Shop", app.getShopName());
+        assertEquals("Somchai", app.getSellerFirstName());
+        assertEquals("1234567890123", app.getIdCardNumber());
+        assertEquals(project.project.Entity.seller.SellerApplicationStatus.PENDING, app.getStatus());
+
+        project.project.Entity.seller.SellerBankAccount bank = bankAccounts.findFirstBySeller_SellerId(seller.getSellerId()).orElseThrow();
+        assertEquals("Kasikorn", bank.getBankName());
+        assertEquals("1234567890", bank.getAccountNumber());
+        assertEquals("Somchai Jaidee", bank.getAccountName());
+    }
+
+    @Test
+    void sellerRegistrationRejectsDuplicateShopName() {
+        var request1 = new project.project.DTO.auth.AuthRequests.RegisterSeller(
+                "seller1", "seller1@example.com", "password123", "password123",
+                "Same Shop", "Shop description", "0812345678", "shop1@example.com",
+                "Bangkok", "Somchai", "Jaidee", "1234567890123",
+                "Kasikorn", "Somchai Jaidee", "1234567890",
+                null, null, null
+        );
+        auth.registerSeller(request1);
+
+        var request2 = new project.project.DTO.auth.AuthRequests.RegisterSeller(
+                "seller2", "seller2@example.com", "password123", "password123",
+                "Same Shop", "Shop description", "0812345679", "shop2@example.com",
+                "Bangkok", "Somsak", "Jaidee", "1234567890124",
+                "SCB", "Somsak Jaidee", "0987654321",
+                null, null, null
+        );
+        assertThrows(DuplicateUserException.class, () -> auth.registerSeller(request2));
+        assertEquals(1, sellers.count());
     }
 
     @Test

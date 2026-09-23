@@ -6,6 +6,16 @@ public class ApiResponse<T> {
     private T data;
     private Object error; // null ถ้าไม่ error
 
+    public ApiResponse() {
+    }
+
+    public ApiResponse(boolean success, String message, T data, Object error) {
+        this.success = success;
+        this.message = message;
+        this.data = data;
+        this.error = error;
+    }
+
     public static <T> ApiResponse<T> success(String message, T data) {
         ApiResponse<T> res = new ApiResponse<>();
         res.success = true;
@@ -44,10 +54,6 @@ public class ApiResponse<T> {
 
     public void setMessage(String message) {
         this.message = message;
-    }
-
-    public boolean isSuccess() {
-        return success;
     }
 
     public void setSuccess(boolean success) {
