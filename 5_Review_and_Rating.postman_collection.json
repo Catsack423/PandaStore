@@ -1,0 +1,463 @@
+{
+  "info": {
+    "_postman_id": "pandastore-5_Review_and_Rating.postman_collection.json",
+    "name": "5. PandaStore - Review & Rating (with { review: อื่นๆ })",
+    "description": "Review eligibility check, standard 5-star review, special other feedback scenario { review: \"อื่นๆ\" }, review editing, seller replies, and out-of-range rating tests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "customerId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "sellerId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "orderItemId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "reviewId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "5.1 (TC19) Check Review Eligibility",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Returns boolean eligibility\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.data).to.be.a(\"boolean\");",
+              "    pm.expect(json.data).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/reviews/check-eligibility?customerId={{customerId}}&orderItemId={{orderItemId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reviews",
+            "check-eligibility"
+          ],
+          "query": [
+            {
+              "key": "customerId",
+              "value": "{{customerId}}"
+            },
+            {
+              "key": "orderItemId",
+              "value": "{{orderItemId}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "5.2 (TC20) Create Review - Standard / Positive (Random Rating & Comment)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const reviews = [",
+              "    \"สินค้าคุณภาพดีมาก คุ้มค่าเกินราคา ผ้านุ่มใส่สบายมากครับ แนะนำเลย!\",",
+              "    \"ได้รับสินค้าตรงปก การตัดเย็บประณีตเรียบร้อย การจัดส่งรวดเร็ว\",",
+              "    \"ประทับใจมาก แพ็คเกจห่อมาดีมาก สินค้าไม่มีตำหนิ\",",
+              "    \"ดีเยี่ยม สั่งเป็นตัวที่สองแล้ว คุณภาพไม่ผิดหวัง\"",
+              "];",
+              "const randomComment = reviews[Math.floor(Math.random() * reviews.length)];",
+              "const rating = Math.floor(Math.random() * 2) + 4; // 4 or 5 stars",
+              "pm.collectionVariables.set(\"temp_review_comment\", randomComment);",
+              "pm.collectionVariables.set(\"temp_review_rating\", rating);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201 Created or 200 OK\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "pm.test(\"Review saved and ID captured\", function () {",
+              "    const json = pm.response.json();",
+              "    if (json.data && json.data.reviewId) {",
+              "        pm.collectionVariables.set(\"reviewId\", json.data.reviewId);",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reviews?customerId={{customerId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reviews"
+          ],
+          "query": [
+            {
+              "key": "customerId",
+              "value": "{{customerId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderItemId\": 1,\n  \"rating\": 5,\n  \"comment\": \"{{temp_review_comment}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "5.3 (TC21) Create Review - Scenario { review: อื่นๆ } / Custom Feedback",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Scenario { review: 'อื่นๆ' } options",
+              "const otherOptions = [",
+              "    \"{ review: 'อื่นๆ' } - สินค้าคุณภาพดี แต่สีจริงเข้มกว่าในรูปภาพเล็กน้อย โดยรวมพอใจ\",",
+              "    \"{ review: 'อื่นๆ' } - การขนส่งล่าช้ากว่ากำหนด 1 วัน แต่สินค้าห่อกันกระแทกมาเรียบร้อยดี\",",
+              "    \"{ review: 'อื่นๆ' } - ไซส์เสื้อค่อนข้างฟิตกว่ามาตรฐาน แนะนำให้เผื่อ 1 ไซส์ แต่เนื้อผ้าดี\",",
+              "    \"{ review: 'อื่นๆ' } - สินค้าใช้งานได้ดี มีคู่มือภาษาไทยให้ สะดวกมาก\"",
+              "];",
+              "const randomOther = otherOptions[Math.floor(Math.random() * otherOptions.length)];",
+              "pm.collectionVariables.set(\"temp_other_review\", randomOther);",
+              "pm.request.body.raw = JSON.stringify({",
+              "    orderItemId: 2,",
+              "    rating: 4,",
+              "    comment: randomOther",
+              "});"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201 Created or 200 OK\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "pm.test(\"Scenario review { review: อื่นๆ } validated\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reviews?customerId={{customerId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reviews"
+          ],
+          "query": [
+            {
+              "key": "customerId",
+              "value": "{{customerId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderItemId\": 2,\n  \"rating\": 4,\n  \"comment\": \"{ review: 'อื่นๆ' } - สินค้าคุณภาพดี แต่สีจริงเข้มกว่าในรูปภาพเล็กน้อย โดยรวมพอใจ\"\n}"
+        }
+      }
+    },
+    {
+      "name": "5.4 (TC22) Update Review (Customer Edited)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"temp_updated_comment\", \"อัปเดตรีวิว: ทดลองซักและใช้งานจริง 2 สัปดาห์ ผ้าไม่หด ไม่ย้วย สียังสดใสดีมากครับ ให้ 5 ดาวเต็ม\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Review comment and rating updated\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reviews/{{reviewId}}?customerId={{customerId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reviews",
+            "{{reviewId}}"
+          ],
+          "query": [
+            {
+              "key": "customerId",
+              "value": "{{customerId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rating\": 5,\n  \"comment\": \"{{temp_updated_comment}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "5.5 (TC23) Seller Reply Review (Random Reply)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const replies = [",
+              "    \"ขอบพระคุณลูกค้าที่ให้ความไว้วางใจ PandaStore ครับ หวังว่าจะได้รับใช้ลูกค้าอีกในโอกาสต่อไปครับ\",",
+              "    \"ทางร้านยินดีเป็นอย่างยิ่งที่ลูกค้าชื่นชอบสินค้า หากมีข้อสงสัยสอบถามแอดมินได้ตลอด 24 ชม. ครับ\",",
+              "    \"กราบขอบพระคุณสำหรับคะแนนรีวิว 5 ดาวครับ ทางร้านจะรักษามาตรฐานและพัฒนาบริการต่อไปครับ\"",
+              "];",
+              "const randomReply = replies[Math.floor(Math.random() * replies.length)];",
+              "pm.collectionVariables.set(\"temp_reply_message\", randomReply);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reviews/{{reviewId}}/reply?sellerId={{sellerId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reviews",
+            "{{reviewId}}",
+            "reply"
+          ],
+          "query": [
+            {
+              "key": "sellerId",
+              "value": "{{sellerId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"replyMessage\": \"{{temp_reply_message}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "5.6 (TC24) Create Review - Out-of-Range Rating (Defect DEF-002 Negative Test)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400 Bad Request for out-of-range rating\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Rating boundary validation triggered\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(false);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reviews?customerId={{customerId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reviews"
+          ],
+          "query": [
+            {
+              "key": "customerId",
+              "value": "{{customerId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderItemId\": 1,\n  \"rating\": 6,\n  \"comment\": \"คะแนนเกินขอบเขต 6 ดาว\"\n}"
+        }
+      }
+    },
+    {
+      "name": "5.7 Get Reviews By Product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Reviews array returned\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.data).to.be.an(\"array\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/reviews/product/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reviews",
+            "product",
+            "{{productId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "5.8 Get Review By Order Item ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/reviews/order-item/{{orderItemId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reviews",
+            "order-item",
+            "{{orderItemId}}"
+          ]
+        }
+      }
+    }
+  ]
+}

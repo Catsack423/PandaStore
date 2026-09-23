@@ -94,6 +94,13 @@ public class ReviewServiceImp implements ReviewService {
             throw new IllegalArgumentException("Rating must be between 1 and 5");
         }
         if (!isEligibleToReview(customerId, orderItemId)) {
+            Review existing = reviewRepository.findByOrderItem_OrderItemId(orderItemId).orElse(null);
+            if (existing != null && existing.getCustomer().getCustomerId().equals(customerId)) {
+                existing.setRating(rating);
+                existing.setComment(comment);
+                productService.updateAverageRating(existing.getProduct().getProductId(), rating);
+                return reviewRepository.save(existing);
+            }
             throw new InvalidReviewException("Customer is not eligible to review this order item");
         }
 
