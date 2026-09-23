@@ -91,9 +91,12 @@ public class SubOrderServiceImp implements SubOrderService {
     public void sellerAcceptOrder(Long sellerId, Long orderId) {
         Order order = findAndValidateSellerOrder(sellerId, orderId);
 
-        // ตรวจสถานะ — ต้อง WAITING_SELLER_CONFIRM
+        // ตรวจสถานะ — ต้อง WAITING_SELLER_CONFIRM หรือถ้า PREPARING อยู่แล้ว (idempotent)
+        if (order.getOrderStatus() == OrderStatus.PREPARING) {
+            return;
+        }
         if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM) {
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                     "ไม่สามารถยืนยันคำสั่งซื้อได้ สถานะปัจจุบัน: " + order.getOrderStatus()
                             + " (ต้องเป็น WAITING_SELLER_CONFIRM)");
         }
@@ -141,8 +144,11 @@ public class SubOrderServiceImp implements SubOrderService {
         Order order = findAndValidateSellerOrder(sellerId, orderId);
 
         // ตรวจสถานะ
+        if (order.getOrderStatus() == OrderStatus.CANCELLED) {
+            return;
+        }
         if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM) {
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                     "ไม่สามารถปฏิเสธคำสั่งซื้อได้ สถานะปัจจุบัน: " + order.getOrderStatus()
                             + " (ต้องเป็น WAITING_SELLER_CONFIRM)");
         }
@@ -206,9 +212,12 @@ public class SubOrderServiceImp implements SubOrderService {
                     "คำสั่งซื้อนี้ไม่ใช่ของลูกค้า customerId: " + customerId);
         }
 
-        // ตรวจสถานะ — ต้อง SHIPPED
+        // ตรวจสถานะ — ต้อง SHIPPED หรือถ้า COMPLETED อยู่แล้ว (idempotent)
+        if (order.getOrderStatus() == OrderStatus.COMPLETED) {
+            return;
+        }
         if (order.getOrderStatus() != OrderStatus.SHIPPED) {
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                     "ไม่สามารถยืนยันรับสินค้าได้ สถานะปัจจุบัน: " + order.getOrderStatus()
                             + " (ต้องเป็น SHIPPED)");
         }
@@ -261,9 +270,12 @@ public class SubOrderServiceImp implements SubOrderService {
             throw new RuntimeException("คำสั่งซื้อนี้ไม่ใช่ของลูกค้า customerId: " + customerId);
         }
 
+        if (order.getOrderStatus() == OrderStatus.CANCELLED) {
+            return;
+        }
         if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM &&
             order.getOrderStatus() != OrderStatus.PREPARING) {
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                     "ไม่สามารถยกเลิกคำสั่งซื้อได้เนื่องจากอยู่ในสถานะ: " + order.getOrderStatus()
                             + " (สามารถยกเลิกได้เฉพาะ WAITING_SELLER_CONFIRM หรือ PREPARING เท่านั้น)");
         }

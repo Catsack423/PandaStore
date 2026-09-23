@@ -1,0 +1,413 @@
+{
+  "info": {
+    "_postman_id": "pandastore-3_Sub_Order_Processing.postman_collection.json",
+    "name": "3. PandaStore - Sub-Order Processing",
+    "description": "Sub-Order lifecycle: view sub-orders, seller accept/reject with randomized reasons, customer delivery confirmation, cancellation, and whitespace validation tests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "sellerId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "customerId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "orderId_reject",
+      "value": "2",
+      "type": "string"
+    },
+    {
+      "key": "orderId_delivered",
+      "value": "4",
+      "type": "string"
+    },
+    {
+      "key": "orderId_cancel",
+      "value": "5",
+      "type": "string"
+    },
+    {
+      "key": "orderId_whitespace",
+      "value": "6",
+      "type": "string"
+    },
+    {
+      "key": "orderGroupId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "3.1 (TC09) Get Sub-Order By ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Sub-Order has orderId\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.data).to.have.property(\"orderId\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/sub-orders/{{orderId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sub-orders",
+            "{{orderId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "3.2 (TC10) Get Sub-Orders By Order Group",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/sub-orders/order-group/{{orderGroupId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sub-orders",
+            "order-group",
+            "{{orderGroupId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "3.3 Get Sub-Orders By Seller",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/sub-orders/seller/{{sellerId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sub-orders",
+            "seller",
+            "{{sellerId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "3.4 (TC11) Seller Accept Sub-Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Order accepted message returned\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/api/sub-orders/{{orderId}}/accept?sellerId={{sellerId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sub-orders",
+            "{{orderId}}",
+            "accept"
+          ],
+          "query": [
+            {
+              "key": "sellerId",
+              "value": "{{sellerId}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "3.5 (TC12) Seller Reject Sub-Order (Random Reason)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const rejectReasons = [",
+              "    \"สินค้าหมดสต็อกกะทันหัน\",",
+              "    \"สินค้าชำรุดระหว่างการแพ็คเตรียมจัดส่ง\",",
+              "    \"ที่อยู่จัดส่งอยู่นอกเขตพื้นที่บริการ\",",
+              "    \"ร้านค้าปิดปรับปรุงระบบชั่วคราว\"",
+              "];",
+              "const randomReject = rejectReasons[Math.floor(Math.random() * rejectReasons.length)];",
+              "pm.collectionVariables.set(\"temp_reject_reason\", randomReject);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/sub-orders/{{orderId_reject}}/reject?sellerId={{sellerId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sub-orders",
+            "{{orderId_reject}}",
+            "reject"
+          ],
+          "query": [
+            {
+              "key": "sellerId",
+              "value": "{{sellerId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"{{temp_reject_reason}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3.6 (TC13) Customer Confirm Delivered",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Sub-Order transitioned to delivered/completed\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/api/sub-orders/{{orderId_delivered}}/confirm-delivered?customerId={{customerId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sub-orders",
+            "{{orderId_delivered}}",
+            "confirm-delivered"
+          ],
+          "query": [
+            {
+              "key": "customerId",
+              "value": "{{customerId}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "3.7 Customer Cancel Sub-Order (Random Reason)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const cancelReasons = [",
+              "    \"ต้องการแก้ไขที่อยู่ในการจัดส่ง\",",
+              "    \"สั่งผิดสีหรือผิดขนาด\",",
+              "    \"เปลี่ยนใจไม่ต้องการสั่งซื้อสินค้านี้แล้ว\",",
+              "    \"พบสินค้าราคาถูกกว่าจากร้านอื่น\"",
+              "];",
+              "const randomCancel = cancelReasons[Math.floor(Math.random() * cancelReasons.length)];",
+              "pm.collectionVariables.set(\"temp_cancel_reason\", randomCancel);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/sub-orders/{{orderId_cancel}}/cancel?customerId={{customerId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sub-orders",
+            "{{orderId_cancel}}",
+            "cancel"
+          ],
+          "query": [
+            {
+              "key": "customerId",
+              "value": "{{customerId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"{{temp_cancel_reason}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3.8 (TC14) Customer Cancel Sub-Order - Empty / Whitespace Reason (Defect DEF-001 Negative Test)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400 Bad Request for whitespace reason\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Validation error captured for empty reason\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(false);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/sub-orders/{{orderId_whitespace}}/cancel?customerId={{customerId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sub-orders",
+            "{{orderId_whitespace}}",
+            "cancel"
+          ],
+          "query": [
+            {
+              "key": "customerId",
+              "value": "{{customerId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"   \"\n}"
+        }
+      }
+    }
+  ]
+}
