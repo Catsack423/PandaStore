@@ -56,10 +56,6 @@ public class ApiResponse<T> {
         this.message = message;
     }
 
-    public boolean isSuccess() {
-        return success;
-    }
-
     public void setSuccess(boolean success) {
         this.success = success;
     }
