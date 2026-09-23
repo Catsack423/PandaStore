@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "pandastore-2_Order_Orchestration.postman_collection.json",
-    "name": "2. PandaStore - Order Orchestration",
+    "name": "2. Order Orchestration (OrderOrchestrationController -> OrderOrchestrationServiceImp)",
     "description": "Order Group creation from cart checkout, payment method selection, order group details, and negative validation tests.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
