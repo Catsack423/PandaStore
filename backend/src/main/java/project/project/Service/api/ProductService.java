@@ -2,11 +2,13 @@ package project.project.Service.api;
 
 import project.project.Entity.product.Product;
 import java.util.List;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import project.project.DTO.product.ProductResponse;
 
 public interface ProductService {
     Product createProduct(Long sellerId, Product product, List<String> imageUrls);
+    Product createProduct(Long sellerId, Product product, List<String> imageUrls, Set<Long> categoryIds);
     Product updateProduct(Long sellerId, Long productId, Product updatedProduct);
     Product getProductById(Long productId);
     List<Product> getAllActiveProducts();

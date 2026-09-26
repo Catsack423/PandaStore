@@ -47,6 +47,18 @@ public class ProductServiceImp implements ProductService {
     @Override
     @Transactional
     public Product createProduct(Long sellerId, Product product, List<String> imageUrls) {
+        Set<Long> categoryIds = new HashSet<>();
+        if (product != null && product.getCategories() != null) {
+            for (Category category : product.getCategories()) {
+                categoryIds.add(category == null ? null : category.getCategoryId());
+            }
+        }
+        return createProduct(sellerId, product, imageUrls, categoryIds);
+    }
+
+    @Override
+    @Transactional
+    public Product createProduct(Long sellerId, Product product, List<String> imageUrls, Set<Long> categoryIds) {
         if (sellerId == null) {
             throw new IllegalArgumentException("Seller ID cannot be null");
         }
@@ -65,10 +77,22 @@ public class ProductServiceImp implements ProductService {
         if (product.getStock() == null || product.getStock() < 0) {
             throw new IllegalArgumentException("Product stock cannot be negative");
         }
-        if (imageUrls == null || imageUrls.isEmpty()) {
+        if (imageUrls == null || imageUrls.isEmpty()
+                || imageUrls.stream().anyMatch(url -> url == null || url.isBlank())) {
             throw new IllegalArgumentException("At least one product image is required");
         }
 
+        Set<Category> categories = new HashSet<>();
+        if (categoryIds != null) {
+            for (Long categoryId : categoryIds) {
+                if (categoryId == null || categoryId <= 0) {
+                    throw new IllegalArgumentException("categoryIds ต้องเป็นรหัสหมวดหมู่ที่มากกว่า 0");
+                }
+                categories.add(categoryRepository.findById(categoryId)
+                        .orElseThrow(() -> new IllegalArgumentException("Category นี้ไม่มีในระบบ: " + categoryId)));
+            }
+        }
+        product.setCategories(categories);
         product.setSeller(seller);
         if (product.getStatus() == null) {
             product.setStatus(ProductStatus.ACTIVE);

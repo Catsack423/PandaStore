@@ -35,7 +35,7 @@ public class ProductController {
         product.setStock(request.getStock());
         product.setShippingInfo(request.getShippingInfo());
 
-        Product created = productService.createProduct(sellerId, product, request.getImageUrls());
+        Product created = productService.createProduct(sellerId, product, request.getImageUrls(), request.getCategoryIds());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("สร้างสินค้าสำเร็จ", ProductResponse.fromEntity(created)));
     }
