@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ClipboardList, Store } from "lucide-react";
+import { SellerNav } from "./Shared";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import { useAuth } from "@/app/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ export default function SellerApplication() {
 
   return <main>
     <Breadcrumb title="Seller Applications" pages={["Seller Applications"]} />
-    <section className="bg-gray-2 py-12 sm:py-16"><div className="mx-auto w-full max-w-[1170px] px-4 sm:px-8 xl:px-0">
+    <section className="bg-gray-2 py-12 sm:py-16"><div className="mx-auto w-full max-w-[1170px] px-4 sm:px-8 xl:px-0"><div className="grid gap-7 lg:grid-cols-[260px_minmax(0,1fr)]"><SellerNav /><div className="min-w-0">
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-medium text-blue">Sell on PandaStore</p><h1 className="mt-1 text-3xl font-semibold text-dark">Seller applications</h1><p className="mt-2 text-sm text-dark-4">Apply with your existing customer account and follow each review decision here.</p></div>
         {user && !loading && !error && canApply && <Link href="/seller-application/apply" className="inline-flex h-11 items-center rounded-lg bg-blue px-5 text-sm font-medium text-white hover:bg-blue-dark">{applyLabel}</Link>}
       </div>
@@ -62,11 +63,11 @@ export default function SellerApplication() {
             <p className="text-sm">{latest.status === "PENDING" ? "Your application is being reviewed." : latest.status === "APPROVED" ? "Your shop has been approved." : latest.status === "NEED_MORE_DOC" ? "The review team needs updated documents. Use the form to submit a revised application." : "Review the decision and submit a corrected application."}</p>
             {latest.adminNote && <div className="rounded-lg border border-yellow/30 bg-yellow-light-4 p-4 text-sm"><strong className="text-dark">Review note</strong><p className="mt-1">{latest.adminNote}</p></div>}
             {canApply && <Link href="/seller-application/apply" className="inline-flex h-10 items-center rounded-lg bg-blue px-5 text-sm font-medium text-white hover:bg-blue-dark">{applyLabel}</Link>}
-            {latest.status === "APPROVED" && <Link href="/seller-dashboard" className="inline-flex h-10 items-center rounded-lg bg-blue px-5 text-sm font-medium text-white hover:bg-blue-dark">Open dashboard</Link>}
+            {latest.status === "APPROVED" && user?.role === "SELLER" && <Link href="/seller-dashboard" className="inline-flex h-10 items-center rounded-lg bg-blue px-5 text-sm font-medium text-white hover:bg-blue-dark">Open dashboard</Link>}
           </CardContent></Card>}
           {!latest && <Card><CardContent className="flex flex-col items-center py-14 text-center"><ClipboardList className="mb-4 size-10 text-blue" /><h2 className="text-xl font-semibold text-dark">No applications yet</h2><p className="mt-2 text-sm">Your customer account is ready. Complete the shop application to get started.</p><Link href="/seller-application/apply" className="mt-6 rounded-lg bg-blue px-5 py-3 text-sm font-medium text-white">Apply to sell</Link></CardContent></Card>}
           <Card><CardHeader><CardTitle>Application history</CardTitle></CardHeader><CardContent className="p-0"><div className="overflow-x-auto"><table className="w-full min-w-[660px] text-left text-sm"><thead className="bg-gray-1 text-dark-4"><tr><th className="px-6 py-4">Application</th><th className="px-6 py-4">Shop</th><th className="px-6 py-4">Submitted</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Review note</th></tr></thead><tbody className="divide-y divide-gray-3">{applications.map((item) => <tr key={item.applicationId}><td className="px-6 py-5 font-medium text-dark">#{item.applicationId}</td><td className="px-6 py-5">{item.shopName}</td><td className="px-6 py-5">{new Date(item.createdAt).toLocaleDateString("en-US")}</td><td className="px-6 py-5"><span className={`rounded-full px-3 py-1 text-xs ${statusColors[item.status]}`}>{statusLabels[item.status]}</span></td><td className="max-w-[250px] px-6 py-5">{item.adminNote || "—"}</td></tr>)}</tbody></table></div></CardContent></Card>
         </div>}
-    </div></section>
+    </div></div></div></section>
   </main>;
 }

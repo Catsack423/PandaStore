@@ -75,13 +75,7 @@ export const menuData: Menu[] = [
       },
       {
         id: 74,
-        title: "Become a Seller",
-        newTab: false,
-        path: "/seller-application",
-      },
-      {
-        id: 75,
-        title: "Seller Application",
+        title: "Submit Seller Application",
         newTab: false,
         path: "/seller-application",
       },

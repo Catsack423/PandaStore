@@ -6,6 +6,7 @@ import type { NextRequest } from "next/server";
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   "/admin": ["ADMIN"],
   "/seller": ["SELLER", "ADMIN"],
+  "/seller-dashboard": ["SELLER"],
   "/account": ["CUSTOMER", "SELLER", "ADMIN"],
 };
 
@@ -36,9 +37,9 @@ export function middleware(request: NextRequest) {
 
     // 2.2 à¸–à¹‰à¸²à¸¥à¹‡à¸­à¸à¸­à¸´à¸™à¹à¸¥à¹‰à¸§ à¹à¸•à¹ˆ Role à¹„à¸¡à¹ˆà¸•à¸£à¸‡à¸à¸±à¸šà¸ªà¸´à¸—à¸˜à¸´à¹Œà¸—à¸µà¹ˆà¸­à¸™à¸¸à¸à¸²à¸•
     const allowedRoles = ROLE_PERMISSIONS[matchedPath];
-    if (userRole && !allowedRoles.includes(userRole)) {
+    if (!userRole || !allowedRoles.includes(userRole)) {
       // à¹„à¸¡à¹ˆà¸¡à¸µà¸ªà¸´à¸—à¸˜à¸´à¹Œ -> à¸ªà¹ˆà¸‡à¹„à¸›à¸«à¸™à¹‰à¸² 403 Forbidden à¸«à¸£à¸·à¸­à¸«à¸™à¹‰à¸²à¹à¸£à¸
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL(matchedPath === "/seller-dashboard" ? "/seller-application" : "/", request.url));
     }
   }
 
@@ -47,5 +48,5 @@ export function middleware(request: NextRequest) {
 
 // à¸à¸³à¸«à¸™à¸” Path à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¹ƒà¸«à¹‰ Middleware à¸—à¸³à¸‡à¸²à¸™
 export const config = {
-  matcher: ["/admin/:path*", "/seller/:path*", "/account/:path*"],
+  matcher: ["/admin/:path*", "/seller/:path*", "/seller-dashboard/:path*", "/account/:path*"],
 };

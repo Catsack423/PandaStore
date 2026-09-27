@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/app/context/AuthContext";
 
 const Dropdown = ({ menuItem, stickyMenu }) => {
   const [dropdownToggler, setDropdownToggler] = useState(false);
   const pathUrl = usePathname();
+  const { user } = useAuth();
 
   return (
     <li
@@ -45,7 +47,7 @@ const Dropdown = ({ menuItem, stickyMenu }) => {
             : "xl:group-hover:translate-y-0"
         }`}
       >
-        {menuItem.submenu.map((item, i) => (
+        {menuItem.submenu.filter(item => item.path !== "/seller-dashboard" || (user?.role === "SELLER" && user.status === "ACTIVE")).map((item, i) => (
           <li key={i}>
             <Link
               href={item.path}

@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, FileCheck2, Store } from "lucide-react";
+import { SellerNav } from "./Shared";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import { useAuth } from "@/app/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -86,7 +87,7 @@ export default function SellerApplicationForm() {
   const blocked = latest && !["REJECTED", "NEED_MORE_DOC"].includes(latest.status);
   return <main>
     <Breadcrumb title="Apply to sell" pages={["Seller Applications", "Apply"]} />
-    <section className="bg-gray-2 py-12 sm:py-16"><div className="mx-auto max-w-[850px] px-4 sm:px-8">
+    <section className="bg-gray-2 py-12 sm:py-16"><div className="mx-auto w-full max-w-[1170px] px-4 sm:px-8 xl:px-0"><div className="grid gap-7 lg:grid-cols-[260px_minmax(0,1fr)]"><SellerNav /><div className="min-w-0">
       <Link href="/seller-application" className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-blue hover:underline"><ArrowLeft className="size-4" />Applications</Link>
       {isLoading || loading ? <Card><CardContent className="py-16 text-center">Loading your account...</CardContent></Card>
         : !user ? <Card><CardContent className="py-16 text-center"><h2 className="text-xl font-semibold text-dark">Sign in as a customer first</h2><Link href="/signin?callbackUrl=%2Fseller-application%2Fapply" className="mt-5 inline-flex rounded-lg bg-blue px-5 py-3 text-sm text-white">Sign in</Link></CardContent></Card>
@@ -114,6 +115,6 @@ export default function SellerApplicationForm() {
             </form>}
           </CardContent></Card>
         </>}
-    </div></section>
+    </div></div></div></section>
   </main>;
 }

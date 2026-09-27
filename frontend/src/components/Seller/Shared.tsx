@@ -1,5 +1,9 @@
+"use client";
 import Link from "next/link";
-import { FlaskConical } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
+import { Card, CardContent } from "@/components/ui/card";
+import { FlaskConical, ClipboardList, FilePlus2, Store } from "lucide-react";
 import type { ApplicationStatus, SellerOrderStatus } from "@/app/context/SellerPreviewContext";
 
 const orderLabels: Record<SellerOrderStatus, string> = {
@@ -28,5 +32,12 @@ export function StatusBadge({ status }: { status: SellerOrderStatus | Applicatio
 }
 
 export function SellerNav() {
-  return <nav aria-label="Seller pages" className="mb-7 flex flex-wrap gap-2 text-sm"><Link href="/seller-application" className="rounded-lg border border-gray-3 bg-white px-4 py-2 font-medium text-dark hover:border-blue hover:text-blue">Application</Link><Link href="/seller-dashboard" className="rounded-lg border border-gray-3 bg-white px-4 py-2 font-medium text-dark hover:border-blue hover:text-blue">Dashboard</Link></nav>;
+  const { user } = useAuth();
+  const pathname = usePathname();
+  const links = [
+    { href: "/seller-application", label: "Application dashboard", icon: ClipboardList },
+    ...(user?.role === "CUSTOMER" ? [{ href: "/seller-application/apply", label: "Submit application", icon: FilePlus2 }] : []),
+    ...(user?.role === "SELLER" && user.status === "ACTIVE" ? [{ href: "/seller-dashboard", label: "Shop dashboard", icon: Store }] : []),
+  ];
+  return <aside><Card><CardContent className="p-3"><nav aria-label="Seller pages" className="space-y-2">{links.map(({href, label, icon: Icon}) => <Link key={href} href={href} aria-current={pathname === href ? "page" : undefined} className={`flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium ${pathname === href ? "bg-blue text-white" : "text-dark hover:bg-gray-1"}`}><Icon className="size-4 shrink-0" />{label}</Link>)}</nav></CardContent></Card></aside>;
 }
