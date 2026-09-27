@@ -54,6 +54,9 @@ class ProductSearchPageTest {
         Product first = saveProduct(seller, keyboard, "Gaming keyboard", ProductStatus.ACTIVE);
         Product second = saveProduct(seller, keyboard, "Office keyboard", ProductStatus.ACTIVE);
         saveProduct(seller, keyboard, "Hidden keyboard", ProductStatus.INACTIVE);
+        Product soldOut = saveProduct(seller, keyboard, "Sold out keyboard", ProductStatus.ACTIVE);
+        soldOut.setStock(0);
+        products.save(soldOut);
         saveProduct(seller, mouse, "Gaming mouse", ProductStatus.ACTIVE);
 
         Page<ProductResponse> page0 = productService.searchProductsPage(" keyboard ",
@@ -69,6 +72,15 @@ class ProductSearchPageTest {
         assertFalse(page1.hasNext());
         assertEquals("Search shop", page0.getContent().getFirst().getSellerShopName());
         assertEquals(keyboard.getCategoryId(), page0.getContent().getFirst().getCategoryIds().getFirst());
+        assertFalse(productService.getAllActiveProducts().stream()
+                .anyMatch(product -> product.getProductId().equals(soldOut.getProductId())));
+        assertEquals(2, productService.searchProducts("keyboard", keyboard.getCategoryId()).size());
+
+        seller.setStatus(SellerStatus.PENDING);
+        sellers.save(seller);
+        assertTrue(productService.getAllActiveProducts().isEmpty());
+        assertTrue(productService.searchProducts("keyboard", keyboard.getCategoryId()).isEmpty());
+        assertEquals(0, productService.searchProductsPage("keyboard", keyboard.getCategoryId(), 0, 20).getTotalElements());
     }
 
     @Test

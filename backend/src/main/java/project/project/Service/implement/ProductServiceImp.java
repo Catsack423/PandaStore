@@ -152,6 +152,8 @@ public class ProductServiceImp implements ProductService {
             existing.setStock(updatedProduct.getStock());
             if (updatedProduct.getStock() == 0 && existing.getStatus() == ProductStatus.ACTIVE) {
                 existing.setStatus(ProductStatus.OUT_OF_STOCK);
+            } else if (updatedProduct.getStock() > 0 && existing.getStatus() == ProductStatus.OUT_OF_STOCK) {
+                existing.setStatus(ProductStatus.ACTIVE);
             }
         }
         if (updatedProduct.getStatus() != null) {
@@ -178,7 +180,7 @@ public class ProductServiceImp implements ProductService {
 
     @Override
     public List<Product> getAllActiveProducts() {
-        return productRepository.findByStatus(ProductStatus.ACTIVE);
+        return productRepository.findAvailableProducts(ProductStatus.ACTIVE);
     }
 
     @Override

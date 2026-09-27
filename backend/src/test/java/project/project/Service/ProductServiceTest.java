@@ -65,6 +65,25 @@ public class ProductServiceTest {
     }
 
     @Test
+    void restockingSoldOutProductReactivatesItWithoutReactivatingHiddenProducts() {
+        sampleProduct.setStatus(ProductStatus.OUT_OF_STOCK);
+        sampleProduct.setStock(0);
+        when(productRepository.findById(100L)).thenReturn(Optional.of(sampleProduct));
+        when(productRepository.save(any(Product.class))).thenAnswer(call -> call.getArgument(0));
+        Product update = new Product();
+        update.setStatus(null);
+        update.setStock(18);
+        assertEquals(ProductStatus.ACTIVE, productService.updateProduct(1L, 100L, update).getStatus());
+        assertEquals(18, sampleProduct.getStock());
+
+        sampleProduct.setStatus(ProductStatus.INACTIVE);
+        assertEquals(ProductStatus.INACTIVE, productService.updateProduct(1L, 100L, update).getStatus());
+        sampleProduct.setStatus(ProductStatus.OUT_OF_STOCK);
+        update.setStatus(ProductStatus.INACTIVE);
+        assertEquals(ProductStatus.INACTIVE, productService.updateProduct(1L, 100L, update).getStatus());
+    }
+
+    @Test
     @DisplayName("UC4: ผู้ขายสร้างสินค้าสำเร็จ (ราคา > 0, สต็อก >= 0, มีรูปภาพอย่างน้อย 1 รูป)")
     void testCreateProduct_Success() {
         List<String> images = List.of("https://cdn.example.com/img1.jpg", "https://cdn.example.com/img2.jpg");

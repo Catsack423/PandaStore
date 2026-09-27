@@ -21,6 +21,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findByStatus(ProductStatus status);
 
+    @Query("select p from Product p where p.status = :status and p.stock > 0 "
+            + "and p.seller.status = 'ACTIVE' and p.seller.user.status = 'ACTIVE'")
+    List<Product> findAvailableProducts(@Param("status") ProductStatus status);
+
     List<Product> findBySeller_SellerId(Long sellerId);
 
     List<Product> findByCategories_CategoryIdAndStatus(
@@ -29,6 +33,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("""
             SELECT p FROM Product p
             WHERE p.status = :status
+              AND p.stock > 0
+              AND p.seller.status = 'ACTIVE'
+              AND p.seller.user.status = 'ACTIVE'
               AND (
                   :keyword IS NULL
                   OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
@@ -50,6 +57,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query(value = """
             SELECT p FROM Product p
             WHERE p.status = :status
+              AND p.stock > 0
+              AND p.seller.status = 'ACTIVE'
+              AND p.seller.user.status = 'ACTIVE'
               AND (:keyword IS NULL
                    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
                    OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
@@ -58,6 +68,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             """, countQuery = """
             SELECT COUNT(p) FROM Product p
             WHERE p.status = :status
+              AND p.stock > 0
+              AND p.seller.status = 'ACTIVE'
+              AND p.seller.user.status = 'ACTIVE'
               AND (:keyword IS NULL
                    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
                    OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
