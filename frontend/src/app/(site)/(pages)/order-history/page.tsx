@@ -7,6 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function OrderHistoryPage() {
-  // The backend does not provide a customer order list yet.
-  return <OrderHistory orders={[]} />;
+  return <OrderHistory />;
 }

@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, PackageOpen, ShoppingBag } from "lucide-react";
+import { ChevronDown, PackageOpen, ShoppingBag, RefreshCw } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/app/context/AuthContext";
+import { checkoutApi, methodLabel } from "@/components/Checkout/api";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,36 +13,59 @@ import { Card, CardContent } from "@/components/ui/card";
 export type CustomerOrder = {
   id: string;
   date: string;
-  status: "placed" | "processing" | "shipped" | "delivered" | "cancelled";
+  status: "PENDING_PAYMENT" | "WAITING_SELLER_CONFIRM" | "PREPARING" | "SHIPPED" | "COMPLETED" | "CANCELLED";
   total: number;
   items: { name: string; quantity: number; price: number }[];
   shippingAddress?: string;
+  shippingFee: number;
+  shippingMethod: string | null;
+  paymentStatus: string;
+  groupNumber: string;
 };
 
 const statusLabels: Record<CustomerOrder["status"], string> = {
-  placed: "Order placed",
-  processing: "Processing",
-  shipped: "Shipped",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
+  PENDING_PAYMENT: "Pending payment",
+  WAITING_SELLER_CONFIRM: "Awaiting seller confirmation",
+  PREPARING: "Preparing",
+  SHIPPED: "Shipped",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
 };
-const steps = ["Order placed", "Processing", "Shipped", "Delivered"];
+const steps: CustomerOrder["status"][] = ["PENDING_PAYMENT", "WAITING_SELLER_CONFIRM", "PREPARING", "SHIPPED", "COMPLETED"];
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+
+type OrderGroup = {
+  groupNumber: string; createdAt: string; paymentStatus: string;
+  subOrders: { orderId: number; subOrderNumber: string; orderStatus: CustomerOrder["status"];
+    totalAmount: number; shippingFee: number; shippingMethod: string | null;
+    items: { productName: string; quantity: number; unitPrice: number }[] }[];
+};
+async function loadOrders(signal?: AbortSignal): Promise<CustomerOrder[]> {
+  const groups = await checkoutApi<OrderGroup[]>("orders", undefined, signal);
+  return groups.flatMap(group => group.subOrders.map(order => ({
+    id: order.subOrderNumber || String(order.orderId),
+    date: new Date(group.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+    status: order.orderStatus, total: Number(order.totalAmount),
+    shippingFee: Number(order.shippingFee), shippingMethod: order.shippingMethod,
+    paymentStatus: group.paymentStatus, groupNumber: group.groupNumber,
+    items: order.items.map(item => ({ name: item.productName, quantity: item.quantity, price: Number(item.unitPrice) })),
+  })));
+}
 
 function OrderRow({ order }: { order: CustomerOrder }) {
   const [expanded, setExpanded] = useState(false);
-  const currentStep = ["placed", "processing", "shipped", "delivered"].indexOf(order.status);
+  const currentStep = steps.indexOf(order.status);
 
   return (
     <div className="border-t border-gray-3">
       <div className="grid gap-4 px-5 py-5 text-sm sm:px-7 lg:grid-cols-[1fr_1fr_2fr_1fr_auto] lg:items-center">
-        <div><span className="block text-xs text-dark-4 lg:hidden">Order</span><strong className="font-medium text-dark">#{order.id}</strong></div>
+        <div className="min-w-0"><span className="block text-xs text-dark-4 lg:hidden">Order</span><strong className="break-all font-medium text-dark">#{order.id}</strong></div>
         <div><span className="block text-xs text-dark-4 lg:hidden">Date</span><span className="text-dark">{order.date}</span></div>
         <div>
           <span className="block text-xs text-dark-4 lg:hidden">Order status</span>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5" aria-hidden="true">
-              {steps.map((step, index) => <span key={step} className={`h-2.5 w-2.5 rounded-full ${order.status !== "cancelled" && index <= currentStep ? "bg-blue" : "bg-gray-4"}`} />)}
+              {steps.map((step, index) => <span key={step} className={`h-2.5 w-2.5 rounded-full ${order.status !== "CANCELLED" && index <= currentStep ? "bg-blue" : "bg-gray-4"}`} />)}
             </div>
             <span className="text-dark">{statusLabels[order.status]}</span>
           </div>
@@ -52,13 +78,26 @@ function OrderRow({ order }: { order: CustomerOrder }) {
       {expanded && <div id={`order-${order.id}`} className="border-t border-gray-3 bg-gray-1 px-5 py-6 sm:px-7">
         <h3 className="mb-4 font-medium text-dark">Items in this order</h3>
         <div className="space-y-3">{order.items.map((item, index) => <div key={`${item.name}-${index}`} className="flex justify-between gap-5 text-sm"><span>{item.name} × {item.quantity}</span><span className="font-medium text-dark">{currency.format(item.price * item.quantity)}</span></div>)}</div>
+        <div className="mt-5 space-y-2 border-t border-gray-3 pt-4 text-sm">
+          <p>Order group: {order.groupNumber}</p>
+          <p>Payment: {order.paymentStatus.replaceAll("_", " ")}</p>
+          <div className="flex justify-between gap-5"><span>Shipping{order.shippingMethod ? ` · ${methodLabel(order.shippingMethod)}` : ""}</span><span>{currency.format(order.shippingFee)}</span></div>
+          <div className="flex justify-between gap-5 font-medium text-dark"><span>Total</span><span>{currency.format(order.total)}</span></div>
+        </div>
         {order.shippingAddress && <p className="mt-6 border-t border-gray-3 pt-4 text-sm"><strong className="text-dark">Shipping address</strong><br />{order.shippingAddress}</p>}
       </div>}
     </div>
   );
 }
 
-export default function OrderHistory({ orders }: { orders: CustomerOrder[] }) {
+export default function OrderHistory() {
+  const { user, isLoading: authLoading } = useAuth();
+  const customer = user?.role === "CUSTOMER";
+  const history = useQuery({ queryKey: ["customer-orders", user?.id],
+    queryFn: ({ signal }) => loadOrders(signal), enabled: !authLoading && customer,
+    staleTime: 0, gcTime: 0, refetchInterval: 30000, refetchIntervalInBackground: false,
+    refetchOnWindowFocus: "always", refetchOnReconnect: "always", retry: 1 });
+  const orders = customer ? history.data || [] : [];
   const [status, setStatus] = useState("all");
   const visibleOrders = status === "all" ? orders : orders.filter((order) => order.status === status);
 
@@ -72,11 +111,16 @@ export default function OrderHistory({ orders }: { orders: CustomerOrder[] }) {
         </div>
         <Card className="overflow-hidden rounded-xl border-gray-3 shadow-1">
           <div className="flex flex-col gap-4 border-b border-gray-3 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-            <h3 className="font-medium text-dark">Order history</h3>
+            <div className="flex items-center gap-3"><h3 className="font-medium text-dark">Order history</h3>
+              {customer && <Button variant="outline" size="sm" onClick={() => void history.refetch()} disabled={history.isFetching} aria-label="Refresh orders"><RefreshCw className={`size-4 ${history.isFetching ? "animate-spin" : ""}`} />Refresh</Button>}
+            </div>
             <label className="flex items-center gap-2 text-sm text-dark"><span>Status</span><select value={status} onChange={(event) => setStatus(event.target.value)} className="h-9 rounded-lg border border-gray-3 bg-white px-3 outline-none focus:ring-2 focus:ring-blue/30"><option value="all">All orders</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           </div>
           <div className="hidden grid-cols-[1fr_1fr_2fr_1fr_auto] gap-4 bg-gray-1 px-7 py-4 text-xs font-medium text-dark lg:grid"><span>Order</span><span>Date</span><span>Order status</span><span>Total</span><span>Action</span></div>
-          {orders.length > 0 ? <>
+          {authLoading || (customer && history.isPending) ? <p role="status" className="px-7 py-16 text-center text-sm">Loading your orders…</p>
+          : !customer ? <CardContent className="py-16 text-center"><h3 className="font-semibold text-dark">{user ? "Order history is available for customer accounts" : "Sign in to view your orders"}</h3>{!user && <Link href="/signin" className="mt-4 inline-block text-blue hover:underline">Sign in</Link>}</CardContent>
+          : history.isError ? <CardContent role="alert" className="py-16 text-center"><p className="text-red">{history.error.message}</p><Button variant="outline" className="mt-4" onClick={() => void history.refetch()} disabled={history.isFetching}>Try again</Button></CardContent>
+          : orders.length > 0 ? <>
             {visibleOrders.length > 0 ? visibleOrders.map((order) => <OrderRow key={order.id} order={order} />) : <p className="px-7 py-10 text-center text-sm">No orders with this status.</p>}
           </> : <CardContent className="flex min-h-[330px] flex-col items-center justify-center px-6 py-14 text-center">
             <div className="mb-5 flex size-16 items-center justify-center rounded-full bg-blue/10 text-blue"><PackageOpen className="size-8" aria-hidden="true" /></div>
