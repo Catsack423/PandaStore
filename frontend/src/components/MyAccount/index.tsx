@@ -9,18 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Addresses from "./Addresses";
 
 type Profile = { name: string; email: string; phone: string };
-type Address = { recipient: string; phone: string; street: string; city: string; region: string; postalCode: string };
-const emptyAddress: Address = { recipient: "", phone: "", street: "", city: "", region: "", postalCode: "" };
 
 export default function MyAccount() {
   const { user, isLoading, logout } = useAuth();
   const [tab, setTab] = useState<"profile" | "address">("profile");
   const [profile, setProfile] = useState<Profile>({ name: "", email: "", phone: "" });
-  const [address, setAddress] = useState<Address>(emptyAddress);
   const [savedProfile, setSavedProfile] = useState<Profile | null>(null);
-  const [savedAddress, setSavedAddress] = useState<Address | null>(null);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -31,12 +28,6 @@ export default function MyAccount() {
     event.preventDefault();
     setSavedProfile({ ...profile });
     setMessage("Profile saved for this visit. Connect the customer API to keep it permanently.");
-  }
-
-  function saveAddress(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSavedAddress({ ...address });
-    setMessage("Address saved for this visit. Connect the address API to keep it permanently.");
   }
 
   return <main>
@@ -65,15 +56,7 @@ export default function MyAccount() {
                 <Button type="submit" className="h-10 bg-blue px-5 text-white hover:bg-blue-dark">Save profile</Button>
               </form>
               {savedProfile && <p className="mt-5 text-sm text-dark-4">Current preview: {savedProfile.name} · {savedProfile.email}</p>}
-            </CardContent></Card> : <Card><CardHeader className="border-b border-gray-3"><CardTitle>Shipping address</CardTitle><p className="text-sm text-dark-4">Add a delivery address for checkout.</p></CardHeader><CardContent className="pt-6">
-              <form onSubmit={saveAddress} className="space-y-5">
-                <div className="grid gap-5 sm:grid-cols-2"><div className="space-y-2"><Label htmlFor="address-recipient">Recipient</Label><Input id="address-recipient" required value={address.recipient} onChange={(e) => setAddress({ ...address, recipient: e.target.value })} placeholder="Full name" /></div><div className="space-y-2"><Label htmlFor="address-phone">Phone number</Label><Input id="address-phone" type="tel" required value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} placeholder="Phone number" /></div></div>
-                <div className="space-y-2"><Label htmlFor="address-street">Street address</Label><Input id="address-street" required value={address.street} onChange={(e) => setAddress({ ...address, street: e.target.value })} placeholder="House number and street" /></div>
-                <div className="grid gap-5 sm:grid-cols-3"><div className="space-y-2"><Label htmlFor="address-city">City</Label><Input id="address-city" required value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} /></div><div className="space-y-2"><Label htmlFor="address-region">State / Region</Label><Input id="address-region" required value={address.region} onChange={(e) => setAddress({ ...address, region: e.target.value })} /></div><div className="space-y-2"><Label htmlFor="address-postal">Postal code</Label><Input id="address-postal" required value={address.postalCode} onChange={(e) => setAddress({ ...address, postalCode: e.target.value })} /></div></div>
-                <Button type="submit" className="h-10 bg-blue px-5 text-white hover:bg-blue-dark">Save address</Button>
-              </form>
-              {savedAddress && <p className="mt-5 text-sm text-dark-4">Current preview: {savedAddress.street}, {savedAddress.city}, {savedAddress.region} {savedAddress.postalCode}</p>}
-            </CardContent></Card>}
+            </CardContent></Card> : <Addresses />}
             {message && <p role="status" className="mt-4 rounded-lg border border-blue/20 bg-blue/5 px-4 py-3 text-sm text-dark">{message}</p>}
           </div>
         </div>
