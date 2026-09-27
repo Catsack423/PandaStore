@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface AddressService {
 
+    Address setDefaultAddress(Long customerId, Long addressId);
+
     Address addAddressToCustomerByCustomerId(Long customerId, CreateAddressRequest request);
 
     boolean removeAddressCustomerByCustomerIdAndAddressId(Long customerId, Long addressId);
