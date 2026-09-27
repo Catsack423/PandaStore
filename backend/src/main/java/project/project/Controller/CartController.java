@@ -30,12 +30,22 @@ public class CartController {
 
     @GetMapping
     public ApiResponse<CartDtos.CartResponse> get() {
-        return ApiResponse.success("ดำเนินการตะกร้าสำเร็จ", CartDtos.CartResponse.from(carts.getCartByCustomerId(currentUser.requireCustomerId())));
+        Long customerId = currentUser.requireCustomerId();
+        try {
+            return ApiResponse.success("ดำเนินการตะกร้าสำเร็จ", CartDtos.CartResponse.from(carts.getCartByCustomerId(customerId)));
+        } catch (java.util.NoSuchElementException missingCart) {
+            return ApiResponse.success("Cart is empty", new CartDtos.CartResponse(null, List.of()));
+        }
     }
 
     @PostMapping("/items")
     public ApiResponse<CartDtos.Item> add(@Valid @RequestBody CartDtos.AddItem request) {
         return ApiResponse.success("ดำเนินการตะกร้าสำเร็จ", CartDtos.Item.from(carts.addItemToCart(currentUser.requireCustomerId(), request.productId(), request.quantity())));
+    }
+
+    @PostMapping("/sync")
+    public ApiResponse<CartDtos.StockSyncResponse> synchronizeStock() {
+        return ApiResponse.success("Cart stock synchronized", carts.synchronizeStock(currentUser.requireCustomerId()));
     }
 
     @PatchMapping("/items/{itemId}")
