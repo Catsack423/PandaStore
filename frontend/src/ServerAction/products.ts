@@ -11,12 +11,15 @@ const backendProductSchema = z.object({
   sellerShopName: z.string().nullable(),
   name: z.string(),
   price: z.number(),
+  stock: z.number().int().nonnegative().nullable(),
   reviewCount: z.number().nullable(),
   imageUrls: z.array(z.string()).nullable(),
   status: z.string().nullable().optional(),
 });
 
 function imageUrl(url: string, base: string): string {
+  // Demo products reuse the product artwork shipped with this storefront.
+  if (/^\/images\/products\/product-[1-8]-(?:bg|sm)-[12]\.png$/.test(url)) return url;
   if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
   return new URL(url.startsWith("/") ? url : `/${url}`, base).toString();
 }
@@ -27,6 +30,7 @@ function mapBackendProducts(products: z.infer<typeof backendProductSchema>[], ba
     const displayImages = images.length ? images : ["/images/products/product-placeholder.svg"];
     return {
       id: product.productId,
+      stock: product.stock,
       title: product.name,
       price: product.price,
       discountedPrice: product.price,
@@ -59,7 +63,7 @@ export async function getSellerProducts(sellerId: number): Promise<Product[] | n
   try {
     const base = process.env.BACKEND_API_URL || "http://localhost:8080";
     const products = await fetchBackendProducts(`/api/products/seller/${sellerId}`);
-    return mapBackendProducts(products.filter((product) => product.status === "ACTIVE"), base);
+    return mapBackendProducts(products.filter((product) => product.status === "ACTIVE" && (product.stock ?? 0) > 0), base);
   } catch {
     return null;
   }

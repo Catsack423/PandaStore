@@ -18,6 +18,7 @@ import ScrollToTop from "@/components/Common/ScrollToTop";
 import PreLoader from "@/components/Common/PreLoader";
 import { ProductContextProvider } from "../context/ProductContext";
 import { AuthProvider } from "../context/AuthContext";
+import { CartProvider, CartQueryProvider } from "../context/CartContext";
 import { SellerPreviewProvider } from "../context/SellerPreviewContext";
 
 export default function RootLayout({
@@ -38,9 +39,10 @@ export default function RootLayout({
           <PreLoader />
         ) : (
           <>
-            <AuthProvider>
+            <CartQueryProvider><AuthProvider>
             <SellerPreviewProvider>
             <ReduxProvider>
+            <CartProvider>
               <CartModalProvider>
                 <ModalProvider>
                   <PreviewSliderProvider>
@@ -54,9 +56,9 @@ export default function RootLayout({
                   </PreviewSliderProvider>
                 </ModalProvider>
               </CartModalProvider>
-            </ReduxProvider>
+            </CartProvider></ReduxProvider>
             </SellerPreviewProvider>
-            </AuthProvider>
+            </AuthProvider></CartQueryProvider>
             <ScrollToTop />
             <Footer />
           </>

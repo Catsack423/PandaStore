@@ -5,12 +5,16 @@ import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { updateQuickView } from "@/redux/features/quickView-slice";
-import { addItemToCart } from "@/redux/features/cart-slice";
+import ProductStock, { useProductAvailability } from "@/components/Common/ProductStock";
+import { useCart } from "@/app/context/CartContext";
 import Image from "next/image";
 import Link from "next/link";
+import ProductStore from "@/components/Shop/ProductStore";
 import { addItemToWishlist } from "@/redux/features/wishlist-slice";
 
 const SingleItem = ({ item }: { item: Product }) => {
+  const { addItemToCart } = useCart();
+  const { canAdd } = useProductAvailability(item);
   const { openModal } = useModalContext();
   const dispatch = useDispatch<AppDispatch>();
 
@@ -21,12 +25,10 @@ const SingleItem = ({ item }: { item: Product }) => {
 
   // add to cart
   const handleAddToCart = () => {
-    dispatch(
-      addItemToCart({
+    addItemToCart({
         ...item,
         quantity: 1,
-      })
-    );
+      });
   };
 
   const handleItemToWishList = () => {
@@ -128,7 +130,7 @@ const SingleItem = ({ item }: { item: Product }) => {
           </button>
 
           <button
-            onClick={() => handleAddToCart()}
+            disabled={!canAdd} onClick={() => handleAddToCart()}
             aria-label="button for add to cart"
             id="addCartOne"
             className="flex items-center justify-center w-9 h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-white hover:text-white hover:bg-blue"
@@ -188,6 +190,8 @@ const SingleItem = ({ item }: { item: Product }) => {
           </button>
         </div>
       </div>
+      <ProductStock product={item} />
+      <ProductStore product={item} />
     </div>
   );
 };

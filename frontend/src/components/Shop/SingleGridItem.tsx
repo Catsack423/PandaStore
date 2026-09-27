@@ -3,7 +3,8 @@ import React from "react";
 import { Product } from "@/types/product";
 import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { updateQuickView } from "@/redux/features/quickView-slice";
-import { addItemToCart } from "@/redux/features/cart-slice";
+import ProductStock, { useProductAvailability } from "@/components/Common/ProductStock";
+import { useCart } from "@/app/context/CartContext";
 import { addItemToWishlist } from "@/redux/features/wishlist-slice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
@@ -12,6 +13,8 @@ import Image from "next/image";
 import ProductStore from "./ProductStore";
 
 const SingleGridItem = ({ item }: { item: Product }) => {
+  const { addItemToCart } = useCart();
+  const { canAdd } = useProductAvailability(item);
   const { openModal } = useModalContext();
 
   const dispatch = useDispatch<AppDispatch>();
@@ -23,12 +26,10 @@ const SingleGridItem = ({ item }: { item: Product }) => {
 
   // add to cart
   const handleAddToCart = () => {
-    dispatch(
-      addItemToCart({
+    addItemToCart({
         ...item,
         quantity: 1,
-      }),
-    );
+      });
   };
 
   const handleItemToWishList = () => {
@@ -80,10 +81,10 @@ const SingleGridItem = ({ item }: { item: Product }) => {
           </button>
 
           <button
-            onClick={() => handleAddToCart()}
-            className="inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark"
+            disabled={!canAdd} onClick={() => handleAddToCart()}
+            className="inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Add to cart
+            {item.stock === 0 ? "Out of stock" : "Add to cart"}
           </button>
 
           <button
@@ -156,6 +157,7 @@ const SingleGridItem = ({ item }: { item: Product }) => {
         <span className="text-dark">${item.discountedPrice}</span>
         {item.price > item.discountedPrice && <span className="text-dark-4 line-through">${item.price}</span>}
       </span>
+      <ProductStock product={item} />
       <ProductStore product={item} />
     </div>
   );

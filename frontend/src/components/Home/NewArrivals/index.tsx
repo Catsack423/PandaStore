@@ -11,9 +11,7 @@ const NewArrival = ({ initialProducts }: { initialProducts: Product[] }) => {
 
   useEffect(() => {
     // นำข้อมูลที่ได้จาก Server ใส่เข้า Context กลาง
-    if (initialProducts.length > 0) {
-      dispatch({ type: "FETCH_SUCCESS", payload: initialProducts });
-    }
+    dispatch({ type: "FETCH_SUCCESS", payload: initialProducts });
   }, [initialProducts, dispatch]);
 
  

@@ -6,6 +6,7 @@ export const productSchema = z.object({
   price: z.number(),
   discountedPrice: z.number(),
   id: z.number(),
+  stock: z.number().int().nonnegative().nullish(),
   sellerId: z.number().int().nullish(),
   sellerShopName: z.string().nullish(),
   imgs: z

@@ -101,10 +101,10 @@ const ShopWithSidebar = ({ initData, preview = false }: param) => {
   }, [products, priceStart, priceEnd, selectedCategories]);
 
   useEffect(() => {
-    if (initData && initData.length > 0 && products.length === 0) {
+    if (initData) {
       dispatch({ type: "FETCH_SUCCESS", payload: initData });
     }
-  }, [initData, products.length, dispatch]);
+  }, [initData, dispatch]);
 
   useEffect(() => {
     if (!productSidebar) return;

@@ -11,6 +11,7 @@ export type CartItem = {
   price: number;
   discountedPrice: number;
   quantity: number;
+  stock?: number | null;
   sellerId?: number | null;
   sellerShopName?: string | null;
   imgs?: {
@@ -27,8 +28,11 @@ export const cart = createSlice({
   name: "cart",
   initialState,
   reducers: {
+    replaceCartItems: (state, action: PayloadAction<CartItem[]>) => {
+      state.items = action.payload;
+    },
     addItemToCart: (state, action: PayloadAction<CartItem>) => {
-      const { id, title, price, quantity, discountedPrice, imgs, sellerId, sellerShopName } =
+      const { id, title, price, quantity, stock, discountedPrice, imgs, sellerId, sellerShopName } =
         action.payload;
       const existingItem = state.items.find((item) => item.id === id);
 
@@ -42,6 +46,7 @@ export const cart = createSlice({
           title,
           price,
           quantity,
+          stock,
           discountedPrice,
           imgs,
           sellerId,
@@ -80,6 +85,7 @@ export const selectTotalPrice = createSelector([selectCartItems], (items) => {
 });
 
 export const {
+  replaceCartItems,
   addItemToCart,
   removeItemFromCart,
   updateCartItemQuantity,

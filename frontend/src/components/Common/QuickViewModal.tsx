@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 
 import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { AppDispatch, useAppSelector } from "@/redux/store";
-import { addItemToCart } from "@/redux/features/cart-slice";
+import ProductStock, { useProductAvailability } from "@/components/Common/ProductStock";
+import { useCart } from "@/app/context/CartContext";
 import { useDispatch } from "react-redux";
 import Image from "next/image";
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
@@ -11,6 +12,7 @@ import { resetQuickView } from "@/redux/features/quickView-slice";
 import { updateproductDetails } from "@/redux/features/product-details";
 
 const QuickViewModal = () => {
+  const { addItemToCart } = useCart();
   const { isModalOpen, closeModal } = useModalContext();
   const { openPreviewModal } = usePreviewSlider();
   const [quantity, setQuantity] = useState(1);
@@ -19,6 +21,8 @@ const QuickViewModal = () => {
 
   // get the product data
   const product = useAppSelector((state) => state.quickViewReducer.value);
+  const { canAdd, remaining } = useProductAvailability(product, quantity);
+  useEffect(() => { setQuantity(1); }, [product.id]);
 
   const [activePreview, setActivePreview] = useState(0);
 
@@ -31,14 +35,13 @@ const QuickViewModal = () => {
 
   // add to cart
   const handleAddToCart = () => {
-    dispatch(
-      addItemToCart({
+    if (!canAdd) return;
+    addItemToCart({
         ...product,
         quantity,
-      })
-    );
+      });
 
-    closeModal();
+    if (canAdd) closeModal();
   };
 
   useEffect(() => {
@@ -307,6 +310,7 @@ const QuickViewModal = () => {
                 industry. Lorem Ipsum has.
               </p>
 
+              <ProductStock product={product} />
               <div className="flex flex-wrap justify-between gap-5 mt-6 mb-7.5">
                 <div>
                   <h4 className="font-semibold text-lg text-dark mb-3.5">
@@ -333,7 +337,7 @@ const QuickViewModal = () => {
                       onClick={() => quantity > 1 && setQuantity(quantity - 1)}
                       aria-label="button for remove product"
                       className="flex items-center justify-center w-10 h-10 rounded-[5px] bg-gray-2 text-dark ease-out duration-200 hover:text-blue"
-                      disabled={quantity < 0 && true}
+                      disabled={quantity <= 1}
                     >
                       <svg
                         className="fill-current"
@@ -360,7 +364,7 @@ const QuickViewModal = () => {
                     </span>
 
                     <button
-                      onClick={() => setQuantity(quantity + 1)}
+                      disabled={quantity >= remaining} onClick={() => quantity < remaining && setQuantity(quantity + 1)}
                       aria-label="button for add product"
                       className="flex items-center justify-center w-10 h-10 rounded-[5px] bg-gray-2 text-dark ease-out duration-200 hover:text-blue"
                     >
@@ -392,7 +396,7 @@ const QuickViewModal = () => {
 
               <div className="flex flex-wrap items-center gap-4">
                 <button
-                  disabled={quantity === 0 && true}
+                  disabled={!canAdd}
                   onClick={() => handleAddToCart()}
                   className={`inline-flex font-medium text-white bg-blue py-3 px-7 rounded-md ease-out duration-200 hover:bg-blue-dark
                   `}

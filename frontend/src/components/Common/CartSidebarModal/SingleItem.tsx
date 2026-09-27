@@ -1,32 +1,29 @@
 import React from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/redux/store";
 import Image from "next/image";
 
-const SingleItem = ({ item, removeItemFromCart }) => {
-  const dispatch = useDispatch<AppDispatch>();
+const SingleItem = ({ item, removeItemFromCart, disabled }) => {
 
   const handleRemoveFromCart = () => {
-    dispatch(removeItemFromCart(item.id));
+    removeItemFromCart(item.id);
   };
 
   return (
     <div className="flex items-center justify-between gap-5">
       <div className="w-full flex items-center gap-6">
         <div className="flex items-center justify-center rounded-[10px] bg-gray-3 max-w-[90px] w-full h-22.5">
-          <Image src={item.imgs?.thumbnails[0]} alt="product" width={100} height={100} />
+          <Image src={item.imgs?.thumbnails?.[0] || "/images/products/product-placeholder.svg"} alt="product" width={100} height={100} />
         </div>
 
         <div>
           <h3 className="font-medium text-dark mb-1 ease-out duration-200 hover:text-blue">
             <a href="#"> {item.title} </a>
           </h3>
-          <p className="text-custom-sm">Price: ${item.discountedPrice}</p>
+          <p className="text-custom-sm">${Number(item.discountedPrice).toFixed(2)} × {item.quantity}</p><p className="mt-1 text-xs">{item.stock == null ? "Stock unavailable" : `${item.stock} in stock`}</p>
         </div>
       </div>
 
       <button
-        onClick={handleRemoveFromCart}
+        onClick={handleRemoveFromCart} disabled={disabled}
         aria-label="button for remove product from cart"
         className="flex items-center justify-center rounded-lg max-w-[38px] w-full h-9.5 bg-gray-2 border border-gray-3 text-dark ease-out duration-200 hover:bg-red-light-6 hover:border-red-light-4 hover:text-red"
       >
