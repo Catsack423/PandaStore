@@ -25,4 +25,18 @@ public class ShippingFeeStrategyFactory {
                 .findFirst()
                 .orElse(defaultStrategy);
     }
+
+    public List<String> getAvailableMethods() {
+        return strategies.stream()
+                .filter(s -> !(s instanceof DefaultShippingStrategy))
+                .map(ShippingFeeStrategy::getCourierCode).sorted().toList();
+    }
+
+    public String requireSupportedMethod(String method) {
+        ShippingFeeStrategy strategy = getStrategy(method);
+        if (strategy instanceof DefaultShippingStrategy) {
+            throw new IllegalArgumentException("Unsupported shipping method: " + method);
+        }
+        return strategy.getCourierCode();
+    }
 }

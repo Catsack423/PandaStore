@@ -23,6 +23,10 @@ public class SubOrderResponse {
     private String shopName;
     private BigDecimal subtotal;
     private BigDecimal shippingFee;
+    private String shippingMethod;
+
+    public String getShippingMethod() { return shippingMethod; }
+    public void setShippingMethod(String shippingMethod) { this.shippingMethod = shippingMethod; }
     private BigDecimal sellerDiscount;
     private BigDecimal totalAmount;
     private OrderStatus orderStatus;
@@ -79,7 +83,7 @@ public class SubOrderResponse {
                 ? ShipmentResponse.fromEntity(order.getShipment())
                 : null;
 
-        return new SubOrderResponse(
+        SubOrderResponse response = new SubOrderResponse(
                 order.getOrderId(),
                 order.getSubOrderNumber(),
                 orderGroupId,
@@ -97,6 +101,8 @@ public class SubOrderResponse {
                 itemResponses,
                 shipmentResponse
         );
+        response.setShippingMethod(order.getShippingMethod());
+        return response;
     }
 
     public Long getOrderId() {
