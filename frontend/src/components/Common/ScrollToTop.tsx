@@ -16,16 +16,18 @@ export default function ScrollToTop() {
   };
 
   useEffect(() => {
-    // Button is displayed after scrolling for 500 pixels
+    let visible = window.scrollY > 300;
+    setIsVisible(visible);
+
     const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
+      const nextVisible = window.scrollY > 300;
+      if (nextVisible !== visible) {
+        visible = nextVisible;
+        setIsVisible(nextVisible);
       }
     };
 
-    window.addEventListener("scroll", toggleVisibility);
+    window.addEventListener("scroll", toggleVisibility, { passive: true });
 
     return () => window.removeEventListener("scroll", toggleVisibility);
   }, []);

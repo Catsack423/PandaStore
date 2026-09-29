@@ -8,6 +8,13 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   "/account": ["CUSTOMER", "SELLER", "ADMIN"],
 };
 
+const ACCOUNT_PAGES: Record<string, string[]> = {
+  "/seller-application/apply": ["CUSTOMER"],
+  "/seller-application": ["CUSTOMER", "SELLER"],
+  "/order-history": ["CUSTOMER"],
+  "/my-account": ["CUSTOMER", "SELLER", "ADMIN"],
+};
+
 const CUSTOMER_PAGES = [
   "/", "/cart", "/checkout", "/shop-with-sidebar", "/shop-without-sidebar",
   "/shop-details", "/order-history", "/wishlist",
@@ -23,6 +30,38 @@ export async function middleware(request: NextRequest) {
 
   const token = request.cookies.get("auth_token")?.value;
   const userRole = request.cookies.get("user_role")?.value;
+  const accountPath = Object.keys(ACCOUNT_PAGES).find((route) =>
+    pathname === route || pathname.startsWith(route + "/")
+  );
+  if (accountPath) {
+    if (!token) {
+      const loginUrl = new URL("/signin", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    try {
+      const response = await fetch(`${backend}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(5000),
+      });
+      const body = response.ok ? await response.json() : null;
+      const role = body?.success ? body.data?.role : null;
+      if (!role) {
+        const loginUrl = new URL("/signin", request.url);
+        loginUrl.searchParams.set("callbackUrl", pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+      if (!ACCOUNT_PAGES[accountPath].includes(role)) {
+        return NextResponse.redirect(new URL(role === "SELLER" ? "/seller-dashboard" : "/", request.url));
+      }
+      return NextResponse.next();
+    } catch {
+      const loginUrl = new URL("/signin", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
   const matchedPath = Object.keys(ROLE_PERMISSIONS).find((route) =>
     pathname === route || pathname.startsWith(route + "/")
   );
@@ -76,6 +115,6 @@ export const config = {
     "/", "/admin/:path*", "/seller/:path*", "/seller-dashboard/:path*", "/account/:path*",
     "/cart/:path*", "/checkout/:path*", "/shop-with-sidebar/:path*",
     "/shop-without-sidebar/:path*", "/shop-details/:path*", "/shop/:path*",
-    "/order-history/:path*", "/wishlist/:path*",
+    "/order-history/:path*", "/my-account/:path*", "/seller-application/:path*", "/wishlist/:path*",
   ],
 };

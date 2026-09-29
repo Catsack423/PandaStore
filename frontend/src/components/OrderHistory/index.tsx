@@ -90,7 +90,7 @@ function OrderRow({ order }: { order: CustomerOrder }) {
   );
 }
 
-export default function OrderHistory() {
+export default function OrderHistory({ showBackToAccount = false }: { showBackToAccount?: boolean }) {
   const { user, isLoading: authLoading } = useAuth();
   const customer = user?.role === "CUSTOMER";
   const history = useQuery({ queryKey: ["customer-orders", user?.id],
@@ -107,7 +107,7 @@ export default function OrderHistory() {
       <div className="mx-auto w-full max-w-[1170px] px-4 sm:px-8 xl:px-0">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div><h2 className="text-2xl font-semibold text-dark">Your orders</h2><p className="mt-2 text-sm text-dark-4">Track purchases and review order details here.</p></div>
-          <Link href="/my-account" className="text-sm font-medium text-blue hover:underline">Back to My Account</Link>
+          {showBackToAccount && <Link href="/my-account" className="text-sm font-medium text-blue hover:underline">Back to My Account</Link>}
         </div>
         <Card className="overflow-hidden rounded-xl border-gray-3 shadow-1">
           <div className="flex flex-col gap-4 border-b border-gray-3 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">

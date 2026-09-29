@@ -26,18 +26,21 @@ const Header = () => {
     openCartModal();
   };
 
-  // Sticky menu
-  const handleStickyMenu = () => {
-    if (window.scrollY >= 80) {
-      setStickyMenu(true);
-    } else {
-      setStickyMenu(false);
-    }
-  };
-
   useEffect(() => {
-    window.addEventListener("scroll", handleStickyMenu);
-  });
+    let isSticky = window.scrollY >= 80;
+    setStickyMenu(isSticky);
+
+    const handleScroll = () => {
+      const nextSticky = window.scrollY >= 80;
+      if (nextSticky !== isSticky) {
+        isSticky = nextSticky;
+        setStickyMenu(nextSticky);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const options = [
     { label: "All Categories", value: "0" },
@@ -160,7 +163,7 @@ const Header = () => {
                     </p>
                   </div>
                 </Link>
-                <NotificationPopover />
+                {user && <NotificationPopover />}
                 {showShopping && <button
                   onClick={handleOpenCartModal}
                   className="flex shrink-0 items-center gap-2.5"
@@ -305,7 +308,7 @@ const Header = () => {
             {/* // <!--=== Nav Right Start ===--> */}
             <div className="hidden xl:block">
               <ul className="flex items-center gap-5.5">
-                {showShopping && <li className="py-4">
+                {user?.role === "CUSTOMER" && <li className="py-4">
                   <a
                     href="/order-history"
                     className="flex items-center gap-1.5 font-medium text-custom-sm text-dark hover:text-blue"
@@ -331,7 +334,7 @@ const Header = () => {
                   </a>
                 </li>}
 
-                <li className="py-4">
+                {user && user.role !== "ADMIN" && <li className="py-4">
                   <Link
                     href={isSeller ? "/seller-dashboard" : "/seller-application"}
                     className="flex items-center gap-1.5 font-medium text-custom-sm text-dark hover:text-blue"
@@ -339,7 +342,7 @@ const Header = () => {
                     <Store size={16} aria-hidden="true" />
                     {isSeller ? "Seller Dashboard" : "Seller Applications"}
                   </Link>
-                </li>
+                </li>}
               </ul>
             </div>
             {/* <!--=== Nav Right End ===--> */}

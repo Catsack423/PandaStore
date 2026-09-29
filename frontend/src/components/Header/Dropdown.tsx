@@ -49,8 +49,10 @@ const Dropdown = ({ menuItem, stickyMenu }) => {
       >
         {menuItem.submenu.filter(item => {
           if (item.path === "/seller-dashboard") return user?.role === "SELLER" && user.status === "ACTIVE";
+          if (item.path === "/seller-application") return user?.role === "CUSTOMER";
           if (user?.role === "SELLER") return !["/shop-with-sidebar", "/shop-without-sidebar", "/checkout", "/cart", "/seller-application", "/signup"].includes(item.path);
-          if (isLoading) return !["/shop-with-sidebar", "/shop-without-sidebar", "/checkout", "/cart"].includes(item.path);
+          if (isLoading) return !["/shop-with-sidebar", "/shop-without-sidebar", "/checkout", "/cart", "/seller-application", "/my-account"].includes(item.path);
+          if (!user) return !["/seller-application", "/my-account"].includes(item.path);
           return true;
         }).map((item, i) => (
           <li key={i}>

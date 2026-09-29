@@ -44,7 +44,7 @@ export default function MyAccount() {
             <Card><CardContent className="space-y-2 p-3">
               <Button type="button" variant={tab === "profile" ? "default" : "ghost"} className={`h-11 w-full justify-start gap-3 ${tab === "profile" ? "bg-blue text-white hover:bg-blue-dark" : ""}`} onClick={() => { setTab("profile"); setMessage(""); }}><UserRound className="size-4" />Profile</Button>
               {user?.role !== "SELLER" && <Button type="button" variant={tab === "address" ? "default" : "ghost"} className={`h-11 w-full justify-start gap-3 ${tab === "address" ? "bg-blue text-white hover:bg-blue-dark" : ""}`} onClick={() => { setTab("address"); setMessage(""); }}><MapPin className="size-4" />Addresses</Button>}
-              {user?.role !== "SELLER" && <Link href="/order-history" className="flex h-11 items-center gap-3 rounded-lg px-2.5 text-sm font-medium text-dark hover:bg-gray-1"><Package className="size-4" />Order history</Link>}
+              {user?.role === "CUSTOMER" && <Link href="/order-history?from=my-account" className="flex h-11 items-center gap-3 rounded-lg px-2.5 text-sm font-medium text-dark hover:bg-gray-1"><Package className="size-4" />Order history</Link>}
               {user && <button type="button" onClick={() => void logout()} className="flex h-11 w-full items-center gap-3 rounded-lg px-2.5 text-left text-sm font-medium text-dark hover:bg-gray-1"><LogOut className="size-4" />Sign out</button>}
             </CardContent></Card>
           </aside>

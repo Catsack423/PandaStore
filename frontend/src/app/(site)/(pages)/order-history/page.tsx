@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   description: "View your orders and delivery progress.",
 };
 
-export default function OrderHistoryPage() {
-  return <OrderHistory />;
+export default async function OrderHistoryPage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
+  const { from } = await searchParams;
+  return <OrderHistory showBackToAccount={from === "my-account"} />;
 }
