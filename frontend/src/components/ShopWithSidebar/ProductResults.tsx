@@ -9,7 +9,7 @@ export default function ProductResults({ products, style, onReset }: {
   if (products.length === 0) return (
     <div className="rounded-lg bg-white px-6 py-16 text-center shadow-1">
       <h2 className="font-semibold text-dark">No products found</h2>
-      <p className="mt-2 text-sm text-dark-4">Try another category or price range.</p>
+      <p className="mt-2 text-sm text-dark-4">Try another keyword, category, or price range.</p>
       <button type="button" onClick={onReset} className="mt-4 text-blue hover:underline">Clear filters</button>
     </div>
   );

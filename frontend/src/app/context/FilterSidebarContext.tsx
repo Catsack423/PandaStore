@@ -31,10 +31,12 @@ type FilterContext = State & {
 const FilterSidebarContext = createContext<FilterContext | undefined>(undefined);
 
 export function FilterSidebarContextProvider({
-  children, maxPrice,
-}: { children: ReactNode; maxPrice: number }) {
+  children, maxPrice, initialCategoryIds = [], initialPriceStart = 0, initialPriceEnd,
+}: { children: ReactNode; maxPrice: number; initialCategoryIds?: number[];
+  initialPriceStart?: number; initialPriceEnd?: number }) {
   const [state, dispatch] = useReducer(reducer, {
-    categoryIds: new Set<number>(), priceStart: 0, priceEnd: maxPrice, maxPrice,
+    categoryIds: new Set(initialCategoryIds), priceStart: initialPriceStart,
+    priceEnd: initialPriceEnd ?? maxPrice, maxPrice,
   });
   return (
     <FilterSidebarContext.Provider value={{

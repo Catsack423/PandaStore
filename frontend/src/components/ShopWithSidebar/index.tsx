@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import type { Product } from "@/types/product";
 import type { Category } from "@/types/category";
+import type { ProductSearch } from "@/ServerAction/products";
 import { useFilterSidebarContext } from "@/app/context/FilterSidebarContext";
 import Breadcrumb from "../Common/Breadcrumb";
 import CategoryDropdown from "./CategoryDropdown";
@@ -19,25 +21,67 @@ import {
   type ProductStyle,
 } from "./catalog";
 
-type Props = { products: Product[]; categories: Category[]; preview?: boolean };
+type Criteria = { keyword: string; categoryIds: number[]; minPrice: number | null;
+  maxPrice: number | null; sort: ProductSort; page: number };
+type Props = { products: Product[]; categories: Category[]; preview?: boolean;
+  showPreviewNotice?: boolean; searchError?: boolean; pageData?: ProductSearch | null;
+  requestedPage: number; criteria: Criteria };
+
+function shopUrl(criteria: Criteria) {
+  const query = new URLSearchParams();
+  if (criteria.keyword) query.set("q", criteria.keyword);
+  criteria.categoryIds.forEach((id) => query.append("categoryId", String(id)));
+  if (criteria.minPrice != null) query.set("minPrice", String(criteria.minPrice));
+  if (criteria.maxPrice != null) query.set("maxPrice", String(criteria.maxPrice));
+  if (criteria.sort !== "latest") query.set("sort", criteria.sort);
+  if (criteria.page > 1) query.set("page", String(criteria.page));
+  return `/shop-with-sidebar${query.size ? `?${query}` : ""}`;
+}
 
 export default function ShopWithSidebar({
   products,
   categories,
   preview = false,
+  showPreviewNotice = false,
+  searchError = false,
+  pageData,
+  requestedPage,
+  criteria,
 }: Props) {
+  const router = useRouter();
+  useEffect(() => {
+    if (requestedPage !== criteria.page) router.replace(shopUrl(criteria));
+  }, [requestedPage, criteria.page, router]);
+  const deferredPage = useDeferredValue(pageData);
   const [style, setStyle] = useState<ProductStyle>("grid");
   
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [sort, setSort] = useState<ProductSort>("latest");
-
-  const { categoryIds, priceStart, priceEnd, resetFilters } =
+  const { categoryIds, priceStart, priceEnd, maxPrice, resetFilters } =
     useFilterSidebarContext();
+  const selection = useMemo(() => Array.from(categoryIds).sort((a, b) => a - b), [categoryIds]);
+  const selectionKey = selection.join(",");
+  const criteriaKey = [...criteria.categoryIds].sort((a, b) => a - b).join(",");
+  useEffect(() => {
+    if (preview) return;
+    const min = priceStart > 0 ? priceStart : null;
+    const max = priceEnd < maxPrice ? priceEnd : null;
+    if (selectionKey === criteriaKey && min === criteria.minPrice && max === criteria.maxPrice) return;
+    const timer = setTimeout(() => router.push(shopUrl({ ...criteria, categoryIds: selection,
+      minPrice: min, maxPrice: max, page: 1 })), 300);
+    return () => clearTimeout(timer);
+  }, [selectionKey, criteriaKey, priceStart, priceEnd, maxPrice,
+    criteria.minPrice, criteria.maxPrice, preview, router]);
+  const changeSort = (sort: ProductSort) => router.push(shopUrl({ ...criteria, sort, page: 1 }));
+  const clearFilters = () => {
+    resetFilters();
+    if (!preview) router.push(shopUrl({ ...criteria, keyword: "", categoryIds: [],
+      minPrice: null, maxPrice: null, page: 1 }));
+  };
   const results = useMemo(
     () =>
-      filterAndSortProducts(products, categoryIds, priceStart, priceEnd, sort),
-    [products, categoryIds, priceStart, priceEnd, sort],
+      preview ? filterAndSortProducts(products, categoryIds, priceStart, priceEnd, criteria.sort) : [],
+    [preview, products, categoryIds, priceStart, priceEnd, criteria.sort],
   );
 
   // A page selection only applies to the results it was made for.
@@ -49,10 +93,21 @@ export default function ShopWithSidebar({
     results: null,
     page: 1,
   });
-  const pagination = paginateProducts(
-    results,
-    pageSelection.results === results ? pageSelection.page : 1,
-  );
+  const pagination = paginateProducts(results,
+    pageSelection.results === results ? pageSelection.page : criteria.page);
+  const shownProducts = preview ? pagination.products : deferredPage?.items ?? [];
+  const currentPage = preview ? pagination.page : (deferredPage?.page ?? 0) + 1;
+  const totalPages = preview ? pagination.totalPages : deferredPage?.totalPages ?? 0;
+  const totalItems = preview ? results.length : deferredPage?.totalItems ?? 0;
+  useEffect(() => {
+    if (preview && requestedPage !== currentPage) {
+      router.replace(shopUrl({ ...criteria, page: currentPage }));
+    }
+  }, [preview, requestedPage, currentPage, router]);
+  const changePage = (page: number) => {
+    if (preview) setPageSelection({ results, page });
+    router.push(shopUrl({ ...criteria, page }));
+  };
 
   useEffect(() => {
     if (!sidebarOpen) return;
@@ -71,7 +126,7 @@ export default function ShopWithSidebar({
       />
       <section className="relative overflow-hidden bg-[#f3f4f6] pb-20 pt-5 lg:pt-20 xl:pt-28">
         <div className="mx-auto w-full max-w-[1170px] px-4 sm:px-8 xl:px-0">
-          {preview && (
+          {showPreviewNotice && (
             <div
               role="status"
               className="mb-6 rounded-lg border border-blue/20 bg-white px-5 py-4 text-sm text-dark"
@@ -110,7 +165,7 @@ export default function ShopWithSidebar({
                   <p>Filters:</p>
                   <button
                     type="button"
-                    onClick={resetFilters}
+                    onClick={clearFilters}
                     className="text-blue"
                   >
                     Clear all
@@ -122,28 +177,27 @@ export default function ShopWithSidebar({
             </aside>
             <div className="min-w-0 w-full xl:max-w-[870px]">
               <ProductToolbar
-                sort={sort}
-                onSortChange={setSort}
+                sort={criteria.sort}
+                onSortChange={changeSort}
                 style={style}
                 onStyleChange={setStyle}
                 start={
-                  results.length ? (pagination.page - 1) * PAGE_SIZE + 1 : 0
+                  totalItems ? (currentPage - 1) * PAGE_SIZE + 1 : 0
                 }
-                end={Math.min(pagination.page * PAGE_SIZE, results.length)}
-                total={results.length}
+                end={Math.min(currentPage * PAGE_SIZE, totalItems)}
+                total={totalItems}
                 sidebarOpen={sidebarOpen}
                 onOpenSidebar={() => setSidebarOpen(true)}
               />
-              <ProductResults
-                products={pagination.products}
-                style={style}
-                onReset={resetFilters}
-              />
-              <Pagination
-                page={pagination.page}
-                totalPages={pagination.totalPages}
-                onPageChange={(page) => setPageSelection({ results, page })}
-              />
+              {searchError ? <div role="alert" className="rounded-lg bg-white px-6 py-12 text-center shadow-1">
+                <p className="font-semibold text-dark">Could not load products</p>
+                <button type="button" onClick={() => router.refresh()} className="mt-3 text-blue hover:underline">Try again</button>
+              </div> : <>
+                {deferredPage !== pageData && <p role="status" className="mb-3 text-sm text-dark-4">Updating products…</p>}
+                <ProductResults products={shownProducts} style={style} onReset={clearFilters} />
+                <Pagination page={currentPage} totalPages={totalPages} totalItems={totalItems}
+                  onPageChange={changePage} />
+              </>}
             </div>
           </div>
         </div>

@@ -66,6 +66,61 @@ function mapBackendProducts(
   });
 }
 
+export type ProductSearch = {
+  items: Product[];
+  page: number;
+  totalItems: number;
+  totalPages: number;
+};
+
+export type ShopCatalogSummary = { maxPrice: number; categoryCounts: Record<string, number> };
+
+export async function getShopCatalogSummary(): Promise<ShopCatalogSummary> {
+  const base = process.env.BACKEND_API_URL || "http://localhost:8080";
+  const response = await fetch(`${base}/api/products/catalog-summary`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(2500),
+  });
+  if (!response.ok) throw new Error(`Product summary returned ${response.status}`);
+  const body = await response.json();
+  if (!body?.success) throw new Error("Product summary failed");
+  return z.object({ maxPrice: z.number(), categoryCounts: z.record(z.string(), z.number()) }).parse(body.data);
+}
+
+export async function searchProducts(params: {
+  keyword?: string;
+  categoryIds?: number[];
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: string;
+  page?: number;
+  size?: number;
+}): Promise<ProductSearch> {
+  const base = process.env.BACKEND_API_URL || "http://localhost:8080";
+  const query = new URLSearchParams();
+  if (params.keyword) query.set("keyword", params.keyword);
+  params.categoryIds?.forEach((id) => query.append("categoryIds", String(id)));
+  if (params.minPrice != null) query.set("minPrice", String(params.minPrice));
+  if (params.maxPrice != null) query.set("maxPrice", String(params.maxPrice));
+  if (params.sort) query.set("sort", params.sort);
+  query.set("page", String(params.page ?? 0));
+  query.set("size", String(params.size ?? 9));
+  const response = await fetch(`${base}/api/products/search?${query}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!response.ok) throw new Error(`Product search returned ${response.status}`);
+  const body = await response.json();
+  if (!body?.success) throw new Error("Product search failed");
+  const data = z.object({
+    items: z.array(backendProductSchema),
+    page: z.number().int(),
+    totalItems: z.number().int(),
+    totalPages: z.number().int(),
+  }).parse(body.data);
+  return { ...data, items: mapBackendProducts(data.items, base) };
+}
+
 export async function getProductById(
   productId: number,
 ): Promise<Product | null> {
