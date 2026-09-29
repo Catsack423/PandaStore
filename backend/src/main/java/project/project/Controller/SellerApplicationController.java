@@ -61,6 +61,12 @@ public class SellerApplicationController {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(ApiResponse.success("ดึงรายการใบสมัครที่รอตรวจสอบสำเร็จ", responses));
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<SellerApplicationResponse>>> getAllApplications() {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(ApiResponse.success("ดึงประวัติใบสมัครทั้งหมดสำเร็จ",
+                sellerApplicationService.getAllApplicationResponses()));
+    }
+
     @PutMapping("/{id}/approve")
     public ResponseEntity<ApiResponse<Void>> approveApplication(@PathVariable Long id) {
         sellerApplicationService.approveApplication(id, currentUser.getCurrentUserId());

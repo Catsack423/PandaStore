@@ -17,5 +17,6 @@ public interface SellerApplicationService {
     SellerApplicationResponse getApplicationResponseById(Long applicationId);
     List<SellerApplication> getPendingApplications();
     List<SellerApplicationResponse> getPendingApplicationResponses();
+    List<SellerApplicationResponse> getAllApplicationResponses();
     List<SellerApplicationResponse> getApplicationsForUser(Long userId);
 }

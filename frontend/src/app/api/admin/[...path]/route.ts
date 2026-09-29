@@ -6,6 +6,8 @@ const backend = process.env.BACKEND_API_URL || "http://localhost:8080";
 function backendPath(method: string, segments: string[]): string | null {
   if (segments.length === 1 && segments[0] === "applications" && method === "GET")
     return "/api/seller-applications/pending";
+  if (segments.length === 2 && segments[0] === "applications" && segments[1] === "history" && method === "GET")
+    return "/api/seller-applications";
   if (segments.length === 2 && segments[0] === "applications" && /^\d+$/.test(segments[1]) && method === "GET")
     return `/api/seller-applications/${segments[1]}`;
   if (segments.length === 3 && segments[0] === "applications" && /^\d+$/.test(segments[1]) && ["approve", "reject", "request-docs"].includes(segments[2]) && method === "PUT")

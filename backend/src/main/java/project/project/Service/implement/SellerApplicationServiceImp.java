@@ -271,4 +271,13 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
                 .map(SellerApplicationResponse::fromEntity)
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SellerApplicationResponse> getAllApplicationResponses() {
+        return applicationRepository.findAll().stream()
+                .map(SellerApplicationResponse::fromEntity)
+                .sorted((a, b) -> b.getApplicationId().compareTo(a.getApplicationId()))
+                .toList();
+    }
 }

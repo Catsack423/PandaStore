@@ -7,15 +7,9 @@ import Breadcrumb from "@/components/Common/Breadcrumb";
 import { useAuth } from "@/app/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { SellerApplicationRecord, SellerApplicationStatus } from "@/types/sellerApplication";
-
-const statusLabels: Record<SellerApplicationStatus, string> = {
-  PENDING: "Under review", APPROVED: "Approved", REJECTED: "Rejected", NEED_MORE_DOC: "Action needed",
-};
-const statusColors: Record<SellerApplicationStatus, string> = {
-  PENDING: "bg-yellow-light-4 text-yellow-dark", APPROVED: "bg-green-light-6 text-green",
-  REJECTED: "bg-red-light-6 text-red", NEED_MORE_DOC: "bg-blue/10 text-blue",
-};
+import { Spinner } from "@/components/ui/spinner";
+import ApplicationHistoryTable, { statusColors, statusLabels } from "./ApplicationHistoryTable";
+import type { SellerApplicationRecord } from "@/types/sellerApplication";
 
 export default function SellerApplication() {
   const { user, isLoading, refreshUser } = useAuth();
@@ -56,14 +50,32 @@ export default function SellerApplication() {
         : loading ? <Card><CardContent className="py-16 text-center">Loading applications...</CardContent></Card>
         : error ? <Card><CardContent className="py-12 text-center"><p role="alert" className="text-red">{error}</p><Button type="button" variant="outline" onClick={() => setReload((value) => value + 1)} className="mt-4">Try again</Button></CardContent></Card>
         : <div className="space-y-6">
-          {latest && <Card><CardHeader><CardTitle>Latest application · #{latest.applicationId}</CardTitle></CardHeader><CardContent className="space-y-4"><div className="flex flex-wrap items-center gap-3"><h2 className="text-xl font-semibold text-dark">{latest.shopName}</h2><span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[latest.status]}`}>{statusLabels[latest.status]}</span></div>
-            <p className="text-sm">{latest.status === "PENDING" ? "Your application is being reviewed." : latest.status === "APPROVED" ? "Your shop has been approved." : latest.status === "NEED_MORE_DOC" ? "The review team needs updated documents. Use the form to submit a revised application." : "Review the decision and submit a corrected application."}</p>
-            {latest.adminNote && <div className="rounded-lg border border-yellow/30 bg-yellow-light-4 p-4 text-sm"><strong className="text-dark">Review note</strong><p className="mt-1">{latest.adminNote}</p></div>}
-            {canApply && <Link href="/seller-application/apply" className="inline-flex h-10 items-center rounded-lg bg-blue px-5 text-sm font-medium text-white hover:bg-blue-dark">{applyLabel}</Link>}
-            {latest.status === "APPROVED" && user?.role === "SELLER" && <Link href="/seller-dashboard" className="inline-flex h-10 items-center rounded-lg bg-blue px-5 text-sm font-medium text-white hover:bg-blue-dark">Open dashboard</Link>}
-          </CardContent></Card>}
+          {latest && (latest.status === "PENDING" ?
+            <Card className="overflow-hidden border-yellow/60">
+              <CardContent className="p-0">
+                <div className="flex flex-col items-start gap-5 bg-yellow-light-4 px-6 py-7 sm:flex-row sm:px-8">
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-yellow/50 bg-white text-yellow-dark-2">
+                    <Spinner className="size-6" aria-label="Application under review" />
+                  </span>
+                  <div>
+                    <h2 className="text-2xl font-semibold leading-tight text-dark">Waiting for review</h2>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-dark-3">Your seller application has been submitted. No action is needed right now; check this page for the review decision.</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-yellow/30 px-6 py-4 text-sm sm:px-8">
+                  <p className="font-medium text-dark">{latest.shopName}</p>
+                  <p className="text-dark-3">Application #{latest.applicationId} · Submitted {new Date(latest.createdAt).toLocaleDateString("en-US")}</p>
+                </div>
+              </CardContent>
+            </Card>
+            : <Card><CardHeader><CardTitle>Latest application · #{latest.applicationId}</CardTitle></CardHeader><CardContent className="space-y-4"><div className="flex flex-wrap items-center gap-3"><h2 className="text-xl font-semibold text-dark">{latest.shopName}</h2><span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[latest.status]}`}>{statusLabels[latest.status]}</span></div>
+              <p className="text-sm">{latest.status === "APPROVED" ? "Your shop has been approved." : latest.status === "NEED_MORE_DOC" ? "The review team needs updated documents. Use the form to submit a revised application." : "Review the decision and submit a corrected application."}</p>
+              {latest.adminNote && <div className="rounded-lg border border-yellow/30 bg-yellow-light-4 p-4 text-sm"><strong className="text-dark">Review note</strong><p className="mt-1">{latest.adminNote}</p></div>}
+              {canApply && <Link href="/seller-application/apply" className="inline-flex h-10 items-center rounded-lg bg-blue px-5 text-sm font-medium text-white hover:bg-blue-dark">{applyLabel}</Link>}
+              {latest.status === "APPROVED" && user?.role === "SELLER" && <Link href="/seller-dashboard" className="inline-flex h-10 items-center rounded-lg bg-blue px-5 text-sm font-medium text-white hover:bg-blue-dark">Open dashboard</Link>}
+            </CardContent></Card>)}
           {!latest && <Card><CardContent className="flex flex-col items-center py-14 text-center"><ClipboardList className="mb-4 size-10 text-blue" /><h2 className="text-xl font-semibold text-dark">No applications yet</h2><p className="mt-2 text-sm">Your customer account is ready. Complete the shop application to get started.</p><Link href="/seller-application/apply" className="mt-6 rounded-lg bg-blue px-5 py-3 text-sm font-medium text-white">Apply to sell</Link></CardContent></Card>}
-          <Card><CardHeader><CardTitle>Application history</CardTitle></CardHeader><CardContent className="p-0"><div className="overflow-x-auto"><table className="w-full min-w-[660px] text-left text-sm"><thead className="bg-gray-1 text-dark-4"><tr><th className="px-6 py-4">Application</th><th className="px-6 py-4">Shop</th><th className="px-6 py-4">Submitted</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Review note</th></tr></thead><tbody className="divide-y divide-gray-3">{applications.map((item) => <tr key={item.applicationId}><td className="px-6 py-5 font-medium text-dark">#{item.applicationId}</td><td className="px-6 py-5">{item.shopName}</td><td className="px-6 py-5">{new Date(item.createdAt).toLocaleDateString("en-US")}</td><td className="px-6 py-5"><span className={`rounded-full px-3 py-1 text-xs ${statusColors[item.status]}`}>{statusLabels[item.status]}</span></td><td className="max-w-[250px] px-6 py-5">{item.adminNote || "—"}</td></tr>)}</tbody></table></div></CardContent></Card>
+          <ApplicationHistoryTable applications={applications} />
         </div>}
     </div></section>
   </main>;
