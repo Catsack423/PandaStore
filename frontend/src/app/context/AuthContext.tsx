@@ -10,7 +10,7 @@ export interface User {
   status: string;
 }
 
-type AuthResult = { success: true } | { success: false; error: string };
+type AuthResult = { success: true; user?: User } | { success: false; error: string };
 type Registration = {
   username: string;
   email: string;
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!response.ok || !data?.success)
         return { success: false, error: data?.message || "Sign in failed" };
       setUser(data.user);
-      return { success: true };
+      return { success: true, user: data.user };
     } catch {
       return { success: false, error: "Could not reach the server" };
     }

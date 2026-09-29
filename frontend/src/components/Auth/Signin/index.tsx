@@ -29,7 +29,10 @@ export default function Signin() {
           setError(result.error);
           return;
         }
-        router.replace("/");
+        const callback = new URLSearchParams(window.location.search).get("callbackUrl");
+        const destination = result.user?.role === "ADMIN" ? "/admin" : result.user?.role === "SELLER" ? "/seller-dashboard" : "/";
+        const safeCallback = callback?.startsWith("/") && !callback.startsWith("//") ? callback : null;
+        router.replace(safeCallback || destination);
         router.refresh();
       });
     });

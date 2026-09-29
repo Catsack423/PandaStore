@@ -8,7 +8,7 @@ const Footer = () => {
   const year = new Date().getFullYear();
   const { user, isLoading } = useAuth();
   const isSeller = user?.role === "SELLER";
-  const showShopping = !isLoading && !isSeller;
+  const showShopping = !isLoading && (!user || user.role === "CUSTOMER");
 
   return (
     <footer className="overflow-hidden">
@@ -127,6 +127,7 @@ const Footer = () => {
                 </Link>
               </li>}
               {isSeller && <li><Link className="ease-out duration-200 hover:text-blue" href="/seller-dashboard">Seller dashboard</Link></li>}
+              {user?.role === "ADMIN" && <><li><Link className="ease-out duration-200 hover:text-blue" href="/admin">Seller applications</Link></li><li><Link className="ease-out duration-200 hover:text-blue" href="/admin/categories">Categories</Link></li></>}
             </ul>
           </div>
 

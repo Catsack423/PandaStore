@@ -86,10 +86,11 @@ export async function middleware(request: NextRequest) {
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
-    if (!authResponse.ok) return userRole === "SELLER"
-      ? NextResponse.redirect(new URL("/seller-dashboard", request.url))
+    if (!authResponse.ok) return userRole === "SELLER" || userRole === "ADMIN"
+      ? NextResponse.redirect(new URL(userRole === "ADMIN" ? "/admin" : "/seller-dashboard", request.url))
       : NextResponse.next();
     const auth = await authResponse.json();
+    if (auth?.data?.role === "ADMIN") return NextResponse.redirect(new URL("/admin", request.url));
     if (auth?.data?.role !== "SELLER") return NextResponse.next();
 
     if (shopMatch) {
@@ -106,6 +107,7 @@ export async function middleware(request: NextRequest) {
   } catch {
     // Deny known seller shopping routes while the backend cannot confirm shop ownership.
     if (userRole === "SELLER") return NextResponse.redirect(new URL("/seller-dashboard", request.url));
+    if (userRole === "ADMIN") return NextResponse.redirect(new URL("/admin", request.url));
     return NextResponse.next();
   }
 }

@@ -48,6 +48,7 @@ const Dropdown = ({ menuItem, stickyMenu }) => {
         }`}
       >
         {menuItem.submenu.filter(item => {
+          if (user?.role === "ADMIN") return ["/contact", "/my-account"].includes(item.path);
           if (item.path === "/seller-dashboard") return user?.role === "SELLER" && user.status === "ACTIVE";
           if (item.path === "/seller-application") return user?.role === "CUSTOMER";
           if (user?.role === "SELLER") return !["/shop-with-sidebar", "/shop-without-sidebar", "/checkout", "/cart", "/seller-application", "/signup"].includes(item.path);
