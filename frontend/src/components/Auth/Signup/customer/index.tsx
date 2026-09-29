@@ -2,7 +2,7 @@
 
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -31,7 +31,7 @@ const CustomerSignup = () => {
 
   const [formData, setFormData] = useState<CustomerFormData>(initialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
 
   const validate = (): boolean => {
@@ -95,29 +95,42 @@ const CustomerSignup = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (loading || !validate()) return;
 
-    setLoading(true);
     setErrors({});
 
-    const registered = await registerCustomer({
-      username: formData.username.trim(), fullName: formData.fullName.trim(),
-      email: formData.email.trim(), phoneNumber: formData.phoneNumber.replace(/[-\s]/g, ""),
-      password: formData.password, confirmPassword: formData.confirmPassword,
+    startTransition(async () => {
+      const registered = await registerCustomer({
+        username: formData.username.trim(),
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim(),
+        phoneNumber: formData.phoneNumber.replace(/[-\s]/g, ""),
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      });
+      if (registered.success === false) {
+        startTransition(() => {
+          setErrors({ general: registered.error });
+        });
+        return;
+      }
+      const signedIn = await login(formData.email.trim(), formData.password);
+      startTransition(() => {
+        if (!signedIn.success) {
+          setErrors({
+            general:
+              "Account created. Automatic sign in failed; please sign in to continue.",
+          });
+          router.push("/signin");
+          return;
+        }
+        setSuccess(true);
+        router.replace("/");
+        router.refresh();
+      });
     });
-    if (registered.success === false) { setErrors({ general: registered.error }); setLoading(false); return; }
-    const signedIn = await login(formData.email.trim(), formData.password);
-    setLoading(false);
-    if (!signedIn.success) {
-      setErrors({ general: "Account created. Automatic sign in failed; please sign in to continue." });
-      router.push("/signin");
-      return;
-    }
-    setSuccess(true);
-    router.replace("/");
-    router.refresh();
   };
 
   return (

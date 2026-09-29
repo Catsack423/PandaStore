@@ -3,6 +3,8 @@
 import { ApiResponse } from "@/types/apiresponse";
 import { Product, productSchema } from "@/types/product";
 import { templateShopName } from "@/lib/templateShops";
+import { templateCategoryIds } from "@/lib/templateCategories";
+import type { Category } from "@/types/category";
 import { z } from "zod";
 
 const backendProductSchema = z.object({
@@ -15,6 +17,8 @@ const backendProductSchema = z.object({
   reviewCount: z.number().nullable(),
   imageUrls: z.array(z.string()).nullable(),
   status: z.string().nullable().optional(),
+  categoryIds: z.array(z.number().int()).nullish(),
+  createdAt: z.string().nullish(),
 });
 
 function imageUrl(url: string, base: string): string {
@@ -30,6 +34,8 @@ function mapBackendProducts(products: z.infer<typeof backendProductSchema>[], ba
     const displayImages = images.length ? images : ["/images/products/product-placeholder.svg"];
     return {
       id: product.productId,
+      categoryIds: product.categoryIds ?? [],
+      createdAt: product.createdAt,
       stock: product.stock,
       title: product.name,
       price: product.price,
@@ -90,6 +96,7 @@ export async function getProducts(): Promise<ApiResponse<Product[]>> {
       message: "Template products loaded",
       data: products.map((product) => ({
         ...product,
+        categoryIds: product.categoryIds ?? templateCategoryIds(product),
         sellerShopName: product.sellerShopName || templateShopName(product),
       })),
       error: null,
@@ -97,5 +104,23 @@ export async function getProducts(): Promise<ApiResponse<Product[]>> {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Product catalog unavailable";
     return { success: false, message, data: null, error: message };
+  }
+}
+
+export async function getCategories(): Promise<Category[]> {
+  try {
+    const base = process.env.BACKEND_API_URL || "http://localhost:8080";
+    const response = await fetch(`${base}/api/categories`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(2500),
+    });
+    if (!response.ok) return [];
+    const body = await response.json();
+    if (!body?.success) return [];
+    return z.array(z.object({ categoryId: z.number().int(), categoryName: z.string() }))
+      .parse(body.data)
+      .map((category) => ({ id: category.categoryId, name: category.categoryName }));
+  } catch {
+    return [];
   }
 }

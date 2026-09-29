@@ -1,131 +1,48 @@
 "use client";
 
-import { Category } from "@/types/category";
-import {
-  createContext,
-  useContext,
-  useReducer,
-  ReactNode,
-  Dispatch,
-} from "react";
+import { createContext, useContext, useReducer, type ReactNode } from "react";
 
-type State = {
-  category: Set<Category>;
-  priceStart: number;
-  priceEnd: number;
-};
+type State = { categoryIds: Set<number>; priceStart: number; priceEnd: number; maxPrice: number };
+type Action =
+  | { type: "toggleCategory"; id: number }
+  | { type: "setPriceRange"; start: number; end: number }
+  | { type: "reset" };
 
-export type FilterSideBarActionType =
-  | { type: "CLEAN ALL" }
-  | { type: "ADD CATEGORY"; payload: Category }
-  | { type: "REMOVE CATEGORY"; payload: Category }
-  | { type: "ADD RANGE"; payload: { start: number; end: number } };
-
-const initialState: State = {
-  category: new Set<Category>(),
-  priceStart: 0,
-  priceEnd: 10000,
-};
-
-interface FilterSidebarContextType extends State {
-  dispatch: Dispatch<FilterSideBarActionType>;
-}
-
-const FilterSidebarContext = createContext<
-  FilterSidebarContextType | undefined
->(undefined);
-
-function filterSidebarReducer(
-  state: State,
-  action: FilterSideBarActionType
-): State {
+function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case "CLEAN ALL":
-      return {
-        ...state,
-        category: new Set<Category>(),
-        priceStart: 0,
-        priceEnd: 10000,
-      };
-    case "ADD CATEGORY": {
-      const newCategorySet = new Set<Category>(state.category);
-      newCategorySet.forEach((item) => {
-        const isSame =
-          item === action.payload ||
-          (item.id !== undefined &&
-            action.payload.id !== undefined &&
-            item.id === action.payload.id) ||
-          (Boolean(item.name) &&
-            Boolean(action.payload.name) &&
-            item.name === action.payload.name) ||
-          (Boolean(item.title) &&
-            Boolean(action.payload.title) &&
-            item.title === action.payload.title) ||
-          (Boolean(item.name) &&
-            Boolean(action.payload.title) &&
-            item.name === action.payload.title) ||
-          (Boolean(item.title) &&
-            Boolean(action.payload.name) &&
-            item.title === action.payload.name);
-        if (isSame) {
-          newCategorySet.delete(item);
-        }
-      });
-      newCategorySet.add(action.payload);
-      return {
-        ...state,
-        category: newCategorySet,
-      };
+    case "toggleCategory": {
+      const categoryIds = new Set(state.categoryIds);
+      if (categoryIds.has(action.id)) categoryIds.delete(action.id);
+      else categoryIds.add(action.id);
+      return { ...state, categoryIds };
     }
-    case "REMOVE CATEGORY": {
-      const newCategorySet = new Set<Category>();
-      state.category.forEach((item) => {
-        const isSame =
-          item === action.payload ||
-          (item.id !== undefined &&
-            action.payload.id !== undefined &&
-            item.id === action.payload.id) ||
-          (Boolean(item.name) &&
-            Boolean(action.payload.name) &&
-            item.name === action.payload.name) ||
-          (Boolean(item.title) &&
-            Boolean(action.payload.title) &&
-            item.title === action.payload.title) ||
-          (Boolean(item.name) &&
-            Boolean(action.payload.title) &&
-            item.name === action.payload.title) ||
-          (Boolean(item.title) &&
-            Boolean(action.payload.name) &&
-            item.title === action.payload.name);
-        if (!isSame) {
-          newCategorySet.add(item);
-        }
-      });
-      return {
-        ...state,
-        category: newCategorySet,
-      };
-    }
-    case "ADD RANGE":
-      return {
-        ...state,
-        priceStart: action.payload.start,
-        priceEnd: action.payload.end,
-      };
-    default:
-      return state;
+    case "setPriceRange":
+      return { ...state, priceStart: action.start, priceEnd: action.end };
+    case "reset":
+      return { ...state, categoryIds: new Set(), priceStart: 0, priceEnd: state.maxPrice };
   }
 }
 
-export function FilterSidebarContextProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const [state, dispatch] = useReducer(filterSidebarReducer, initialState);
+type FilterContext = State & {
+  toggleCategory: (id: number) => void;
+  setPriceRange: (start: number, end: number) => void;
+  resetFilters: () => void;
+};
+const FilterSidebarContext = createContext<FilterContext | undefined>(undefined);
 
+export function FilterSidebarContextProvider({
+  children, maxPrice,
+}: { children: ReactNode; maxPrice: number }) {
+  const [state, dispatch] = useReducer(reducer, {
+    categoryIds: new Set<number>(), priceStart: 0, priceEnd: maxPrice, maxPrice,
+  });
   return (
-    <FilterSidebarContext.Provider value={{ ...state, dispatch }}>
+    <FilterSidebarContext.Provider value={{
+      ...state,
+      toggleCategory: (id) => dispatch({ type: "toggleCategory", id }),
+      setPriceRange: (start, end) => dispatch({ type: "setPriceRange", start, end }),
+      resetFilters: () => dispatch({ type: "reset" }),
+    }}>
       {children}
     </FilterSidebarContext.Provider>
   );
@@ -133,10 +50,6 @@ export function FilterSidebarContextProvider({
 
 export function useFilterSidebarContext() {
   const context = useContext(FilterSidebarContext);
-  if (!context) {
-    throw new Error(
-      "useFilterSidebarContext must be used within a FilterSidebarContextProvider"
-    );
-  }
+  if (!context) throw new Error("Filters require a FilterSidebarContextProvider");
   return context;
 }

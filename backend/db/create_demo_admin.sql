@@ -1,4 +1,4 @@
--- Local development account: checkout_admin / AdminDemo123!
+    -- Local development account: checkout_admin / AdminDemo123!
 -- BCrypt cost 12, generated and verified with the backend PasswordService.
 -- A duplicate username or email is left unchanged.
 INSERT INTO users (username, email, password_hash, role, status, created_at, updated_at)

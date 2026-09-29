@@ -2,10 +2,11 @@ import React from "react";
 import ShopWithSidebar from "@/components/ShopWithSidebar";
 
 import { Metadata } from "next";
-import { getProducts } from "@/ServerAction/products";
-import { ProductContextProvider } from "@/app/context/ProductContext";
+import { getProducts, getCategories } from "@/ServerAction/products";
 import { FilterSidebarContextProvider } from "@/app/context/FilterSidebarContext";
 import shopData from "@/components/Shop/shopData";
+import { templateCategories } from "@/lib/templateCategories";
+import { catalogCategories } from "@/components/ShopWithSidebar/catalog";
 
 export const metadata: Metadata = {
   title: "Shop Page | NextCommerce Nextjs E-commerce template",
@@ -13,17 +14,38 @@ export const metadata: Metadata = {
 };
 
 async function ShopWithSidebarPage() {
-  const response = await getProducts();
+  const [response, apiCategories] = await Promise.all([
+    getProducts(),
+    getCategories(),
+  ]);
   const initialProducts =
     response.success && response.data ? response.data : shopData;
+  const preview =
+    !response.success || response.message === "Template products loaded";
+  const categories = catalogCategories(
+    initialProducts,
+    preview ? templateCategories : apiCategories,
+  );
+  const maxPrice = Math.max(
+    1,
+    Math.ceil(
+      initialProducts.reduce(
+        (max, product) =>
+          Math.max(max, product.discountedPrice ?? product.price),
+        0,
+      ),
+    ),
+  );
 
   return (
     <main>
-      <ProductContextProvider>
-        <FilterSidebarContextProvider>
-          <ShopWithSidebar initData={initialProducts} preview={!response.success || response.message === "Template products loaded"} />
-        </FilterSidebarContextProvider>
-      </ProductContextProvider>
+      <FilterSidebarContextProvider key={maxPrice} maxPrice={maxPrice}>
+        <ShopWithSidebar
+          products={initialProducts}
+          categories={categories}
+          preview={preview}
+        />
+      </FilterSidebarContextProvider>
     </main>
   );
 }
