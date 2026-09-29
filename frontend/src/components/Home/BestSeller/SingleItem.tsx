@@ -11,6 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import ProductStore from "@/components/Shop/ProductStore";
 import { addItemToWishlist } from "@/redux/features/wishlist-slice";
+import { productUrl } from "@/lib/productUrl";
 
 const SingleItem = ({ item }: { item: Product }) => {
   const { addItemToCart } = useCart();
@@ -83,7 +84,7 @@ const SingleItem = ({ item }: { item: Product }) => {
           </div>
 
           <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
-            <Link href="/shop-details"> {item.title} </Link>
+            <Link href={productUrl(item)}> {item.title} </Link>
           </h3>
 
           <span className="flex items-center justify-center gap-2 font-medium text-lg">

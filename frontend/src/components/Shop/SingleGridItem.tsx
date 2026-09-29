@@ -11,6 +11,7 @@ import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 import Image from "next/image";
 import ProductStore from "./ProductStore";
+import { productUrl } from "@/lib/productUrl";
 
 const SingleGridItem = ({ item }: { item: Product }) => {
   const { addItemToCart } = useCart();
@@ -45,7 +46,7 @@ const SingleGridItem = ({ item }: { item: Product }) => {
   return (
     <div className="group">
       <div className="relative overflow-hidden flex items-center justify-center rounded-lg bg-white shadow-1 min-h-[270px] mb-4">
-        <Image src={item.imgs?.previews[0] || "/images/products/product-placeholder.svg"} alt={item.title} width={250} height={250} unoptimized />
+        <Link href={productUrl(item)} aria-label={`View ${item.title}`}><Image src={item.imgs?.previews[0] || "/images/products/product-placeholder.svg"} alt={item.title} width={250} height={250} unoptimized /></Link>
 
         <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
           <button
@@ -150,7 +151,7 @@ const SingleGridItem = ({ item }: { item: Product }) => {
       </div>
 
       <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
-        <Link href="/shop-details"> {item.title} </Link>
+        <Link href={productUrl(item)}> {item.title} </Link>
       </h3>
 
       <span className="flex items-center gap-2 font-medium text-lg">

@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { productUrl } from "@/lib/productUrl";
 
 const LatestProducts = ({ products }) => {
   return (
@@ -20,7 +21,7 @@ const LatestProducts = ({ products }) => {
 
               <div>
                 <h3 className="font-medium text-dark mb-1 ease-out duration-200 hover:text-blue">
-                  <Link href="/shop-details"> {product.title} </Link>
+                  <Link href={productUrl(product)}> {product.title} </Link>
                 </h3>
                 <p className="text-custom-sm">Price: ${product.price}</p>
               </div>

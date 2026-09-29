@@ -2,6 +2,8 @@ import { z } from "zod";
 
 export const productSchema = z.object({
   title: z.string(),
+  description: z.string().nullish(),
+  averageRating: z.number().nullish(),
   reviews: z.number(),
   price: z.number(),
   discountedPrice: z.number(),
@@ -9,6 +11,7 @@ export const productSchema = z.object({
   categoryIds: z.array(z.number().int()).optional(),
   createdAt: z.string().nullish(),
   stock: z.number().int().nonnegative().nullish(),
+  status: z.string().nullish(),
   sellerId: z.number().int().nullish(),
   sellerShopName: z.string().nullish(),
   imgs: z

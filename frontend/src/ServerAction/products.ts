@@ -12,9 +12,11 @@ const backendProductSchema = z.object({
   sellerId: z.number().int().nullable(),
   sellerShopName: z.string().nullable(),
   name: z.string(),
+  description: z.string().nullish(),
   price: z.number(),
   stock: z.number().int().nonnegative().nullable(),
   reviewCount: z.number().nullable(),
+  averageRating: z.number().nullish(),
   imageUrls: z.array(z.string()).nullable(),
   status: z.string().nullable().optional(),
   categoryIds: z.array(z.number().int()).nullish(),
@@ -37,7 +39,10 @@ function mapBackendProducts(products: z.infer<typeof backendProductSchema>[], ba
       categoryIds: product.categoryIds ?? [],
       createdAt: product.createdAt,
       stock: product.stock,
+      status: product.status,
       title: product.name,
+      description: product.description,
+      averageRating: product.averageRating,
       price: product.price,
       discountedPrice: product.price,
       reviews: product.reviewCount || 0,
@@ -46,6 +51,20 @@ function mapBackendProducts(products: z.infer<typeof backendProductSchema>[], ba
       imgs: { thumbnails: displayImages, previews: displayImages },
     };
   });
+}
+
+export async function getProductById(productId: number): Promise<Product | null> {
+  try {
+    const base = process.env.BACKEND_API_URL || "http://localhost:8080";
+    const response = await fetch(`${base}/api/products/${productId}`, { cache: "no-store", signal: AbortSignal.timeout(2500) });
+    if (!response.ok) return null;
+    const body = await response.json();
+    if (!body?.success) return null;
+    const data = backendProductSchema.parse(body.data);
+    return mapBackendProducts([data], base)[0];
+  } catch {
+    return null;
+  }
 }
 
 async function fetchBackendProducts(path: string): Promise<z.infer<typeof backendProductSchema>[]> {
