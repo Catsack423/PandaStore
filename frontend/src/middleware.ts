@@ -21,6 +21,28 @@ const CUSTOMER_PAGES = [
 ];
 const backend = process.env.BACKEND_API_URL || "http://localhost:8080";
 
+async function getIdentity(token: string): Promise<{ role: string; userId: number } | null> {
+  try {
+    const response = await fetch(`${backend}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) return null;
+    const body = await response.json();
+    if (!body?.success || !["CUSTOMER", "SELLER", "ADMIN"].includes(body.data?.role)) return null;
+    return body.data;
+  } catch {
+    return null;
+  }
+}
+
+function signInRedirect(request: NextRequest, pathname: string) {
+  const loginUrl = new URL("/signin", request.url);
+  loginUrl.searchParams.set("callbackUrl", pathname);
+  return NextResponse.redirect(loginUrl);
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // Only the order detail preview is public. It uses local demo data and never calls seller APIs.
@@ -29,72 +51,45 @@ export async function middleware(request: NextRequest) {
   }
 
   const token = request.cookies.get("auth_token")?.value;
-  const userRole = request.cookies.get("user_role")?.value;
   const accountPath = Object.keys(ACCOUNT_PAGES).find((route) =>
     pathname === route || pathname.startsWith(route + "/")
   );
   if (accountPath) {
-    if (!token) {
-      const loginUrl = new URL("/signin", request.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
+    if (!token) return signInRedirect(request, pathname);
+    const identity = await getIdentity(token);
+    if (!identity) return signInRedirect(request, pathname);
+    if (!ACCOUNT_PAGES[accountPath].includes(identity.role)) {
+      const destination = identity.role === "SELLER" ? "/seller-dashboard" : identity.role === "ADMIN" ? "/admin" : "/";
+      return NextResponse.redirect(new URL(destination, request.url));
     }
-    try {
-      const response = await fetch(`${backend}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-        signal: AbortSignal.timeout(5000),
-      });
-      const body = response.ok ? await response.json() : null;
-      const role = body?.success ? body.data?.role : null;
-      if (!role) {
-        const loginUrl = new URL("/signin", request.url);
-        loginUrl.searchParams.set("callbackUrl", pathname);
-        return NextResponse.redirect(loginUrl);
-      }
-      if (!ACCOUNT_PAGES[accountPath].includes(role)) {
-        return NextResponse.redirect(new URL(role === "SELLER" ? "/seller-dashboard" : "/", request.url));
-      }
-      return NextResponse.next();
-    } catch {
-      const loginUrl = new URL("/signin", request.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
+    return NextResponse.next();
   }
   const matchedPath = Object.keys(ROLE_PERMISSIONS).find((route) =>
     pathname === route || pathname.startsWith(route + "/")
   );
   if (matchedPath) {
-    if (!token) {
-      const loginUrl = new URL("/signin", request.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
+    if (!token) return signInRedirect(request, pathname);
+    const identity = await getIdentity(token);
+    if (!identity) return signInRedirect(request, pathname);
+    if (!ROLE_PERMISSIONS[matchedPath].includes(identity.role)) {
+      const destination = identity.role === "ADMIN" ? "/admin" : identity.role === "SELLER" ? "/seller-dashboard" : matchedPath === "/seller-dashboard" ? "/seller-application" : "/";
+      return NextResponse.redirect(new URL(destination, request.url));
     }
-    if (!userRole || !ROLE_PERMISSIONS[matchedPath].includes(userRole)) {
-      return NextResponse.redirect(new URL(matchedPath === "/seller-dashboard" ? "/seller-application" : "/", request.url));
-    }
+    return NextResponse.next();
   }
 
   const isCustomerPage = CUSTOMER_PAGES.some((path) => pathname === path || pathname.startsWith(path + "/"));
   const shopMatch = /^\/shop\/([^/]+)(?:\/.*)?$/.exec(pathname);
   if (!token || (!isCustomerPage && !shopMatch)) return NextResponse.next();
 
-  try {
-    const authResponse = await fetch(`${backend}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!authResponse.ok) return userRole === "SELLER" || userRole === "ADMIN"
-      ? NextResponse.redirect(new URL(userRole === "ADMIN" ? "/admin" : "/seller-dashboard", request.url))
-      : NextResponse.next();
-    const auth = await authResponse.json();
-    if (auth?.data?.role === "ADMIN") return NextResponse.redirect(new URL("/admin", request.url));
-    if (auth?.data?.role !== "SELLER") return NextResponse.next();
+  const identity = await getIdentity(token);
+  if (!identity) return NextResponse.next();
+  if (identity.role === "ADMIN") return NextResponse.redirect(new URL("/admin", request.url));
+  if (identity.role !== "SELLER") return NextResponse.next();
 
+  try {
     if (shopMatch) {
-      const shopResponse = await fetch(`${backend}/api/seller/shops/user/${auth.data.userId}`, {
+      const shopResponse = await fetch(`${backend}/api/seller/shops/user/${identity.userId}`, {
         cache: "no-store",
         signal: AbortSignal.timeout(5000),
       });
@@ -105,10 +100,8 @@ export async function middleware(request: NextRequest) {
     }
     return NextResponse.redirect(new URL("/seller-dashboard", request.url));
   } catch {
-    // Deny known seller shopping routes while the backend cannot confirm shop ownership.
-    if (userRole === "SELLER") return NextResponse.redirect(new URL("/seller-dashboard", request.url));
-    if (userRole === "ADMIN") return NextResponse.redirect(new URL("/admin", request.url));
-    return NextResponse.next();
+    // A verified seller cannot enter a shop without confirming ownership.
+    return NextResponse.redirect(new URL("/seller-dashboard", request.url));
   }
 }
 

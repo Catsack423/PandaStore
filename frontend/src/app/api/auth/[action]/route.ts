@@ -50,13 +50,8 @@ export async function GET(
       },
       { headers: { "Cache-Control": "no-store" } },
     );
-    result.cookies.set("user_role", data.role, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24,
-    });
+    // Remove the old client-stored role. Authorization uses the verified session.
+    result.cookies.delete("user_role");
     return result;
   } catch {
     return failure("Authentication service is unavailable", 503);
@@ -138,7 +133,7 @@ export async function POST(
       maxAge: 60 * 60 * 24,
     };
     result.cookies.set(cookieName, token, options);
-    result.cookies.set("user_role", user.role, options);
+    result.cookies.delete("user_role");
     return result;
   } catch {
     return failure("Authentication service is unavailable", 503);
