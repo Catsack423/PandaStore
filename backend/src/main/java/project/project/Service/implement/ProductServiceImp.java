@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import project.project.Entity.product.Category;
 import project.project.DTO.product.ProductResponse;
+import project.project.DTO.product.CatalogSummary;
 import project.project.Entity.product.Product;
 import project.project.Entity.product.ProductImage;
 import project.project.Entity.product.ProductStatus;
@@ -23,7 +24,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -179,6 +182,17 @@ public class ProductServiceImp implements ProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public CatalogSummary getCatalogSummary() {
+        BigDecimal maxPrice = productRepository.findMaximumAvailablePrice(ProductStatus.ACTIVE);
+        Map<Long, Long> counts = new LinkedHashMap<>();
+        for (Object[] row : productRepository.countAvailableProductsByCategory(ProductStatus.ACTIVE)) {
+            counts.put((Long) row[0], (Long) row[1]);
+        }
+        return new CatalogSummary(maxPrice == null ? BigDecimal.ZERO : maxPrice, counts);
+    }
+
+    @Override
     public List<Product> getAllActiveProducts() {
         return productRepository.findAvailableProducts(ProductStatus.ACTIVE);
     }
@@ -213,6 +227,40 @@ public class ProductServiceImp implements ProductService {
         Page<Product> products = productRepository.searchProductsPage(
                 cleanKeyword, categoryId, ProductStatus.ACTIVE, pageable);
         return products.map(ProductResponse::fromEntity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> searchProductsPage(String keyword, List<Long> categoryIds,
+            BigDecimal minPrice, BigDecimal maxPrice, String sort, int page, int size) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new IllegalArgumentException("Invalid page or size");
+        }
+        if (categoryIds != null && categoryIds.stream().anyMatch(id -> id == null || id <= 0)) {
+            throw new IllegalArgumentException("Invalid category ID");
+        }
+        if ((minPrice != null && minPrice.signum() < 0)
+                || (maxPrice != null && maxPrice.signum() < 0)
+                || (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0)) {
+            throw new IllegalArgumentException("Invalid price range");
+        }
+        Sort ordering = switch (sort == null ? "" : sort) {
+            case "", "id-asc" -> Sort.by("productId").ascending();
+            case "latest" -> Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("productId"));
+            case "oldest" -> Sort.by(Sort.Order.asc("createdAt"), Sort.Order.asc("productId"));
+            case "reviews" -> Sort.by(Sort.Order.desc("reviewCount"), Sort.Order.desc("productId"));
+            case "price-asc" -> Sort.by(Sort.Order.asc("price"), Sort.Order.asc("productId"));
+            case "price-desc" -> Sort.by(Sort.Order.desc("price"), Sort.Order.desc("productId"));
+            default -> throw new IllegalArgumentException("Invalid sort order");
+        };
+        List<Long> selected = categoryIds == null || categoryIds.isEmpty() ? List.of(-1L) : categoryIds;
+        String cleanKeyword = keyword == null ? "" : keyword.trim();
+        return productRepository.searchCatalogPage(cleanKeyword, !cleanKeyword.isEmpty(), selected,
+                categoryIds != null && !categoryIds.isEmpty(),
+                minPrice == null ? BigDecimal.ZERO : minPrice, minPrice != null,
+                maxPrice == null ? BigDecimal.ZERO : maxPrice, maxPrice != null,
+                ProductStatus.ACTIVE, PageRequest.of(page, size, ordering))
+                .map(ProductResponse::fromEntity);
     }
 
     @Override

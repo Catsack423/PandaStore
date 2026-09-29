@@ -7,12 +7,14 @@ import org.springframework.web.bind.annotation.*;
 import project.project.ApiResponse.ApiResponse;
 import project.project.DTO.product.CreateProductRequest;
 import project.project.DTO.product.ProductResponse;
+import project.project.DTO.product.CatalogSummary;
 import project.project.DTO.product.PageResponse;
 import project.project.DTO.product.UpdateProductRequest;
 import project.project.Entity.product.Product;
 import project.project.Service.api.ProductService;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/products")
@@ -68,10 +70,21 @@ public class ProductController {
     public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> searchProducts(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) List<Long> categoryIds,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        var result = productService.searchProductsPage(keyword, categoryId, page, size);
+        var selected = categoryIds != null && !categoryIds.isEmpty()
+                ? categoryIds : categoryId == null ? List.<Long>of() : List.of(categoryId);
+        var result = productService.searchProductsPage(keyword, selected, minPrice, maxPrice, sort, page, size);
         return ResponseEntity.ok(ApiResponse.success("ค้นหาสินค้าสำเร็จ", PageResponse.from(result)));
+    }
+
+    @GetMapping("/catalog-summary")
+    public ResponseEntity<ApiResponse<CatalogSummary>> getCatalogSummary() {
+        return ResponseEntity.ok(ApiResponse.success("ดึงสรุปรายการสินค้าสำเร็จ", productService.getCatalogSummary()));
     }
 
     @GetMapping("/category/{categoryId}")

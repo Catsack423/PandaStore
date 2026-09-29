@@ -5,21 +5,35 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.List;
+import java.util.Map;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import project.project.DTO.product.ProductResponse;
+import project.project.DTO.product.CatalogSummary;
 import project.project.Service.api.ProductService;
 
 class ProductSearchPageControllerTest {
+    @Test
+    void catalogSummaryReturnsPriceAndCategoryCounts() throws Exception {
+        ProductService service = mock(ProductService.class);
+        when(service.getCatalogSummary()).thenReturn(new CatalogSummary(new BigDecimal("200.00"), Map.of(3L, 2L)));
+        var mvc = MockMvcBuilders.standaloneSetup(new ProductController(service)).build();
+        mvc.perform(get("/api/products/catalog-summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.maxPrice").value(200))
+                .andExpect(jsonPath("$.data.categoryCounts.3").value(2));
+    }
+
     @Test
     void searchReturnsItemsAndPaginationDetails() throws Exception {
         ProductService service = mock(ProductService.class);
         ProductResponse product = new ProductResponse();
         product.setProductId(42L);
         var page = new PageImpl<>(List.of(product), PageRequest.of(0, 1), 2);
-        when(service.searchProductsPage("keyboard", 3L, 0, 1)).thenReturn(page);
+        when(service.searchProductsPage("keyboard", List.of(3L), null, null, null, 0, 1)).thenReturn(page);
 
         var mvc = MockMvcBuilders.standaloneSetup(new ProductController(service)).build();
         mvc.perform(get("/api/products/search")

@@ -25,6 +25,16 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             + "and p.seller.status = 'ACTIVE' and p.seller.user.status = 'ACTIVE'")
     List<Product> findAvailableProducts(@Param("status") ProductStatus status);
 
+    @Query("select max(p.price) from Product p where p.status = :status and p.stock > 0 "
+            + "and p.seller.status = 'ACTIVE' and p.seller.user.status = 'ACTIVE'")
+    java.math.BigDecimal findMaximumAvailablePrice(@Param("status") ProductStatus status);
+
+    @Query("select c.categoryId, count(p) from Product p join p.categories c "
+            + "where p.status = :status and p.stock > 0 "
+            + "and p.seller.status = 'ACTIVE' and p.seller.user.status = 'ACTIVE' "
+            + "group by c.categoryId")
+    List<Object[]> countAvailableProductsByCategory(@Param("status") ProductStatus status);
+
     List<Product> findBySeller_SellerId(Long sellerId);
 
     List<Product> findByCategories_CategoryIdAndStatus(
@@ -82,6 +92,37 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("categoryId") Long categoryId,
             @Param("status") ProductStatus status,
             Pageable pageable);
+
+    @Query(value = """
+            SELECT p FROM Product p
+            WHERE p.status = :status AND p.stock > 0
+              AND p.seller.status = 'ACTIVE' AND p.seller.user.status = 'ACTIVE'
+              AND (:filterKeyword = false OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                   OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (:filterCategories = false OR EXISTS
+                   (SELECT c FROM p.categories c WHERE c.categoryId IN :categoryIds))
+              AND (:filterMinPrice = false OR p.price >= :minPrice)
+              AND (:filterMaxPrice = false OR p.price <= :maxPrice)
+            """, countQuery = """
+            SELECT COUNT(p) FROM Product p
+            WHERE p.status = :status AND p.stock > 0
+              AND p.seller.status = 'ACTIVE' AND p.seller.user.status = 'ACTIVE'
+              AND (:filterKeyword = false OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                   OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (:filterCategories = false OR EXISTS
+                   (SELECT c FROM p.categories c WHERE c.categoryId IN :categoryIds))
+              AND (:filterMinPrice = false OR p.price >= :minPrice)
+              AND (:filterMaxPrice = false OR p.price <= :maxPrice)
+            """)
+    Page<Product> searchCatalogPage(@Param("keyword") String keyword,
+            @Param("filterKeyword") boolean filterKeyword,
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("filterCategories") boolean filterCategories,
+            @Param("minPrice") java.math.BigDecimal minPrice,
+            @Param("filterMinPrice") boolean filterMinPrice,
+            @Param("maxPrice") java.math.BigDecimal maxPrice,
+            @Param("filterMaxPrice") boolean filterMaxPrice,
+            @Param("status") ProductStatus status, Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Product p where p.productId = :productId")
