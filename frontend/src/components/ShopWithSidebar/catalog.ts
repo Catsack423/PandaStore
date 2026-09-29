@@ -12,10 +12,21 @@ export function catalogCategories(products: Product[], categories: Category[]): 
       counts.set(id, (counts.get(id) ?? 0) + 1);
     }
   }
-  const names = new Map(categories.map((category) => [category.id, category.name || category.title]));
-  return Array.from(counts, ([id, count]) => ({
-    id, name: names.get(id) || `Category ${id}`, products: count,
-  })).sort((a, b) => a.name.localeCompare(b.name));
+  const catalog = new Map<number, Category>();
+  for (const category of categories) {
+    if (category.id == null) continue;
+    catalog.set(category.id, {
+      ...category,
+      name: category.name || category.title || `Category ${category.id}`,
+      products: counts.get(category.id) ?? 0,
+    });
+  }
+  counts.forEach((count, id) => {
+    if (!catalog.has(id)) catalog.set(id, { id, name: `Category ${id}`, products: count });
+  });
+  return Array.from(catalog.values()).sort((a, b) =>
+    (a.name || "").localeCompare(b.name || ""),
+  );
 }
 
 export function filterAndSortProducts(
