@@ -6,7 +6,7 @@ import { AppDispatch, useAppSelector } from "@/redux/store";
 import ProductStock, { useProductAvailability } from "@/components/Common/ProductStock";
 import { useCart } from "@/app/context/CartContext";
 import { useDispatch } from "react-redux";
-import Image from "next/image";
+import ProductImage from "@/components/Common/ProductImage";
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { resetQuickView } from "@/redux/features/quickView-slice";
 import { updateproductDetails } from "@/redux/features/product-details";
@@ -103,19 +103,13 @@ const QuickViewModal = () => {
                       className={`flex items-center justify-center w-20 h-20 overflow-hidden rounded-lg bg-gray-1 ease-out duration-200 hover:border-2 hover:border-blue ${activePreview === key && "border-2 border-blue"
                         }`}
                     >
-                      <Image
-                        src={img || ""}
-                        alt="thumbnail"
-                        width={61}
-                        height={61}
-                        className="aspect-square"
-                      />
+                      <ProductImage src={img} alt="" size="fill" surface="muted" imageClassName="p-2" />
                     </button>
                   ))}
                 </div>
 
                 <div className="relative z-1 overflow-hidden flex items-center justify-center w-full sm:min-h-[508px] bg-gray-1 rounded-lg border border-gray-3">
-                  <div>
+                  <div className="w-full">
                     <button
                       onClick={handlePreviewSlider}
                       aria-label="button for zoom"
@@ -138,14 +132,8 @@ const QuickViewModal = () => {
                       </svg>
                     </button>
 
-                    {product?.imgs?.previews?.[activePreview] && (
-                      <Image
-                        src={product.imgs.previews[activePreview]}
-                        alt="products-details"
-                        width={400}
-                        height={400}
-                      />
-                    )}
+                    <ProductImage src={product?.imgs?.previews?.[activePreview]} alt={product?.title || "Product"}
+                      size="fill" surface="muted" />
                   </div>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import Image from "next/image";
+import ProductImage from "@/components/Common/ProductImage";
 import Link from "next/link";
 import { productUrl } from "@/lib/productUrl";
 
@@ -15,9 +15,7 @@ const LatestProducts = ({ products }) => {
           {/* <!-- product item --> */}
           {products.slice(0, 3).map((product, key) => (
             <div className="flex items-center gap-6" key={key}>
-              <div className="flex items-center justify-center rounded-[10px] bg-gray-3 max-w-[90px] w-full h-22.5">
-                <Image src={product.imgs?.thumbnails?.[0]} alt="product" width={74} height={74} />
-              </div>
+              <ProductImage src={product.imgs?.thumbnails?.[0]} alt={product.title} size="sm" surface="gray3" />
 
               <div>
                 <h3 className="font-medium text-dark mb-1 ease-out duration-200 hover:text-blue">

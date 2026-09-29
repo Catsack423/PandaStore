@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "node scripts/lint.cjs",
     "server": "json-server --watch db.json --port 5000"
   },
   "dependencies": {

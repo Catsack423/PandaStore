@@ -2,6 +2,7 @@
 import React, { use, useEffect, useState } from "react";
 import Breadcrumb from "../Common/Breadcrumb";
 import Image from "next/image";
+import ProductImage from "@/components/Common/ProductImage";
 import Newsletter from "../Common/Newsletter";
 import RecentlyViewdItems from "./RecentlyViewd";
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
@@ -104,7 +105,7 @@ const ShopDetails = () => {
               <div className="flex flex-col lg:flex-row gap-7.5 xl:gap-17.5">
                 <div className="lg:max-w-[570px] w-full">
                   <div className="lg:min-h-[512px] rounded-lg shadow-1 bg-gray-2 p-4 sm:p-7.5 relative flex items-center justify-center">
-                    <div>
+                    <div className="w-full max-w-[400px]">
                       <button
                         onClick={handlePreviewSlider}
                         aria-label="button for zoom"
@@ -127,14 +128,8 @@ const ShopDetails = () => {
                         </svg>
                       </button>
 
-                      {product.imgs?.previews?.[previewImg] && (
-                        <Image
-                          src={product.imgs.previews[previewImg]}
-                          alt="products-details"
-                          width={400}
-                          height={400}
-                        />
-                      )}
+                      <ProductImage src={product.imgs?.previews?.[previewImg]} alt={product.title || "Product"}
+                        size="fill" surface="soft" />
                     </div>
                   </div>
 
@@ -149,12 +144,7 @@ const ShopDetails = () => {
                           : "border-transparent"
                           }`}
                       >
-                        <Image
-                          width={50}
-                          height={50}
-                          src={item}
-                          alt="thumbnail"
-                        />
+                        <ProductImage src={item} alt="" size="fill" surface="soft" imageClassName="p-2" />
                       </button>
                     ))}
                   </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import ProductImage from "@/components/Common/ProductImage";
 import { MessageSquareText, Minus, Plus, ShoppingCart, Star, Store } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
@@ -44,13 +44,13 @@ export default function ProductDetail({ product, categoryNames, reviews, sample 
       <div className="mx-auto w-full max-w-[1170px] px-4 sm:px-8 xl:px-0">
         <section className="grid gap-5 rounded-xl bg-white p-4 shadow-1 sm:gap-8 sm:p-8 lg:grid-cols-2 lg:gap-12" aria-labelledby="product-title">
           <div className="mx-auto w-full min-w-0 max-w-[530px]">
-            <div className="relative flex aspect-square max-h-[530px] items-center justify-center overflow-hidden rounded-xl bg-[#F6F7FB] p-6 sm:p-10">
-              <Image key={images[activeImage]} src={images[activeImage]} alt={product.title} fill sizes="(max-width: 1024px) 100vw, 530px" className="object-contain p-6 sm:p-10" unoptimized />
+            <div className="relative">
+              <ProductImage src={images[activeImage]} alt={product.title} size="fill" surface="detail" sizes="(max-width: 1024px) 100vw, 530px" className="max-h-[530px] rounded-xl" imageClassName="p-6 sm:p-10" />
               {images.length > 1 && <span className="absolute bottom-4 right-4 rounded-full bg-white px-3 py-1 text-xs font-medium text-dark shadow-1" aria-live="polite">{activeImage + 1} / {images.length}</span>}
             </div>
             {images.length > 1 && <div className="mt-4 flex gap-3 overflow-x-auto pb-2" role="group" aria-label="Choose product image">
               {images.map((src, index) => <Button key={`${src}-${index}`} type="button" variant="outline" onClick={() => setActiveImage(index)} aria-label={`View image ${index + 1} of ${images.length}`} aria-pressed={activeImage === index} className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border-2 bg-[#F6F7FB] p-0 sm:h-24 sm:w-24 ${activeImage === index ? "border-blue" : "border-gray-3 hover:border-blue"}`}>
-                <Image src={src} alt="" fill sizes="(min-width: 640px) 96px, 80px" className="object-contain p-2" unoptimized />
+                <ProductImage src={src} alt="" size="fill" surface="detail" sizes="(min-width: 640px) 96px, 80px" imageClassName="p-2" />
               </Button>)}
             </div>}
           </div>

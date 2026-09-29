@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Package, Store, Truck } from "lucide-react";
 import Breadcrumb from "@/components/Common/Breadcrumb";
+import ProductImage from "@/components/Common/ProductImage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/app/context/AuthContext";
@@ -114,9 +115,9 @@ export default function Checkout() {
             <DeliveryAddress customerId={data.customerId} addresses={data.addresses} value={addressId} disabled={submitting}
               onSelect={id => { setFees({}); setAddressId(id); }} onAdded={address => { setData(current => current ? { ...current, addresses: [...current.addresses, address] } : current); setAddressId(address.addressId); }} />
             {shops.map(([sellerId, items]) => <Card key={sellerId}><CardHeader className="border-b border-gray-3"><CardTitle className="flex items-center gap-2"><Store className="size-5 text-blue" /><Link href={`/shop/${sellerId}`} className="hover:text-blue">{items[0].shopName || `Shop #${sellerId}`}</Link></CardTitle></CardHeader><CardContent className="pt-6">
-              <div className="space-y-4">{items.map(item => <div key={item.productId} className="flex items-center gap-4">
-                <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-2">{item.imageUrl ? <img src={item.imageUrl} alt={item.productName} className="size-full object-contain" /> : <Package className="size-6 text-dark-5" />}</div>
-                <div className="min-w-0 flex-1"><p className="break-words text-sm font-medium text-dark">{item.productName}</p><p className="mt-1 text-xs">Qty {item.quantity} · {money(Number(item.unitPrice))} each</p></div><span className="shrink-0 text-sm font-semibold text-dark">{money(Number(item.unitPrice) * item.quantity)}</span>
+              <div className="space-y-4">{items.map(item => <div key={item.productId} className="flex min-w-0 items-start gap-4">
+                <ProductImage src={item.imageUrl} alt={item.productName} size="md" surface="soft" />
+                <div className="min-w-0 flex-1"><p className="break-words text-sm font-medium text-dark">{item.productName}</p><p className="mt-1 text-xs">Qty {item.quantity} · {money(Number(item.unitPrice))} each</p></div><span className="shrink-0 text-right text-sm font-semibold text-dark">{money(Number(item.unitPrice) * item.quantity)}</span>
               </div>)}</div>
               <ShippingMethod sellerId={sellerId} methods={data.shippingMethods} value={methods[sellerId]} fees={fees[sellerId] || {}}
                 loading={quoting} disabled={!addressId || submitting} onChange={method => setMethods(current => ({ ...current, [sellerId]: method }))} />

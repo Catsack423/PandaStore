@@ -8,6 +8,7 @@ import { updateQuickView } from "@/redux/features/quickView-slice";
 import ProductStock, { useProductAvailability } from "@/components/Common/ProductStock";
 import { useCart } from "@/app/context/CartContext";
 import Image from "next/image";
+import ProductImage from "@/components/Common/ProductImage";
 import Link from "next/link";
 import ProductStore from "@/components/Shop/ProductStore";
 import { addItemToWishlist } from "@/redux/features/wishlist-slice";
@@ -93,8 +94,8 @@ const SingleItem = ({ item }: { item: Product }) => {
           </span>
         </div>
 
-        <div className="flex justify-center items-center">
-          <Image src={item.imgs.previews[0]} alt="" width={280} height={280} />
+        <div className="flex items-center justify-center">
+          <ProductImage src={item.imgs?.previews?.[0]} alt={item.title} size="fill" surface="transparent" className="max-w-[280px]" />
         </div>
 
         <div className="absolute right-0 bottom-0 translate-x-full u-w-full flex flex-col gap-2 p-5.5 ease-linear duration-300 group-hover:translate-x-0">

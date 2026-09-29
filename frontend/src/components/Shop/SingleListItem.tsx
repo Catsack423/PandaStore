@@ -11,6 +11,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 import Image from "next/image";
+import ProductImage from "@/components/Common/ProductImage";
 import ProductStore from "./ProductStore";
 import { productUrl } from "@/lib/productUrl";
 
@@ -45,9 +46,9 @@ const SingleListItem = ({ item }: { item: Product }) => {
 
   return (
     <div className="group rounded-lg bg-white shadow-1">
-      <div className="flex">
-        <div className="shadow-list relative overflow-hidden flex items-center justify-center max-w-[270px] w-full sm:min-h-[270px] p-4">
-          <Link href={productUrl(item)} aria-label={`View ${item.title}`}><Image src={item.imgs?.previews[0] || "/images/products/product-placeholder.svg"} alt={item.title} width={250} height={250} unoptimized /></Link>
+      <div className="flex flex-col sm:flex-row">
+        <div className="shadow-list relative w-full shrink-0 overflow-hidden sm:w-56">
+          <Link href={productUrl(item)} aria-label={`View ${item.title}`} className="block w-full"><ProductImage src={item.imgs?.previews?.[0]} alt={item.title} size="fill" imageClassName="p-4" /></Link>
 
           <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
             <button
@@ -112,8 +113,8 @@ const SingleListItem = ({ item }: { item: Product }) => {
           </div>
         </div>
 
-        <div className="w-full flex flex-col gap-5 sm:flex-row sm:items-center justify-center sm:justify-between py-5 px-4 sm:px-7.5 lg:pl-11 lg:pr-12">
-          <div>
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-5 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7.5 lg:pl-11 lg:pr-12">
+          <div className="min-w-0">
             <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
               <Link href={productUrl(item)}> {item.title} </Link>
             </h3>

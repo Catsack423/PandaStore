@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import Image from "next/image";
 import { ChevronRight, Minus, Plus, ShoppingBag, Store, Trash2 } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
 import Breadcrumb from "@/components/Common/Breadcrumb";
+import ProductImage from "@/components/Common/ProductImage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type CartItem } from "@/redux/features/cart-slice";
@@ -77,9 +77,7 @@ export default function Cart() {
               <CardContent className="divide-y divide-gray-3 p-0">
                 {group.items.map((item) => <div key={item.id} className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-6">
                   <div className="flex min-w-0 flex-1 gap-4">
-                    <div className="flex size-20 shrink-0 items-center justify-center rounded-lg bg-gray-2 sm:size-24">
-                      {item.imgs?.thumbnails?.[0] ? <Image src={item.imgs.thumbnails[0]} alt="" width={88} height={88} className="max-h-[80px] w-auto object-contain" /> : <ShoppingBag className="size-7 text-dark-4" />}
-                    </div>
+                    <ProductImage src={item.imgs?.thumbnails?.[0]} alt={item.title} size="md" surface="soft" />
                     <div className="min-w-0"><p className="font-medium leading-6 text-dark">{item.title}</p><p className="mt-1 text-xs text-dark-4">{item.stock == null ? "Stock unavailable" : `${item.stock} in stock`}</p><p className="mt-2 text-sm font-semibold text-blue">{currency.format(item.discountedPrice)}</p>{item.price > item.discountedPrice && <p className="mt-1 text-xs text-dark-4 line-through">{currency.format(item.price)}</p>}</div>
                   </div>
                   <div className="flex items-center justify-between gap-3 sm:justify-end">
