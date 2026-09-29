@@ -17,10 +17,13 @@ export const statusColors: Record<SellerApplicationStatus, string> = {
 
 const PAGE_SIZE = 10;
 
-export default function ApplicationHistoryTable({ applications, emptyMessage, onView }: {
+export default function ApplicationHistoryTable({ applications, emptyMessage, onView, embedded = false, getViewLabel, viewDisabled = false }: {
   applications: SellerApplicationRecord[];
   emptyMessage?: string;
   onView?: (application: SellerApplicationRecord) => void;
+  embedded?: boolean;
+  getViewLabel?: (application: SellerApplicationRecord) => string;
+  viewDisabled?: boolean;
 }) {
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(applications.length / PAGE_SIZE));
@@ -31,11 +34,9 @@ export default function ApplicationHistoryTable({ applications, emptyMessage, on
     .filter((value) => value >= 1 && value <= totalPages)
     .sort((a, b) => a - b);
 
-  return <Card>
-    <CardHeader><CardTitle>Application history</CardTitle></CardHeader>
-    <CardContent className="p-0">
+  const content = <>
       <div className="overflow-x-auto">
-        <table className={`w-full text-left text-sm ${onView ? "min-w-[780px]" : "min-w-[660px]"}`}>
+        <table className={`w-full text-left text-sm ${embedded ? "min-w-[960px]" : onView ? "min-w-[780px]" : "min-w-[660px]"}`}>
           <thead className="bg-gray-1 text-dark-4"><tr>
             <th className="px-6 py-4">Application</th>
             <th className="px-6 py-4">Shop</th>
@@ -49,9 +50,9 @@ export default function ApplicationHistoryTable({ applications, emptyMessage, on
               <td className="px-6 py-5 font-medium text-dark">#{item.applicationId}</td>
               <td className="px-6 py-5">{item.shopName}</td>
               <td className="px-6 py-5">{new Date(item.createdAt).toLocaleDateString("en-US")}</td>
-              <td className="px-6 py-5"><span className={`rounded-full px-3 py-1 text-xs ${statusColors[item.status]}`}>{statusLabels[item.status]}</span></td>
+              <td className="px-6 py-5"><span className={`rounded-full px-3 py-1 text-xs ${embedded ? "inline-flex whitespace-nowrap" : ""} ${statusColors[item.status]}`}>{statusLabels[item.status]}</span></td>
               <td className="max-w-[250px] px-6 py-5">{item.adminNote || "—"}</td>
-              {onView && <td className="px-6 py-4 text-right"><Button type="button" onClick={() => onView(item)} aria-label={`View application ${item.applicationId}`} className="h-9 gap-2 rounded-lg bg-blue px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-dark focus-visible:ring-blue/30"><Eye className="size-4" /> View application</Button></td>}
+              {onView && <td className="px-6 py-4 text-right"><Button type="button" disabled={viewDisabled} onClick={() => onView(item)} aria-label={getViewLabel ? `${getViewLabel(item)} ${item.applicationId}` : `View application ${item.applicationId}`} className="h-9 gap-2 rounded-lg bg-blue px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-dark focus-visible:ring-blue/30"><Eye className="size-4" /> {getViewLabel ? getViewLabel(item) : "View application"}</Button></td>}
             </tr>)}
             {applications.length === 0 && emptyMessage && <tr><td colSpan={onView ? 6 : 5} className="px-6 py-10 text-center text-dark-4">{emptyMessage}</td></tr>}
           </tbody>
@@ -68,6 +69,12 @@ export default function ApplicationHistoryTable({ applications, emptyMessage, on
           <Button type="button" variant="outline" disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)} aria-label="Next page" className="h-9 rounded-lg border-gray-3 px-3 text-dark hover:bg-gray-1">Next <ChevronRight className="size-4" /></Button>
         </nav>}
       </div>}
-    </CardContent>
+  </>;
+
+  if (embedded) return content;
+
+  return <Card>
+    <CardHeader><CardTitle>Application history</CardTitle></CardHeader>
+    <CardContent className="p-0">{content}</CardContent>
   </Card>;
 }
