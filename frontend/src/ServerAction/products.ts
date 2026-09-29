@@ -25,15 +25,28 @@ const backendProductSchema = z.object({
 
 function imageUrl(url: string, base: string): string {
   // Demo products reuse the product artwork shipped with this storefront.
-  if (/^\/images\/products\/product-[1-8]-(?:bg|sm)-[12]\.png$/.test(url)) return url;
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
+  if (/^\/images\/products\/product-[1-8]-(?:bg|sm)-[12]\.png$/.test(url))
+    return url;
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("data:")
+  )
+    return url;
   return new URL(url.startsWith("/") ? url : `/${url}`, base).toString();
 }
 
-function mapBackendProducts(products: z.infer<typeof backendProductSchema>[], base: string): Product[] {
+function mapBackendProducts(
+  products: z.infer<typeof backendProductSchema>[],
+  base: string,
+): Product[] {
   return products.map((product) => {
-    const images = (product.imageUrls || []).filter(Boolean).map((url) => imageUrl(url, base));
-    const displayImages = images.length ? images : ["/images/products/product-placeholder.svg"];
+    const images = (product.imageUrls || [])
+      .filter(Boolean)
+      .map((url) => imageUrl(url, base));
+    const displayImages = images.length
+      ? images
+      : ["/images/products/product-placeholder.svg"];
     return {
       id: product.productId,
       categoryIds: product.categoryIds ?? [],
@@ -53,10 +66,15 @@ function mapBackendProducts(products: z.infer<typeof backendProductSchema>[], ba
   });
 }
 
-export async function getProductById(productId: number): Promise<Product | null> {
+export async function getProductById(
+  productId: number,
+): Promise<Product | null> {
   try {
     const base = process.env.BACKEND_API_URL || "http://localhost:8080";
-    const response = await fetch(`${base}/api/products/${productId}`, { cache: "no-store", signal: AbortSignal.timeout(2500) });
+    const response = await fetch(`${base}/api/products/${productId}`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(2500),
+    });
     if (!response.ok) return null;
     const body = await response.json();
     if (!body?.success) return null;
@@ -67,7 +85,9 @@ export async function getProductById(productId: number): Promise<Product | null>
   }
 }
 
-async function fetchBackendProducts(path: string): Promise<z.infer<typeof backendProductSchema>[]> {
+async function fetchBackendProducts(
+  path: string,
+): Promise<z.infer<typeof backendProductSchema>[]> {
   const base = process.env.BACKEND_API_URL || "http://localhost:8080";
   const response = await fetch(`${base}${path}`, {
     cache: "no-store",
@@ -84,11 +104,20 @@ async function getBackendProducts(): Promise<Product[]> {
   return mapBackendProducts(await fetchBackendProducts("/api/products"), base);
 }
 
-export async function getSellerProducts(sellerId: number): Promise<Product[] | null> {
+export async function getSellerProducts(
+  sellerId: number,
+): Promise<Product[] | null> {
   try {
     const base = process.env.BACKEND_API_URL || "http://localhost:8080";
-    const products = await fetchBackendProducts(`/api/products/seller/${sellerId}`);
-    return mapBackendProducts(products.filter((product) => product.status === "ACTIVE" && (product.stock ?? 0) > 0), base);
+    const products = await fetchBackendProducts(
+      `/api/products/seller/${sellerId}`,
+    );
+    return mapBackendProducts(
+      products.filter(
+        (product) => product.status === "ACTIVE" && (product.stock ?? 0) > 0,
+      ),
+      base,
+    );
   } catch {
     return null;
   }
@@ -96,7 +125,12 @@ export async function getSellerProducts(sellerId: number): Promise<Product[] | n
 
 export async function getProducts(): Promise<ApiResponse<Product[]>> {
   try {
-    return { success: true, message: "Products loaded", data: await getBackendProducts(), error: null };
+    return {
+      success: true,
+      message: "Products loaded",
+      data: await getBackendProducts(),
+      error: null,
+    };
   } catch {
     // The template catalog remains browsable while the Spring API is offline.
   }
@@ -106,7 +140,8 @@ export async function getProducts(): Promise<ApiResponse<Product[]>> {
       cache: "no-store",
       signal: AbortSignal.timeout(2500),
     });
-    if (!response.ok) throw new Error(`Template API returned ${response.status}`);
+    if (!response.ok)
+      throw new Error(`Template API returned ${response.status}`);
     const body = await response.json();
     if (!body?.success) throw new Error("Template API returned an error");
     const products = z.array(productSchema).parse(body.data?.products);
@@ -121,7 +156,8 @@ export async function getProducts(): Promise<ApiResponse<Product[]>> {
       error: null,
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Product catalog unavailable";
+    const message =
+      error instanceof Error ? error.message : "Product catalog unavailable";
     return { success: false, message, data: null, error: message };
   }
 }
@@ -136,9 +172,15 @@ export async function getCategories(): Promise<Category[]> {
     if (!response.ok) return [];
     const body = await response.json();
     if (!body?.success) return [];
-    return z.array(z.object({ categoryId: z.number().int(), categoryName: z.string() }))
+    return z
+      .array(
+        z.object({ categoryId: z.number().int(), categoryName: z.string() }),
+      )
       .parse(body.data)
-      .map((category) => ({ id: category.categoryId, name: category.categoryName }));
+      .map((category) => ({
+        id: category.categoryId,
+        name: category.categoryName,
+      }));
   } catch {
     return [];
   }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { MessageSquareText, Minus, Plus, ShoppingCart, Star, Store } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
+import { useAuth } from "@/app/context/AuthContext";
 import { useProductAvailability } from "@/components/Common/ProductStock";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,8 @@ export default function ProductDetail({ product, categoryNames, reviews, sample 
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const { addItemToCart } = useCart();
+  const { user, isLoading } = useAuth();
+  const readOnly = isLoading || user?.role === "SELLER";
   const { stock, remaining, canAdd } = useProductAvailability(product, quantity);
   const price = product.discountedPrice ?? product.price;
   const rating = product.averageRating ?? (reviews?.length ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length : 0);
@@ -66,14 +69,14 @@ export default function ProductDetail({ product, categoryNames, reviews, sample 
             <p className={`mt-4 text-sm font-medium sm:mt-6 ${stock === 0 || remaining === 0 ? "text-red" : "text-dark-4"}`}>
               {stock == null ? "Stock information is unavailable" : stock === 0 ? "Out of stock" : remaining === 0 ? "All available items are in your cart" : `${remaining} available`}
             </p>
-            <div className="mt-4 flex min-w-0 items-center gap-2 sm:mt-5 sm:gap-3">
+            {readOnly ? user?.role === "SELLER" && <p className="mt-5 rounded-lg border border-blue/20 bg-blue/5 px-4 py-3 text-sm font-medium text-blue">Storefront preview · Read only</p> : <div className="mt-4 flex min-w-0 items-center gap-2 sm:mt-5 sm:gap-3">
               <div className="inline-flex h-11 w-28 shrink-0 items-center justify-between rounded-lg border border-gray-3 sm:h-12 sm:w-36" aria-label="Quantity">
                 <Button type="button" variant="ghost" size="icon" onClick={() => setQuantity((value) => Math.max(1, value - 1))} disabled={quantity <= 1} aria-label="Decrease quantity" className="h-10 w-9 text-dark-4 hover:text-blue sm:h-11 sm:w-11"><Minus className="size-4" /></Button>
                 <span className="min-w-4 text-center font-medium text-dark" aria-live="polite">{quantity}</span>
                 <Button type="button" variant="ghost" size="icon" onClick={() => setQuantity((value) => Math.min(stock ?? value, value + 1))} disabled={stock == null || quantity >= remaining} aria-label="Increase quantity" className="h-10 w-9 text-dark-4 hover:text-blue sm:h-11 sm:w-11"><Plus className="size-4" /></Button>
               </div>
               <Button type="button" disabled={!canAdd} onClick={() => addItemToCart({ ...product, quantity })} className="h-11 min-w-0 flex-1 gap-1.5 bg-blue px-2.5 text-white hover:bg-blue-dark sm:h-12 sm:gap-2 sm:px-6"><ShoppingCart className="size-4 sm:size-5" aria-hidden="true" />Add to cart</Button>
-            </div>
+            </div>}
             {sample && <p className="mt-4 text-xs text-dark-4">Sample product. Purchase details are available when the product API is connected.</p>}
           </div>
         </section>

@@ -1,9 +1,14 @@
+"use client";
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useAuth } from "@/app/context/AuthContext";
 
 const Footer = () => {
   const year = new Date().getFullYear();
+  const { user, isLoading } = useAuth();
+  const isSeller = user?.role === "SELLER";
+  const showShopping = !isLoading && !isSeller;
 
   return (
     <footer className="overflow-hidden">
@@ -106,21 +111,22 @@ const Footer = () => {
                   Login / Register
                 </Link>
               </li>
-              <li>
+              {showShopping && <li>
                 <Link className="ease-out duration-200 hover:text-blue" href="/cart">
                   Cart
                 </Link>
-              </li>
-              <li>
+              </li>}
+              {showShopping && <li>
                 <Link className="ease-out duration-200 hover:text-blue" href="/order-history">
                   Order history
                 </Link>
-              </li>
-              <li>
+              </li>}
+              {showShopping && <li>
                 <Link className="ease-out duration-200 hover:text-blue" href="/shop-with-sidebar">
                   Shop
                 </Link>
-              </li>
+              </li>}
+              {isSeller && <li><Link className="ease-out duration-200 hover:text-blue" href="/seller-dashboard">Seller dashboard</Link></li>}
             </ul>
           </div>
 

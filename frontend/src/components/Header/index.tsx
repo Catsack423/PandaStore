@@ -9,13 +9,16 @@ import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import Image from "next/image";
 import { useAuth } from "@/app/context/AuthContext";
 import { Store } from "lucide-react";
+import NotificationPopover from "./NotificationPopover";
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
   const { openCartModal } = useCartModalContext();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const isSeller = user?.role === "SELLER";
+  const showShopping = !authLoading && !isSeller;
 
   const { count, totalPrice, isLoading: cartLoading } = useCart();
 
@@ -62,7 +65,7 @@ const Header = () => {
         >
           {/* <!-- header top left --> */}
           <div className="min-w-0 xl:flex-1 flex-col sm:flex-row w-full flex sm:items-center gap-5 sm:gap-6">
-            <Link className="flex-shrink-0" href="/">
+            <Link className="flex-shrink-0" href={isSeller ? "/seller-dashboard" : "/"}>
               <Image
                 src="/images/logo/logo.svg"
                 alt="Logo"
@@ -71,7 +74,7 @@ const Header = () => {
               />
             </Link>
 
-            <div className="min-w-0 max-w-[600px] w-full flex-1">
+            {showShopping && <div className="min-w-0 max-w-[600px] w-full flex-1">
               <form>
                 <div className="flex items-center">
                   <CustomSelect options={options} />
@@ -112,7 +115,7 @@ const Header = () => {
                   </div>
                 </div>
               </form>
-            </div>
+            </div>}
           </div>
 
           {/* <!-- header top right --> */}
@@ -121,7 +124,7 @@ const Header = () => {
             <span className="hidden xl:block w-px h-7.5 bg-gray-4"></span>
 
             <div className="flex w-full xl:w-auto justify-between items-center gap-5">
-              <div className="flex min-w-0 items-center gap-5">
+              <div className="flex min-w-0 items-center gap-3 sm:gap-5">
                 <Link
                   href={user ? "/my-account" : "/signin"}
                   className="flex min-w-0 items-center gap-2.5"
@@ -157,7 +160,8 @@ const Header = () => {
                     </p>
                   </div>
                 </Link>
-                <button
+                <NotificationPopover />
+                {showShopping && <button
                   onClick={handleOpenCartModal}
                   className="flex shrink-0 items-center gap-2.5"
                 >
@@ -206,7 +210,7 @@ const Header = () => {
                       {cartLoading ? "…" : `$${totalPrice.toFixed(2)}`}
                     </p>
                   </div>
-                </button>
+                </button>}
               </div>
 
               {/* <!-- Hamburger Toggle BTN --> */}
@@ -269,7 +273,7 @@ const Header = () => {
               {/* <!-- Main Nav Start --> */}
               <nav>
                 <ul className="flex xl:items-center flex-col xl:flex-row gap-5 xl:gap-6">
-                  {menuData.map((menuItem, i) =>
+                  {menuData.filter((menuItem) => showShopping || (menuItem.title !== "Popular" && menuItem.title !== "Shop")).map((menuItem, i) =>
                     menuItem.submenu ? (
                       <Dropdown
                         key={i}
@@ -301,7 +305,7 @@ const Header = () => {
             {/* // <!--=== Nav Right Start ===--> */}
             <div className="hidden xl:block">
               <ul className="flex items-center gap-5.5">
-                <li className="py-4">
+                {showShopping && <li className="py-4">
                   <a
                     href="/order-history"
                     className="flex items-center gap-1.5 font-medium text-custom-sm text-dark hover:text-blue"
@@ -325,15 +329,15 @@ const Header = () => {
                     </svg>
                     Order History
                   </a>
-                </li>
+                </li>}
 
                 <li className="py-4">
                   <Link
-                    href="/seller-application"
+                    href={isSeller ? "/seller-dashboard" : "/seller-application"}
                     className="flex items-center gap-1.5 font-medium text-custom-sm text-dark hover:text-blue"
                   >
                     <Store size={16} aria-hidden="true" />
-                    Seller Applications
+                    {isSeller ? "Seller Dashboard" : "Seller Applications"}
                   </Link>
                 </li>
               </ul>

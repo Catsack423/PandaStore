@@ -13,7 +13,7 @@ import Image from "next/image";
 import ProductStore from "./ProductStore";
 import { productUrl } from "@/lib/productUrl";
 
-const SingleGridItem = ({ item }: { item: Product }) => {
+const SingleGridItem = ({ item, readOnly = false }: { item: Product; readOnly?: boolean }) => {
   const { addItemToCart } = useCart();
   const { canAdd } = useProductAvailability(item);
   const { openModal } = useModalContext();
@@ -48,7 +48,7 @@ const SingleGridItem = ({ item }: { item: Product }) => {
       <div className="relative overflow-hidden flex items-center justify-center rounded-lg bg-white shadow-1 min-h-[270px] mb-4">
         <Link href={productUrl(item)} aria-label={`View ${item.title}`}><Image src={item.imgs?.previews[0] || "/images/products/product-placeholder.svg"} alt={item.title} width={250} height={250} unoptimized /></Link>
 
-        <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
+        {!readOnly && <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
           <button
             onClick={() => {
               openModal();
@@ -110,7 +110,7 @@ const SingleGridItem = ({ item }: { item: Product }) => {
               />
             </svg>
           </button>
-        </div>
+        </div>}
       </div>
 
       <div className="flex items-center gap-2.5 mb-2">

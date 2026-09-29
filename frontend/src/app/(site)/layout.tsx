@@ -58,9 +58,9 @@ export default function RootLayout({
               </CartModalProvider>
             </CartProvider></ReduxProvider>
             </SellerPreviewProvider>
+            <Footer />
             </AuthProvider></CartQueryProvider>
             <ScrollToTop />
-            <Footer />
           </>
         )}
       </body>

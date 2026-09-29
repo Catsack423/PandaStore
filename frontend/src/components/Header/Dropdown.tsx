@@ -6,7 +6,7 @@ import { useAuth } from "@/app/context/AuthContext";
 const Dropdown = ({ menuItem, stickyMenu }) => {
   const [dropdownToggler, setDropdownToggler] = useState(false);
   const pathUrl = usePathname();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
   return (
     <li
@@ -47,7 +47,12 @@ const Dropdown = ({ menuItem, stickyMenu }) => {
             : "xl:group-hover:translate-y-0"
         }`}
       >
-        {menuItem.submenu.filter(item => item.path !== "/seller-dashboard" || (user?.role === "SELLER" && user.status === "ACTIVE")).map((item, i) => (
+        {menuItem.submenu.filter(item => {
+          if (item.path === "/seller-dashboard") return user?.role === "SELLER" && user.status === "ACTIVE";
+          if (user?.role === "SELLER") return !["/shop-with-sidebar", "/shop-without-sidebar", "/checkout", "/cart", "/seller-application", "/signup"].includes(item.path);
+          if (isLoading) return !["/shop-with-sidebar", "/shop-without-sidebar", "/checkout", "/cart"].includes(item.path);
+          return true;
+        }).map((item, i) => (
           <li key={i}>
             <Link
               href={item.path}
