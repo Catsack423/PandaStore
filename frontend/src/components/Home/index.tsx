@@ -1,27 +1,20 @@
-"use client"
+import type { ReactNode } from "react";
+import Link from "next/link";
 
-import React from "react";
-import Hero from "./Hero";
-import Categories from "./Categories";
-import NewArrival from "./NewArrivals";
-import PromoBanner from "./PromoBanner";
-import BestSeller from "./BestSeller";
-import CounDown from "./Countdown";
-import Testimonials from "./Testimonials";
-import Newsletter from "../Common/Newsletter";
-import { ProductContextProvider } from "@/app/context/ProductContext";
-import { Product } from "@/types/product";
-
-const Home = ({initialProducts, preview = false}:{initialProducts:Product[]; preview?: boolean}) => {
+export default function Home({ children }: { children: ReactNode }) {
   return (
-    <main>
-      {preview && <div role="status" className="mx-auto mt-[180px] max-w-[1170px] rounded-lg border border-blue/20 bg-white px-5 py-4 text-sm text-dark sm:mt-[160px]">Preview catalog: these are sample products from the template while the product API is unavailable.</div>}
-      <Categories />
-      <ProductContextProvider>
-        <NewArrival  initialProducts={initialProducts} />
-      </ProductContextProvider>
+    <main className="pb-16 pt-[244px] sm:pt-[196px] xl:pt-[232px]">
+      <section aria-labelledby="new-arrivals-title" className="mx-auto w-full max-w-[1170px] px-4 sm:px-8 xl:px-0">
+        <div className="mb-7 flex items-center justify-between gap-4">
+          <h1 id="new-arrivals-title" className="text-xl font-semibold text-dark xl:text-heading-5">
+            New Arrivals
+          </h1>
+          <Link href="/shop-with-sidebar" className="inline-flex shrink-0 rounded-md border border-gray-3 bg-gray-1 px-5 py-2.5 text-custom-sm font-medium text-dark transition-colors hover:border-dark hover:bg-dark hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 sm:px-7">
+            View All
+          </Link>
+        </div>
+        {children}
+      </section>
     </main>
   );
-};
-
-export default Home;
+}
