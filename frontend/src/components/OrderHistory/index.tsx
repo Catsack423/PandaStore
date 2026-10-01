@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, PackageOpen, ShoppingBag, RefreshCw } from "lucide-react";
+import { ChevronDown, PackageOpen, ShoppingBag, RefreshCw, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/app/context/AuthContext";
 import { checkoutApi, methodLabel } from "@/components/Checkout/api";
@@ -31,6 +31,14 @@ const statusLabels: Record<CustomerOrder["status"], string> = {
   SHIPPED: "Shipped",
   COMPLETED: "Completed",
   CANCELLED: "Cancelled",
+};
+const statusDotStyles: Record<CustomerOrder["status"], string> = {
+  PENDING_PAYMENT: "bg-yellow-dark ring-yellow-dark/30",
+  WAITING_SELLER_CONFIRM: "bg-blue ring-blue/30",
+  PREPARING: "bg-orange ring-orange/30",
+  SHIPPED: "bg-teal ring-teal/30",
+  COMPLETED: "bg-green-dark ring-green-dark/30",
+  CANCELLED: "bg-red-dark ring-red-dark/30",
 };
 const steps: CustomerOrder["status"][] = ["PENDING_PAYMENT", "WAITING_SELLER_CONFIRM", "PREPARING", "SHIPPED", "COMPLETED"];
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
@@ -67,10 +75,18 @@ function OrderRow({ order }: { order: CustomerOrder }) {
         <div className="min-w-0">
           <span className="block text-xs text-dark-4 lg:hidden">Order status</span>
           <div className="flex items-center gap-3">
-            <div className="flex shrink-0 items-center gap-1.5" aria-hidden="true">
-              {steps.map((step, index) => <span key={step} className={`h-2.5 w-2.5 rounded-full ${order.status !== "CANCELLED" && index <= currentStep ? "bg-blue" : "bg-gray-4"}`} />)}
+            <div className="flex w-[74px] shrink-0 items-center gap-1.5" aria-hidden="true">
+              {order.status === "CANCELLED" ? (
+                <span className={`flex h-3.5 w-3.5 items-center justify-center rounded-full text-white ring-2 ring-offset-2 ${statusDotStyles.CANCELLED}`}>
+                  <X className="h-2.5 w-2.5" strokeWidth={3} />
+                </span>
+              ) : steps.map((step, index) => (
+                <span key={step} className={`h-2.5 w-2.5 rounded-full ${index === currentStep
+                  ? `ring-2 ring-offset-2 ${statusDotStyles[order.status]}`
+                  : index < currentStep ? "bg-gray-5" : "bg-gray-3"}`} />
+              ))}
             </div>
-            <span className="min-w-0 text-dark">{statusLabels[order.status]}</span>
+            <span className={`min-w-0 ${order.status === "CANCELLED" ? "text-red-dark" : "text-dark"}`}>{statusLabels[order.status]}</span>
           </div>
         </div>
         <div className="lg:text-right"><span className="block text-xs text-dark-4 lg:hidden">Total</span><span className="whitespace-nowrap font-medium text-dark">{currency.format(order.total)}</span></div>
