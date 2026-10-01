@@ -3,7 +3,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { useCallback, useRef } from "react";
 import "swiper/css/navigation";
 import "swiper/css";
-import Image from "next/image";
+import ProductImage from "@/components/Common/ProductImage";
 
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { useAppSelector } from "@/redux/store";
@@ -97,22 +97,12 @@ const PreviewSliderModal = () => {
       <Swiper ref={sliderRef} slidesPerView={1} spaceBetween={20}>
         <SwiperSlide>
           <div className="flex justify-center items-center">
-            <Image
-              src={"/images/products/product-2-bg-1.png"}
-              alt={"product image"}
-              width={450}
-              height={450}
-            />
+            <ProductImage src="/images/products/product-2-bg-1.png" alt="Product image" size="fill" className="max-w-[450px]" />
           </div>
         </SwiperSlide>
         <SwiperSlide>
           <div className="flex justify-center items-center">
-            <Image
-              src={"/images/products/product-2-bg-1.png"}
-              alt={"product image"}
-              width={450}
-              height={450}
-            />
+            <ProductImage src="/images/products/product-2-bg-1.png" alt="Product image" size="fill" className="max-w-[450px]" />
           </div>
         </SwiperSlide>
       </Swiper>

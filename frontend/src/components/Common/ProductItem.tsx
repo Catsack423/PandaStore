@@ -1,17 +1,23 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import ProductImage from "@/components/Common/ProductImage";
 import { Product } from "@/types/product";
 import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { updateQuickView } from "@/redux/features/quickView-slice";
-import { addItemToCart } from "@/redux/features/cart-slice";
+import ProductStock, { useProductAvailability } from "@/components/Common/ProductStock";
+import { useCart } from "@/app/context/CartContext";
 import { addItemToWishlist } from "@/redux/features/wishlist-slice";
 import { updateproductDetails } from "@/redux/features/product-details";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
+import ProductStore from "@/components/Shop/ProductStore";
+import { productUrl } from "@/lib/productUrl";
 
 const ProductItem = ({ item }: { item: Product }) => {
+  const { addItemToCart } = useCart();
+  const { canAdd } = useProductAvailability(item);
   const { openModal } = useModalContext();
 
   const dispatch = useDispatch<AppDispatch>();
@@ -23,12 +29,10 @@ const ProductItem = ({ item }: { item: Product }) => {
 
   // add to cart
   const handleAddToCart = () => {
-    dispatch(
-      addItemToCart({
+    addItemToCart({
         ...item,
         quantity: 1,
-      })
-    );
+      });
   };
 
   const handleItemToWishList = () => {
@@ -47,8 +51,8 @@ const ProductItem = ({ item }: { item: Product }) => {
 
   return (
     <div className="group">
-      <div className="relative overflow-hidden flex items-center justify-center rounded-lg bg-[#F6F7FB] min-h-[270px] mb-4">
-        <Image src={item.imgs.previews[0]} alt="" width={250} height={250} />
+      <div className="relative mb-4 overflow-hidden rounded-lg bg-[#F6F7FB]">
+        <Link href={productUrl(item)} aria-label={`View ${item.title}`} className="block w-full"><ProductImage src={item.imgs?.previews?.[0]} alt={item.title} size="fill" surface="transparent" /></Link>
 
         <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
           <button
@@ -84,10 +88,10 @@ const ProductItem = ({ item }: { item: Product }) => {
           </button>
 
           <button
-            onClick={() => handleAddToCart()}
-            className="inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark"
+            disabled={!canAdd} onClick={() => handleAddToCart()}
+            className="inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Add to cart
+            {item.stock === 0 ? "Out of stock" : "Add to cart"}
           </button>
 
           <button
@@ -156,13 +160,15 @@ const ProductItem = ({ item }: { item: Product }) => {
         className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5"
         onClick={() => handleProductDetails()}
       >
-        <Link href="/shop-details"> {item.title} </Link>
+        <Link href={productUrl(item)}> {item.title} </Link>
       </h3>
 
       <span className="flex items-center gap-2 font-medium text-lg">
         <span className="text-dark">${item.discountedPrice}</span>
         <span className="text-dark-4 line-through">${item.price}</span>
       </span>
+      <ProductStock product={item} />
+      <ProductStore product={item} />
     </div>
   );
 };

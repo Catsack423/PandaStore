@@ -149,6 +149,7 @@ public class OrderDraftFactoryImp implements OrderDraftFactory {
         order.setOrderStatus(OrderStatus.PENDING_PAYMENT);
         order.setSubtotal(BigDecimal.ZERO);
         order.setShippingFee(shippingFee);
+        order.setShippingMethod(shippingMethod.trim().toUpperCase(java.util.Locale.ROOT));
         order.setSellerDiscount(BigDecimal.ZERO);
         order.setTotalAmount(BigDecimal.ZERO);
 

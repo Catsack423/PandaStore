@@ -22,16 +22,18 @@ public class ShippingServiceImp implements ShippingService {
     private final OrderRepository orderRepository;
     private final ShipmentRepository shipmentRepository;
     private final NotificationService notificationService;
+    private final OrderStateLock stateLock;
     private final project.project.Service.strategy.shipping.ShippingFeeStrategyFactory shippingFeeStrategyFactory;
 
     // Constructor Injection (SOLID - Dependency Inversion Principle)
     public ShippingServiceImp(OrderRepository orderRepository,
             ShipmentRepository shipmentRepository,
             NotificationService notificationService,
-            project.project.Service.strategy.shipping.ShippingFeeStrategyFactory shippingFeeStrategyFactory) {
+            project.project.Service.strategy.shipping.ShippingFeeStrategyFactory shippingFeeStrategyFactory, OrderStateLock stateLock) {
         this.orderRepository = orderRepository;
         this.shipmentRepository = shipmentRepository;
         this.notificationService = notificationService;
+        this.stateLock = stateLock;
         this.shippingFeeStrategyFactory = shippingFeeStrategyFactory;
     }
 
@@ -72,12 +74,13 @@ public class ShippingServiceImp implements ShippingService {
             String courierName, String trackingNumber) {
         // 1. ค้นหา Order
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new IllegalStateException(
                         "ไม่พบคำสั่งซื้อ orderId: " + orderId));
 
+        stateLock.lock(order);
         // 2. ตรวจว่า Order เป็นของ Seller นี้
         if (!order.getSeller().getSellerId().equals(sellerId)) {
-            throw new RuntimeException(
+            throw new IllegalStateException(
                     "คำสั่งซื้อนี้ไม่ใช่ของร้านค้า sellerId: " + sellerId);
         }
 
@@ -88,12 +91,16 @@ public class ShippingServiceImp implements ShippingService {
                             + " (ต้องเป็น PREPARING หรือ SHIPPED)");
         }
 
+        var paymentStatus = order.getOrderGroup().getPaymentStatus();
+        if (paymentStatus != project.project.Entity.order.OrderGroupPaymentStatus.PAID
+                && paymentStatus != project.project.Entity.order.OrderGroupPaymentStatus.PARTIALLY_REFUNDED)
+            throw new IllegalStateException("This order has not been paid");
         // 4. ตรวจว่า courierName และ trackingNumber ไม่ว่าง (UC1-41A)
-        if (courierName == null || courierName.isBlank()) {
-            throw new RuntimeException("กรุณาระบุชื่อบริษัทขนส่ง (courierName)");
+        if (courierName == null || courierName.isBlank() || courierName.trim().length() > 100) {
+            throw new IllegalArgumentException("กรุณาระบุชื่อบริษัทขนส่ง (courierName) ไม่เกิน 100 ตัวอักษร");
         }
-        if (trackingNumber == null || trackingNumber.isBlank()) {
-            throw new RuntimeException("กรุณาระบุหมายเลข Tracking (trackingNumber)");
+        if (trackingNumber == null || trackingNumber.isBlank() || trackingNumber.trim().length() > 100) {
+            throw new IllegalArgumentException("กรุณาระบุหมายเลข Tracking (trackingNumber) ไม่เกิน 100 ตัวอักษร");
         }
 
         // 5. สร้างหรืออัปเดต Shipment
@@ -101,8 +108,8 @@ public class ShippingServiceImp implements ShippingService {
                 .orElse(new Shipment());
 
         shipment.setOrder(order);
-        shipment.setCourierName(courierName);
-        shipment.setTrackingNumber(trackingNumber);
+        shipment.setCourierName(courierName.trim());
+        shipment.setTrackingNumber(trackingNumber.trim());
         shipment.setShippingStatus(ShippingStatus.SHIPPED);
         shipment.setShippedAt(LocalDateTime.now());
 
@@ -136,7 +143,7 @@ public class ShippingServiceImp implements ShippingService {
     @Override
     public Shipment getShipmentByOrderId(Long orderId) {
         return shipmentRepository.findByOrder_OrderId(orderId)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new IllegalStateException(
                         "ไม่พบข้อมูลการจัดส่งสำหรับ orderId: " + orderId));
     }
 
@@ -150,14 +157,16 @@ public class ShippingServiceImp implements ShippingService {
     @Transactional
     public void updateShippingStatus(Long shipmentId, String status) {
         Shipment shipment = shipmentRepository.findById(shipmentId)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new IllegalStateException(
                         "ไม่พบ Shipment shipmentId: " + shipmentId));
+
+        stateLock.lock(shipment.getOrder());
 
         ShippingStatus newStatus;
         try {
             newStatus = ShippingStatus.valueOf(status.toUpperCase().trim());
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException(
+            throw new IllegalStateException(
                     "สถานะไม่ถูกต้อง: " + status
                             + " (ต้องเป็น PENDING, SHIPPED, หรือ DELIVERED)");
         }

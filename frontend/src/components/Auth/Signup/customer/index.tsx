@@ -2,7 +2,7 @@
 
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { CustomerFormData, FormErrors } from "./types";
 import { CustomerForm } from "./CustomerForm";
+import { useAuth } from "@/app/context/AuthContext";
 
 const initialFormData: CustomerFormData = {
   username: "",
@@ -26,10 +27,11 @@ const initialFormData: CustomerFormData = {
 
 const CustomerSignup = () => {
   const router = useRouter();
+  const { registerCustomer, login } = useAuth();
 
   const [formData, setFormData] = useState<CustomerFormData>(initialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
 
   const validate = (): boolean => {
@@ -93,53 +95,42 @@ const CustomerSignup = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (loading || !validate()) return;
 
-    setLoading(true);
     setErrors({});
 
-    try {
-      // const payload = {
-      //   username: formData.username.trim(),
-      //   fullName: formData.fullName.trim(),
-      //   email: formData.email.trim(),
-      //   phoneNumber: formData.phoneNumber.replace(/[-\s]/g, ""),
-      //   password: formData.password,
-      // };
-
-      // const res = await fetch("/api/customers", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(payload),
-      // });
-      //  setSuccess(true);
-      //   setTimeout(() => {
-      //     router.push("/signin");
-      //   }, 2000);
-      // const data = await res.json().catch(() => null);
-
-      // if (res.ok) {
-      //   setSuccess(true);
-      //   setTimeout(() => {
-      //     router.push("/signin");
-      //   }, 2000);
-      // } else {
-      //   setErrors({
-      //     general:
-      //       data?.message ||
-      //       "เกิดข้อผิดพลาดในการสมัครสมาชิก กรุณาลองใหม่อีกครั้ง",
-      //   });
-      // }
-    } catch (err: any) {
-      console.error("Signup error:", err);
-      setErrors({
-        general: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่อ",
+    startTransition(async () => {
+      const registered = await registerCustomer({
+        username: formData.username.trim(),
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim(),
+        phoneNumber: formData.phoneNumber.replace(/[-\s]/g, ""),
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
       });
-    } finally {
-      setLoading(false);
-    }
+      if (registered.success === false) {
+        startTransition(() => {
+          setErrors({ general: registered.error });
+        });
+        return;
+      }
+      const signedIn = await login(formData.email.trim(), formData.password);
+      startTransition(() => {
+        if (!signedIn.success) {
+          setErrors({
+            general:
+              "Account created. Automatic sign in failed; please sign in to continue.",
+          });
+          router.push("/signin");
+          return;
+        }
+        setSuccess(true);
+        router.replace("/");
+        router.refresh();
+      });
+    });
   };
 
   return (
@@ -194,7 +185,7 @@ const CustomerSignup = () => {
                     สร้างบัญชีลูกค้าสำเร็จ!
                   </h3>
                   <p className="text-body text-sm">
-                    กำลังนำท่านไปยังหน้าเข้าสู่ระบบ...
+                    กำลังนำท่านไปยังหน้าแรก...
                   </p>
                 </div>
               ) : (
@@ -219,10 +210,10 @@ const CustomerSignup = () => {
                 </Link>
               </p>
               <Link
-                href="/signup"
+                href="/seller-application"
                 className="text-xs text-dark-4 hover:text-dark mt-1 flex items-center gap-1"
               >
-                ⬅ เปลี่ยนบทบาท (เลือกประเภทบัญชีอื่น)
+                Become a seller after creating your account
               </Link>
             </CardFooter>
           </Card>

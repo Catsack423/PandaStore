@@ -4,14 +4,20 @@ import React from "react";
 import { Product } from "@/types/product";
 import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { updateQuickView } from "@/redux/features/quickView-slice";
-import { addItemToCart } from "@/redux/features/cart-slice";
+import ProductStock, { useProductAvailability } from "@/components/Common/ProductStock";
+import { useCart } from "@/app/context/CartContext";
 import { addItemToWishlist } from "@/redux/features/wishlist-slice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 import Image from "next/image";
+import ProductImage from "@/components/Common/ProductImage";
+import ProductStore from "./ProductStore";
+import { productUrl } from "@/lib/productUrl";
 
 const SingleListItem = ({ item }: { item: Product }) => {
+  const { addItemToCart } = useCart();
+  const { canAdd } = useProductAvailability(item);
   const { openModal } = useModalContext();
   const dispatch = useDispatch<AppDispatch>();
 
@@ -22,12 +28,10 @@ const SingleListItem = ({ item }: { item: Product }) => {
 
   // add to cart
   const handleAddToCart = () => {
-    dispatch(
-      addItemToCart({
+    addItemToCart({
         ...item,
         quantity: 1,
-      }),
-    );
+      });
   };
 
   const handleItemToWishList = () => {
@@ -42,9 +46,9 @@ const SingleListItem = ({ item }: { item: Product }) => {
 
   return (
     <div className="group rounded-lg bg-white shadow-1">
-      <div className="flex">
-        <div className="shadow-list relative overflow-hidden flex items-center justify-center max-w-[270px] w-full sm:min-h-[270px] p-4">
-          <Image src={item.imgs.previews[0]} alt="" width={250} height={250} />
+      <div className="flex flex-col sm:flex-row">
+        <div className="shadow-list relative w-full shrink-0 overflow-hidden sm:w-56">
+          <Link href={productUrl(item)} aria-label={`View ${item.title}`} className="block w-full"><ProductImage src={item.imgs?.previews?.[0]} alt={item.title} size="fill" imageClassName="p-4" /></Link>
 
           <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
             <button
@@ -79,10 +83,10 @@ const SingleListItem = ({ item }: { item: Product }) => {
             </button>
 
             <button
-              onClick={() => handleAddToCart()}
-              className="inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark"
+              disabled={!canAdd} onClick={() => handleAddToCart()}
+              className="inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Add to cart
+              {item.stock === 0 ? "Out of stock" : "Add to cart"}
             </button>
 
             <button
@@ -109,16 +113,18 @@ const SingleListItem = ({ item }: { item: Product }) => {
           </div>
         </div>
 
-        <div className="w-full flex flex-col gap-5 sm:flex-row sm:items-center justify-center sm:justify-between py-5 px-4 sm:px-7.5 lg:pl-11 lg:pr-12">
-          <div>
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-5 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7.5 lg:pl-11 lg:pr-12">
+          <div className="min-w-0">
             <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
-              <Link href="/shop-details"> {item.title} </Link>
+              <Link href={productUrl(item)}> {item.title} </Link>
             </h3>
 
             <span className="flex items-center gap-2 font-medium text-lg">
               <span className="text-dark">${item.discountedPrice}</span>
-              <span className="text-dark-4 line-through">${item.price}</span>
+              {item.price > item.discountedPrice && <span className="text-dark-4 line-through">${item.price}</span>}
             </span>
+            <ProductStock product={item} />
+      <ProductStore product={item} />
           </div>
 
           <div className="flex items-center gap-2.5 mb-2">

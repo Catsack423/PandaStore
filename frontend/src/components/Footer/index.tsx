@@ -1,8 +1,14 @@
+"use client";
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useAuth } from "@/app/context/AuthContext";
 
 const Footer = () => {
   const year = new Date().getFullYear();
+  const { user, isLoading } = useAuth();
+  const isSeller = user?.role === "SELLER";
+  const showShopping = !isLoading && (!user || user.role === "CUSTOMER");
 
   return (
     <footer className="overflow-hidden">
@@ -95,31 +101,33 @@ const Footer = () => {
             </h2>
 
             <ul className="flex flex-col gap-3.5">
-              <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
+              {user && <li>
+                <Link className="ease-out duration-200 hover:text-blue" href="/my-account">
                   My Account
-                </a>
-              </li>
-              <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
+                </Link>
+              </li>}
+              {!isLoading && !user && <li>
+                <Link className="ease-out duration-200 hover:text-blue" href="/signin">
                   Login / Register
-                </a>
-              </li>
-              <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
+                </Link>
+              </li>}
+              {showShopping && <li>
+                <Link className="ease-out duration-200 hover:text-blue" href="/cart">
                   Cart
-                </a>
-              </li>
-              <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
-                  Wishlist
-                </a>
-              </li>
-              <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
+                </Link>
+              </li>}
+              {user?.role === "CUSTOMER" && <li>
+                <Link className="ease-out duration-200 hover:text-blue" href="/order-history">
+                  Order history
+                </Link>
+              </li>}
+              {showShopping && <li>
+                <Link className="ease-out duration-200 hover:text-blue" href="/shop-with-sidebar">
                   Shop
-                </a>
-              </li>
+                </Link>
+              </li>}
+              {isSeller && <li><Link className="ease-out duration-200 hover:text-blue" href="/seller-dashboard">Seller dashboard</Link></li>}
+              {user?.role === "ADMIN" && <><li><Link className="ease-out duration-200 hover:text-blue" href="/admin">Seller applications</Link></li><li><Link className="ease-out duration-200 hover:text-blue" href="/admin/categories">Categories</Link></li></>}
             </ul>
           </div>
 

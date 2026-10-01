@@ -25,16 +25,18 @@ public class SubOrderServiceImp implements SubOrderService {
     private final ProductRepository productRepository;
     private final PaymentService paymentService;
     private final NotificationService notificationService;
+    private final OrderStateLock stateLock;
 
     // Constructor Injection (SOLID - Dependency Inversion Principle)
     public SubOrderServiceImp(OrderRepository orderRepository,
             ProductRepository productRepository,
             PaymentService paymentService,
-            NotificationService notificationService) {
+            NotificationService notificationService, OrderStateLock stateLock) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.paymentService = paymentService;
         this.notificationService = notificationService;
+        this.stateLock = stateLock;
     }
 
     /**
@@ -48,7 +50,7 @@ public class SubOrderServiceImp implements SubOrderService {
     @Override
     public Order getSubOrderById(Long orderId) {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
                         "ไม่พบคำสั่งซื้อ orderId: " + orderId));
     }
 
@@ -90,6 +92,7 @@ public class SubOrderServiceImp implements SubOrderService {
     @Transactional
     public void sellerAcceptOrder(Long sellerId, Long orderId) {
         Order order = findAndValidateSellerOrder(sellerId, orderId);
+        requirePaid(order);
 
         // ตรวจสถานะ — ต้อง WAITING_SELLER_CONFIRM
         if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM) {
@@ -139,6 +142,8 @@ public class SubOrderServiceImp implements SubOrderService {
     @Transactional
     public void sellerRejectOrder(Long sellerId, Long orderId, String reason) {
         Order order = findAndValidateSellerOrder(sellerId, orderId);
+        requirePaid(order);
+        if (reason == null || reason.isBlank() || reason.trim().length() > 255) throw new IllegalArgumentException("Enter a rejection reason up to 255 characters");
 
         // ตรวจสถานะ
         if (order.getOrderStatus() == OrderStatus.CANCELLED) {
@@ -161,13 +166,8 @@ public class SubOrderServiceImp implements SubOrderService {
         restoreStock(order);
 
         // 4. Partial Refund — คืนเงินเฉพาะยอดของร้านนี้ให้ลูกค้า
-        try {
-            paymentService.processPartialRefund(
-                    orderId, order.getTotalAmount(),
-                    "ร้านค้าปฏิเสธคำสั่งซื้อ: " + reason);
-        } catch (Exception e) {
-            // Log error — ในระบบจริงต้องมี retry mechanism
-        }
+        paymentService.processPartialRefund(orderId, order.getTotalAmount(), "ร้านค้าปฏิเสธคำสั่งซื้อ: " + reason.trim());
+        order.setRejectionReason(reason.trim());
 
         // 5. อัปเดตสถานะ OrderGroup
         updateOrderGroupPaymentStatus(order.getOrderGroup());
@@ -199,13 +199,14 @@ public class SubOrderServiceImp implements SubOrderService {
     @Transactional
     public void confirmOrderDelivered(Long customerId, Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new IllegalStateException(
                         "ไม่พบคำสั่งซื้อ orderId: " + orderId));
 
+        stateLock.lock(order);
         // ตรวจว่า Order เป็นของลูกค้าจริง
         Long orderCustomerId = order.getOrderGroup().getCustomer().getCustomerId();
         if (!orderCustomerId.equals(customerId)) {
-            throw new RuntimeException(
+            throw new IllegalStateException(
                     "คำสั่งซื้อนี้ไม่ใช่ของลูกค้า customerId: " + customerId);
         }
 
@@ -233,9 +234,10 @@ public class SubOrderServiceImp implements SubOrderService {
     @Transactional
     public void autoConfirmDelivered(Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new IllegalStateException(
                         "ไม่พบคำสั่งซื้อ orderId: " + orderId));
 
+        stateLock.lock(order);
         // ตรวจสถานะ — ต้อง SHIPPED
         if (order.getOrderStatus() != OrderStatus.SHIPPED) {
             return; // สถานะไม่ตรง ข้ามไป (อาจถูก manual confirm ไปแล้ว)
@@ -260,11 +262,12 @@ public class SubOrderServiceImp implements SubOrderService {
     @Transactional
     public void customerCancelOrder(Long customerId, Long orderId, String reason) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("ไม่พบคำสั่งซื้อ orderId: " + orderId));
+                .orElseThrow(() -> new IllegalStateException("ไม่พบคำสั่งซื้อ orderId: " + orderId));
 
+        stateLock.lock(order);
         Long orderCustomerId = order.getOrderGroup().getCustomer().getCustomerId();
         if (!orderCustomerId.equals(customerId)) {
-            throw new RuntimeException("คำสั่งซื้อนี้ไม่ใช่ของลูกค้า customerId: " + customerId);
+            throw new IllegalStateException("คำสั่งซื้อนี้ไม่ใช่ของลูกค้า customerId: " + customerId);
         }
 
         if (reason == null || reason.trim().isEmpty()) {
@@ -287,13 +290,8 @@ public class SubOrderServiceImp implements SubOrderService {
 
         restoreStock(order);
 
-        try {
-            paymentService.processPartialRefund(
-                    orderId, order.getTotalAmount(),
-                    "ลูกค้ายกเลิกคำสั่งซื้อ: " + reason);
-        } catch (Exception e) {
-            // Log error
-        }
+        paymentService.processPartialRefund(orderId, order.getTotalAmount(), "ลูกค้ายกเลิกคำสั่งซื้อ: " + reason);
+        order.setRejectionReason(reason.trim());
 
         updateOrderGroupPaymentStatus(order.getOrderGroup());
 
@@ -315,15 +313,22 @@ public class SubOrderServiceImp implements SubOrderService {
      */
     private Order findAndValidateSellerOrder(Long sellerId, Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new IllegalStateException(
                         "ไม่พบคำสั่งซื้อ orderId: " + orderId));
 
+        stateLock.lock(order);
         if (!order.getSeller().getSellerId().equals(sellerId)) {
-            throw new RuntimeException(
+            throw new IllegalStateException(
                     "คำสั่งซื้อ " + orderId + " ไม่ใช่ของร้านค้า sellerId: " + sellerId);
         }
 
         return order;
+    }
+
+    private void requirePaid(Order order) {
+        var status = order.getOrderGroup() == null ? null : order.getOrderGroup().getPaymentStatus();
+        if (status != OrderGroupPaymentStatus.PAID && status != OrderGroupPaymentStatus.PARTIALLY_REFUNDED)
+            throw new IllegalStateException("This order has not been paid");
     }
 
     /**
@@ -346,9 +351,12 @@ public class SubOrderServiceImp implements SubOrderService {
             return;
         }
 
-        for (OrderItem item : items) {
+        for (OrderItem item : items.stream().filter(i -> i.getProduct() != null).sorted(java.util.Comparator.comparing(i -> i.getProduct().getProductId())).toList()) {
             Product product = item.getProduct();
             if (product != null) {
+                product = productRepository.findByIdForUpdate(product.getProductId())
+                        .orElseThrow(() -> new IllegalStateException("Order product is missing"));
+                stateLock.refreshLockedProduct(product);
                 product.setStock(product.getStock() + item.getQuantity());
                 productRepository.save(product);
             }

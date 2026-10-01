@@ -15,6 +15,12 @@ import project.project.Exception.DuplicateUserException;
 
 @RestControllerAdvice(assignableTypes = {AuthController.class, CartController.class})
 public class AuthCartExceptionHandler {
+    @ExceptionHandler(project.project.Exception.CartAvailabilityException.class)
+    public ResponseEntity<ApiResponse<Void>> unavailable(project.project.Exception.CartAvailabilityException e) {
+        return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage(),
+                java.util.Map.of("code", e.getCode())));
+    }
+
     @ExceptionHandler({IllegalArgumentException.class, ConstraintViolationException.class,
             HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ApiResponse<Void>> badRequest(Exception e) {

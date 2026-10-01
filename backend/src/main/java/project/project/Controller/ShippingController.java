@@ -7,6 +7,7 @@ import project.project.ApiResponse.ApiResponse;
 import project.project.DTO.shipping.*;
 import project.project.Entity.order.Shipment;
 import project.project.Service.api.ShippingService;
+import project.project.Security.OrderAccess;
 
 import java.math.BigDecimal;
 
@@ -15,9 +16,11 @@ import java.math.BigDecimal;
 public class ShippingController {
 
     private final ShippingService shippingService;
+    private final OrderAccess access;
 
-    public ShippingController(ShippingService shippingService) {
+    public ShippingController(ShippingService shippingService, OrderAccess access) {
         this.shippingService = shippingService;
+        this.access = access;
     }
 
     @PostMapping("/calculate-fee")
@@ -45,6 +48,7 @@ public class ShippingController {
             @RequestParam Long sellerId,
             @Valid @RequestBody AssignTrackingRequest request) {
 
+        access.requireSellerOrder(sellerId, orderId);
         Shipment shipment = shippingService.assignTrackingNumber(
                 sellerId,
                 orderId,
@@ -57,6 +61,7 @@ public class ShippingController {
 
     @GetMapping("/orders/{orderId}")
     public ResponseEntity<ApiResponse<ShipmentResponse>> getShipmentByOrderId(@PathVariable Long orderId) {
+        access.requireOrderRead(orderId);
         Shipment shipment = shippingService.getShipmentByOrderId(orderId);
         return ResponseEntity.ok(ApiResponse.success("ดึงข้อมูลการจัดส่งสำเร็จ", ShipmentResponse.fromEntity(shipment)));
     }
@@ -66,6 +71,7 @@ public class ShippingController {
             @PathVariable Long shipmentId,
             @Valid @RequestBody UpdateShippingStatusRequest request) {
 
+        access.requireAdmin();
         shippingService.updateShippingStatus(shipmentId, request.getStatus());
         return ResponseEntity.ok(ApiResponse.success("อัปเดตสถานะการจัดส่งสำเร็จ", null));
     }
