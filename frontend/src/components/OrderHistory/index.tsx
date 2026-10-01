@@ -34,6 +34,7 @@ const statusLabels: Record<CustomerOrder["status"], string> = {
 };
 const steps: CustomerOrder["status"][] = ["PENDING_PAYMENT", "WAITING_SELLER_CONFIRM", "PREPARING", "SHIPPED", "COMPLETED"];
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+const orderColumns = "lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,1.7fr)_minmax(0,0.6fr)_200px]";
 
 type OrderGroup = {
   orderGroupId: number; groupNumber: string; createdAt: string; paymentStatus: string;
@@ -60,24 +61,24 @@ function OrderRow({ order }: { order: CustomerOrder }) {
 
   return (
     <div className="border-t border-gray-3">
-      <div className="grid gap-4 px-5 py-5 text-sm sm:px-7 lg:grid-cols-[1fr_1fr_2fr_1fr_auto] lg:items-center">
+      <div className={`grid gap-4 px-5 py-5 text-sm sm:px-7 lg:items-center ${orderColumns}`}>
         <div className="min-w-0"><span className="block text-xs text-dark-4 lg:hidden">Order</span><strong className="break-all font-medium text-dark">#{order.id}</strong></div>
         <div><span className="block text-xs text-dark-4 lg:hidden">Date</span><span className="text-dark">{order.date}</span></div>
-        <div>
+        <div className="min-w-0">
           <span className="block text-xs text-dark-4 lg:hidden">Order status</span>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5" aria-hidden="true">
+            <div className="flex shrink-0 items-center gap-1.5" aria-hidden="true">
               {steps.map((step, index) => <span key={step} className={`h-2.5 w-2.5 rounded-full ${order.status !== "CANCELLED" && index <= currentStep ? "bg-blue" : "bg-gray-4"}`} />)}
             </div>
-            <span className="text-dark">{statusLabels[order.status]}</span>
+            <span className="min-w-0 text-dark">{statusLabels[order.status]}</span>
           </div>
         </div>
-        <div><span className="block text-xs text-dark-4 lg:hidden">Total</span><span className="font-medium text-dark">{currency.format(order.total)}</span></div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="lg:text-right"><span className="block text-xs text-dark-4 lg:hidden">Total</span><span className="whitespace-nowrap font-medium text-dark">{currency.format(order.total)}</span></div>
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           {order.status === "PENDING_PAYMENT" && order.paymentStatus === "PENDING" && <Link href={`/payment/${order.orderGroupId}`} aria-label={`Pay now for order group ${order.orderGroupId}`} className="inline-flex h-9 items-center justify-center rounded-lg bg-blue px-3 text-sm text-white hover:bg-blue-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">Pay now</Link>}
-        <Button variant="outline" aria-expanded={expanded} aria-controls={`order-${order.id}`} onClick={() => setExpanded(!expanded)}>
-          Details <ChevronDown className={`ml-1 transition-transform ${expanded ? "rotate-180" : ""}`} />
-        </Button>
+          <Button variant="outline" className="h-9 px-3" aria-expanded={expanded} aria-controls={`order-${order.id}`} onClick={() => setExpanded(!expanded)}>
+            Details <ChevronDown className={`ml-1 h-4 w-4 transition-transform motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`} />
+          </Button>
         </div>
       </div>
       {expanded && <div id={`order-${order.id}`} className="border-t border-gray-3 bg-gray-1 px-5 py-6 sm:px-7">
@@ -107,7 +108,7 @@ export default function OrderHistory({ showBackToAccount = false }: { showBackTo
   const visibleOrders = status === "all" ? orders : orders.filter((order) => order.status === status);
 
   return <main>
-    <Breadcrumb title="Order History" pages={["Order History"]} />
+    <div className="pt-12 sm:pt-8 xl:pt-0"><Breadcrumb title="Order History" pages={["Order History"]} /></div>
     <section className="bg-gray-2 py-12 sm:py-16">
       <div className="mx-auto w-full max-w-[1170px] px-4 sm:px-8 xl:px-0">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -121,7 +122,7 @@ export default function OrderHistory({ showBackToAccount = false }: { showBackTo
             </div>
             <label className="flex items-center gap-2 text-sm text-dark"><span>Status</span><select value={status} onChange={(event) => setStatus(event.target.value)} className="h-9 rounded-lg border border-gray-3 bg-white px-3 outline-none focus:ring-2 focus:ring-blue/30"><option value="all">All orders</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           </div>
-          <div className="hidden grid-cols-[1fr_1fr_2fr_1fr_auto] gap-4 bg-gray-1 px-7 py-4 text-xs font-medium text-dark lg:grid"><span>Order</span><span>Date</span><span>Order status</span><span>Total</span><span>Action</span></div>
+          <div className={`hidden gap-4 bg-gray-1 px-7 py-4 text-xs font-medium text-dark lg:grid ${orderColumns}`}><span>Order</span><span>Date</span><span>Order status</span><span className="text-right">Total</span><span className="text-right">Action</span></div>
           {authLoading || (customer && history.isPending) ? <p role="status" className="px-7 py-16 text-center text-sm">Loading your orders…</p>
           : !customer ? <CardContent className="py-16 text-center"><h3 className="font-semibold text-dark">{user ? "Order history is available for customer accounts" : "Sign in to view your orders"}</h3>{!user && <Link href="/signin" className="mt-4 inline-block text-blue hover:underline">Sign in</Link>}</CardContent>
           : history.isError ? <CardContent role="alert" className="py-16 text-center"><p className="text-red">{history.error.message}</p><Button variant="outline" className="mt-4" onClick={() => void history.refetch()} disabled={history.isFetching}>Try again</Button></CardContent>
