@@ -7,26 +7,45 @@ import org.springframework.web.bind.annotation.*;
 import project.project.ApiResponse.ApiResponse;
 import project.project.DTO.product.CreateProductRequest;
 import project.project.DTO.product.ProductResponse;
+import project.project.DTO.product.CatalogSummary;
+import project.project.DTO.product.PageResponse;
 import project.project.DTO.product.UpdateProductRequest;
 import project.project.Entity.product.Product;
 import project.project.Service.api.ProductService;
+import project.project.Security.CurrentUser;
+import project.project.Repository.SellerRepository;
+import project.project.Entity.user.UserRole;
+import project.project.Entity.seller.SellerStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
 
     private final ProductService productService;
+    private final CurrentUser currentUser;
+    private final SellerRepository sellers;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, CurrentUser currentUser, SellerRepository sellers) {
         this.productService = productService;
+        this.currentUser = currentUser;
+        this.sellers = sellers;
     }
 
     @PostMapping
     public ResponseEntity<ApiResponse<ProductResponse>> createProduct(
             @RequestParam Long sellerId,
             @Valid @RequestBody CreateProductRequest request) {
+        var identity = currentUser.requireIdentity();
+        if (identity.role() != UserRole.SELLER)
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Seller account required");
+        var shop = sellers.findByUser_UserId(identity.userId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Active shop required"));
+        if (shop.getStatus() != SellerStatus.ACTIVE || !shop.getSellerId().equals(sellerId))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only add products to your active shop");
         Product product = new Product();
         product.setName(request.getName());
         product.setDescription(request.getDescription());
@@ -34,7 +53,7 @@ public class ProductController {
         product.setStock(request.getStock());
         product.setShippingInfo(request.getShippingInfo());
 
-        Product created = productService.createProduct(sellerId, product, request.getImageUrls());
+        Product created = productService.createProduct(sellerId, product, request.getImageUrls(), request.getCategoryIds());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("สร้างสินค้าสำเร็จ", ProductResponse.fromEntity(created)));
     }
@@ -64,14 +83,33 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<ProductResponse>>> searchProducts(
+    public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> searchProducts(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Long categoryId) {
-        List<Product> products = productService.searchProducts(keyword, categoryId);
-        List<ProductResponse> responses = products.stream()
-                .map(ProductResponse::fromEntity)
-                .toList();
-        return ResponseEntity.ok(ApiResponse.success("ค้นหาสินค้าสำเร็จ", responses));
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) List<Long> categoryIds,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        var selected = categoryIds != null && !categoryIds.isEmpty()
+                ? categoryIds : categoryId == null ? List.<Long>of() : List.of(categoryId);
+        var result = productService.searchProductsPage(keyword, selected, minPrice, maxPrice, sort, page, size);
+        return ResponseEntity.ok(ApiResponse.success("ค้นหาสินค้าสำเร็จ", PageResponse.from(result)));
+    }
+
+    @GetMapping("/catalog-summary")
+    public ResponseEntity<ApiResponse<CatalogSummary>> getCatalogSummary() {
+        return ResponseEntity.ok(ApiResponse.success("ดึงสรุปรายการสินค้าสำเร็จ", productService.getCatalogSummary()));
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getProductsByCategory(
+            @PathVariable Long categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        var result = productService.searchProductsPage(null, categoryId, page, size);
+        return ResponseEntity.ok(ApiResponse.success("ดึงสินค้าตามหมวดหมู่สำเร็จ", PageResponse.from(result)));
     }
 
     @PutMapping("/{id}")

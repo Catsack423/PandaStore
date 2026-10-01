@@ -126,6 +126,20 @@ public class AddressServiceImp implements AddressService {
         return true;
     }
 
+    @Override
+    public Address setDefaultAddress(Long customerId, Long addressId) {
+        requirePositiveId(customerId, "customerId");
+        requirePositiveId(addressId, "addressId");
+        lockCustomer(customerId);
+        Address selected = addressRepository.findOwnedAddressForUpdate(customerId, addressId)
+                .orElseThrow(() -> new EntityNotFoundException("Address not found"));
+        var addresses = addressRepository.findByCustomer_CustomerIdOrderByIsDefaultDescAddressIdAsc(customerId);
+        addresses.forEach(address -> address.setIsDefault(false));
+        addressRepository.flush();
+        selected.setIsDefault(true);
+        return addressRepository.save(selected);
+    }
+
     private Customer lockCustomer(Long customerId) {
         return customerRepository.findByIdForUpdate(customerId)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found: " + customerId));

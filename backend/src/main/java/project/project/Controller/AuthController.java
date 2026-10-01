@@ -12,6 +12,7 @@ import project.project.Security.BearerTokens;
 import org.springframework.security.core.context.SecurityContextHolder;
 import project.project.DTO.auth.AuthRequests;
 import project.project.DTO.auth.CurrentUserResponse;
+import project.project.DTO.auth.LoginResponse;
 import org.springframework.http.CacheControl;
 import project.project.DTO.customer.CustomerResponse;
 import project.project.Service.api.AuthService;
@@ -48,10 +49,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ApiResponse<Map<String, String>> login(@Valid @RequestBody AuthRequests.Login request) {
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody AuthRequests.Login request) {
         try {
             return ApiResponse.success("เข้าสู่ระบบสำเร็จ",
-                    Map.of("token", auth.login(request.usernameOrEmail(), request.password()), "tokenType", "Bearer"));
+                    auth.loginWithUser(request.usernameOrEmail(), request.password()));
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
         }

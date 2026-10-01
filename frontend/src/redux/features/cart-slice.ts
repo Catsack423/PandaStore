@@ -5,12 +5,15 @@ type InitialState = {
   items: CartItem[];
 };
 
-type CartItem = {
+export type CartItem = {
   id: number;
   title: string;
   price: number;
   discountedPrice: number;
   quantity: number;
+  stock?: number | null;
+  sellerId?: number | null;
+  sellerShopName?: string | null;
   imgs?: {
     thumbnails: string[];
     previews: string[];
@@ -25,21 +28,29 @@ export const cart = createSlice({
   name: "cart",
   initialState,
   reducers: {
+    replaceCartItems: (state, action: PayloadAction<CartItem[]>) => {
+      state.items = action.payload;
+    },
     addItemToCart: (state, action: PayloadAction<CartItem>) => {
-      const { id, title, price, quantity, discountedPrice, imgs } =
+      const { id, title, price, quantity, stock, discountedPrice, imgs, sellerId, sellerShopName } =
         action.payload;
       const existingItem = state.items.find((item) => item.id === id);
 
       if (existingItem) {
         existingItem.quantity += quantity;
+        if (existingItem.sellerId == null && sellerId != null) existingItem.sellerId = sellerId;
+        if (!existingItem.sellerShopName && sellerShopName) existingItem.sellerShopName = sellerShopName;
       } else {
         state.items.push({
           id,
           title,
           price,
           quantity,
+          stock,
           discountedPrice,
           imgs,
+          sellerId,
+          sellerShopName,
         });
       }
     },
@@ -74,6 +85,7 @@ export const selectTotalPrice = createSelector([selectCartItems], (items) => {
 });
 
 export const {
+  replaceCartItems,
   addItemToCart,
   removeItemFromCart,
   updateCartItemQuantity,

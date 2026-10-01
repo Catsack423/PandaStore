@@ -35,7 +35,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final ObjectMapper json;
     private static final List<String> MONITORED_PATH_PREFIXES = List.of(
             "/api/cart",
-            "/api/auth");
+            "/api/checkout",
+            "/api/sub-orders",
+            "/api/auth",
+            "/api/seller-applications");
 
     // Endpoint เมธอด POST ที่อนุญาตให้ผ่านได้โดยไม่ต้องมี Token
     private static final Set<String> PUBLIC_POST_PATHS = Set.of(
@@ -57,6 +60,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI().substring(request.getContextPath().length());
         String method = request.getMethod();
+
+        // การเขียนรีวิวและตรวจสิทธิ์รีวิวต้องรู้ว่าลูกค้าคนไหนเป็นผู้เรียก
+        if (("POST".equalsIgnoreCase(method) && "/api/reviews".equals(path))
+                || ("PUT".equalsIgnoreCase(method) && path.matches("/api/reviews/[^/]+"))
+                || ("GET".equalsIgnoreCase(method) && "/api/reviews/check-eligibility".equals(path))) {
+            return false;
+        }
 
         // 2. ถ้าไม่ใช่ Path ที่ Filter นี้ดูแล ให้ข้ามการตรวจได้เลย
         boolean isMonitored = MONITORED_PATH_PREFIXES.stream()

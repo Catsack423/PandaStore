@@ -43,6 +43,8 @@ public class SubOrderServiceTest {
 
     @Mock
     private NotificationService notificationService;
+    @Mock
+    private project.project.Service.implement.OrderStateLock stateLock;
 
     @Test
     @DisplayName("getSubOrderById - สำเร็จเมื่อพบคำสั่งซื้อ")
@@ -120,6 +122,7 @@ public class SubOrderServiceTest {
         customer.setUser(user);
 
         OrderGroup group = new OrderGroup();
+        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setCustomer(customer);
 
         Order order = new Order();
@@ -179,6 +182,10 @@ public class SubOrderServiceTest {
         order.setSeller(seller);
         order.setOrderStatus(OrderStatus.PREPARING);
 
+        OrderGroup paid = new OrderGroup();
+        paid.setPaymentStatus(OrderGroupPaymentStatus.PAID);
+        order.setOrderGroup(paid);
+
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> {
@@ -203,6 +210,7 @@ public class SubOrderServiceTest {
         customer.setUser(user);
 
         OrderGroup group = new OrderGroup();
+        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setOrderGroupId(100L);
         group.setCustomer(customer);
 
@@ -225,6 +233,7 @@ public class SubOrderServiceTest {
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
         when(orderRepository.findByOrderGroup_OrderGroupId(100L)).thenReturn(List.of(order));
+        when(productRepository.findByIdForUpdate(product.getProductId())).thenReturn(Optional.of(product));
 
         subOrderService.sellerRejectOrder(sellerId, orderId, "สินค้าหมดสต็อก");
 
@@ -264,6 +273,7 @@ public class SubOrderServiceTest {
         customer.setCustomerId(customerId);
 
         OrderGroup group = new OrderGroup();
+        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setCustomer(customer);
 
         Order order = new Order();
@@ -291,6 +301,7 @@ public class SubOrderServiceTest {
         otherCustomer.setCustomerId(otherCustomerId);
 
         OrderGroup group = new OrderGroup();
+        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setCustomer(otherCustomer);
 
         Order order = new Order();
@@ -315,6 +326,7 @@ public class SubOrderServiceTest {
         customer.setCustomerId(customerId);
 
         OrderGroup group = new OrderGroup();
+        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setCustomer(customer);
 
         Order order = new Order();
@@ -372,10 +384,12 @@ public class SubOrderServiceTest {
         customer.setCustomerId(customerId);
 
         OrderGroup group = new OrderGroup();
+        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setOrderGroupId(100L);
         group.setCustomer(customer);
 
         Product product = new Product();
+        product.setProductId(2L);
         product.setStock(5);
 
         OrderItem item = new OrderItem();
@@ -399,6 +413,7 @@ public class SubOrderServiceTest {
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
         when(orderRepository.findByOrderGroup_OrderGroupId(100L)).thenReturn(List.of(order));
+        when(productRepository.findByIdForUpdate(product.getProductId())).thenReturn(Optional.of(product));
 
         subOrderService.customerCancelOrder(customerId, orderId, "เปลี่ยนใจไม่ต้องการสินค้า");
 
@@ -420,6 +435,7 @@ public class SubOrderServiceTest {
         customer.setCustomerId(customerId);
 
         OrderGroup group = new OrderGroup();
+        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setCustomer(customer);
 
         Order order = new Order();
@@ -447,6 +463,7 @@ public class SubOrderServiceTest {
         customer.setCustomerId(otherCustomerId);
 
         OrderGroup group = new OrderGroup();
+        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setCustomer(customer);
 
         Order order = new Order();

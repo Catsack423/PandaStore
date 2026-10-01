@@ -5,12 +5,18 @@ import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { updateQuickView } from "@/redux/features/quickView-slice";
-import { addItemToCart } from "@/redux/features/cart-slice";
+import ProductStock, { useProductAvailability } from "@/components/Common/ProductStock";
+import { useCart } from "@/app/context/CartContext";
 import Image from "next/image";
+import ProductImage from "@/components/Common/ProductImage";
 import Link from "next/link";
+import ProductStore from "@/components/Shop/ProductStore";
 import { addItemToWishlist } from "@/redux/features/wishlist-slice";
+import { productUrl } from "@/lib/productUrl";
 
 const SingleItem = ({ item }: { item: Product }) => {
+  const { addItemToCart } = useCart();
+  const { canAdd } = useProductAvailability(item);
   const { openModal } = useModalContext();
   const dispatch = useDispatch<AppDispatch>();
 
@@ -21,12 +27,10 @@ const SingleItem = ({ item }: { item: Product }) => {
 
   // add to cart
   const handleAddToCart = () => {
-    dispatch(
-      addItemToCart({
+    addItemToCart({
         ...item,
         quantity: 1,
-      })
-    );
+      });
   };
 
   const handleItemToWishList = () => {
@@ -81,7 +85,7 @@ const SingleItem = ({ item }: { item: Product }) => {
           </div>
 
           <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
-            <Link href="/shop-details"> {item.title} </Link>
+            <Link href={productUrl(item)}> {item.title} </Link>
           </h3>
 
           <span className="flex items-center justify-center gap-2 font-medium text-lg">
@@ -90,8 +94,8 @@ const SingleItem = ({ item }: { item: Product }) => {
           </span>
         </div>
 
-        <div className="flex justify-center items-center">
-          <Image src={item.imgs.previews[0]} alt="" width={280} height={280} />
+        <div className="flex items-center justify-center">
+          <ProductImage src={item.imgs?.previews?.[0]} alt={item.title} size="fill" surface="transparent" className="max-w-[280px]" />
         </div>
 
         <div className="absolute right-0 bottom-0 translate-x-full u-w-full flex flex-col gap-2 p-5.5 ease-linear duration-300 group-hover:translate-x-0">
@@ -128,7 +132,7 @@ const SingleItem = ({ item }: { item: Product }) => {
           </button>
 
           <button
-            onClick={() => handleAddToCart()}
+            disabled={!canAdd} onClick={() => handleAddToCart()}
             aria-label="button for add to cart"
             id="addCartOne"
             className="flex items-center justify-center w-9 h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-white hover:text-white hover:bg-blue"
@@ -188,6 +192,8 @@ const SingleItem = ({ item }: { item: Product }) => {
           </button>
         </div>
       </div>
+      <ProductStock product={item} />
+      <ProductStore product={item} />
     </div>
   );
 };

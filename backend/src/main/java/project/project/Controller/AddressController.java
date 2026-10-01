@@ -64,6 +64,16 @@ public class AddressController {
                 ApiResponse.success("ดึงข้อมูลที่อยู่สำเร็จ", addresses));
     }
 
+    @PutMapping("/{addressId}/default")
+    public ResponseEntity<ApiResponse<AddressResponse>> setDefaultAddress(
+            @PathVariable("customerId") Long customerId,
+            @PathVariable("addressId") Long addressId,
+            Principal principal) {
+        requireOwner(principal, customerId);
+        return ResponseEntity.ok(ApiResponse.success("Default address updated",
+                AddressResponse.fromEntity(addressService.setDefaultAddress(customerId, addressId))));
+    }
+
     @DeleteMapping("/{addressId}")
     public ResponseEntity<ApiResponse<Void>> deleteAddress(
             @PathVariable("customerId") Long customerId,

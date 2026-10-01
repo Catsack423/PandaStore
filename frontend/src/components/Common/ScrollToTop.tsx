@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { ArrowUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false);
@@ -14,16 +16,18 @@ export default function ScrollToTop() {
   };
 
   useEffect(() => {
-    // Button is displayed after scrolling for 500 pixels
+    let visible = window.scrollY > 300;
+    setIsVisible(visible);
+
     const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
+      const nextVisible = window.scrollY > 300;
+      if (nextVisible !== visible) {
+        visible = nextVisible;
+        setIsVisible(nextVisible);
       }
     };
 
-    window.addEventListener("scroll", toggleVisibility);
+    window.addEventListener("scroll", toggleVisibility, { passive: true });
 
     return () => window.removeEventListener("scroll", toggleVisibility);
   }, []);
@@ -31,20 +35,16 @@ export default function ScrollToTop() {
   return (
     <>
       {isVisible && (
-        <button
+        <Button
+          type="button"
+          variant="default"
+          size="icon"
           onClick={scrollToTop}
-          className={`items-center justify-center w-10 h-10 rounded-[4px] shadow-lg bg-blue ease-out duration-200 hover:bg-blue-dark fixed bottom-8 right-8 z-999 ${
-            isVisible ? "flex" : "hidden"
-          }`}
+          aria-label="Scroll to top"
+          className="fixed bottom-7 right-7 z-999 h-9 w-9 bg-blue text-white shadow-lg hover:bg-blue-dark sm:bottom-8 sm:right-8 sm:h-10 sm:w-10"
         >
-          <svg
-            className="fill-white w-5 h-5"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 512 512"
-          >
-            <path d="M233.4 105.4c12.5-12.5 32.8-12.5 45.3 0l192 192c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L256 173.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l192-192z" />
-          </svg>
-        </button>
+          <ArrowUp className="size-5" aria-hidden="true" />
+        </Button>
       )}
     </>
   );

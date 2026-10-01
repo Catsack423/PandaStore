@@ -30,6 +30,8 @@ public class ShippingControllerTest {
 
     @Mock
     private ShippingService shippingService;
+    @Mock
+    private project.project.Security.OrderAccess access;
 
     @InjectMocks
     private ShippingController shippingController;

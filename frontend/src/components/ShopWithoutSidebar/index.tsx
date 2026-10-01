@@ -6,9 +6,9 @@ import SingleGridItem from "../Shop/SingleGridItem";
 import SingleListItem from "../Shop/SingleListItem";
 import CustomSelect from "../ShopWithSidebar/CustomSelect";
 
-import shopData from "../Shop/shopData";
+import type { Product } from "@/types/product";
 
-const ShopWithoutSidebar = () => {
+const ShopWithoutSidebar = ({ products, preview = false }: { products: Product[]; preview?: boolean }) => {
   const [productStyle, setProductStyle] = useState("grid");
 
   const options = [
@@ -25,6 +25,7 @@ const ShopWithoutSidebar = () => {
       />
       <section className="overflow-hidden relative pb-20 pt-5 lg:pt-20 xl:pt-28 bg-[#f3f4f6]">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
+          {preview && <div role="status" className="mb-6 rounded-lg border border-blue/20 bg-white px-5 py-4 text-sm text-dark">Preview catalog: these are sample products from the template while the product API is unavailable.</div>}
           <div className="flex gap-7.5">
             {/* // <!-- Content Start --> */}
             <div className="w-full">
@@ -35,7 +36,7 @@ const ShopWithoutSidebar = () => {
                     <CustomSelect options={options} />
 
                     <p>
-                      Showing <span className="text-dark">9 of 50</span>{" "}
+                      Showing <span className="text-dark">{products.length}</span>{" "}
                       Products
                     </p>
                   </div>
@@ -129,18 +130,19 @@ const ShopWithoutSidebar = () => {
                     : "flex flex-col gap-7.5"
                 }`}
               >
-                {shopData.map((item, key) =>
+                {products.map((item) =>
                   productStyle === "grid" ? (
-                    <SingleGridItem item={item} key={key} />
+                    <SingleGridItem item={item} key={item.id} />
                   ) : (
-                    <SingleListItem item={item} key={key} />
+                    <SingleListItem item={item} key={item.id} />
                   )
                 )}
               </div>
+              {products.length === 0 && <div className="rounded-lg bg-white px-6 py-16 text-center text-dark-4">No products available yet.</div>}
               {/* <!-- Products Grid Tab Content End --> */}
 
               {/* <!-- Products Pagination Start --> */}
-              <div className="flex justify-center mt-15">
+              <div className="hidden justify-center mt-15">
                 <div className="bg-white shadow-1 rounded-md p-2">
                   <ul className="flex items-center">
                     <li>

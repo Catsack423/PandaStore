@@ -3,14 +3,16 @@ import React, { useEffect, useState } from "react";
 
 import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { AppDispatch, useAppSelector } from "@/redux/store";
-import { addItemToCart } from "@/redux/features/cart-slice";
+import ProductStock, { useProductAvailability } from "@/components/Common/ProductStock";
+import { useCart } from "@/app/context/CartContext";
 import { useDispatch } from "react-redux";
-import Image from "next/image";
+import ProductImage from "@/components/Common/ProductImage";
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { resetQuickView } from "@/redux/features/quickView-slice";
 import { updateproductDetails } from "@/redux/features/product-details";
 
 const QuickViewModal = () => {
+  const { addItemToCart } = useCart();
   const { isModalOpen, closeModal } = useModalContext();
   const { openPreviewModal } = usePreviewSlider();
   const [quantity, setQuantity] = useState(1);
@@ -19,6 +21,8 @@ const QuickViewModal = () => {
 
   // get the product data
   const product = useAppSelector((state) => state.quickViewReducer.value);
+  const { canAdd, remaining } = useProductAvailability(product, quantity);
+  useEffect(() => { setQuantity(1); }, [product.id]);
 
   const [activePreview, setActivePreview] = useState(0);
 
@@ -31,14 +35,13 @@ const QuickViewModal = () => {
 
   // add to cart
   const handleAddToCart = () => {
-    dispatch(
-      addItemToCart({
+    if (!canAdd) return;
+    addItemToCart({
         ...product,
         quantity,
-      })
-    );
+      });
 
-    closeModal();
+    if (canAdd) closeModal();
   };
 
   useEffect(() => {
@@ -100,19 +103,13 @@ const QuickViewModal = () => {
                       className={`flex items-center justify-center w-20 h-20 overflow-hidden rounded-lg bg-gray-1 ease-out duration-200 hover:border-2 hover:border-blue ${activePreview === key && "border-2 border-blue"
                         }`}
                     >
-                      <Image
-                        src={img || ""}
-                        alt="thumbnail"
-                        width={61}
-                        height={61}
-                        className="aspect-square"
-                      />
+                      <ProductImage src={img} alt="" size="fill" surface="muted" imageClassName="p-2" />
                     </button>
                   ))}
                 </div>
 
                 <div className="relative z-1 overflow-hidden flex items-center justify-center w-full sm:min-h-[508px] bg-gray-1 rounded-lg border border-gray-3">
-                  <div>
+                  <div className="w-full">
                     <button
                       onClick={handlePreviewSlider}
                       aria-label="button for zoom"
@@ -135,14 +132,8 @@ const QuickViewModal = () => {
                       </svg>
                     </button>
 
-                    {product?.imgs?.previews?.[activePreview] && (
-                      <Image
-                        src={product.imgs.previews[activePreview]}
-                        alt="products-details"
-                        width={400}
-                        height={400}
-                      />
-                    )}
+                    <ProductImage src={product?.imgs?.previews?.[activePreview]} alt={product?.title || "Product"}
+                      size="fill" surface="muted" />
                   </div>
                 </div>
               </div>
@@ -307,6 +298,7 @@ const QuickViewModal = () => {
                 industry. Lorem Ipsum has.
               </p>
 
+              <ProductStock product={product} />
               <div className="flex flex-wrap justify-between gap-5 mt-6 mb-7.5">
                 <div>
                   <h4 className="font-semibold text-lg text-dark mb-3.5">
@@ -333,7 +325,7 @@ const QuickViewModal = () => {
                       onClick={() => quantity > 1 && setQuantity(quantity - 1)}
                       aria-label="button for remove product"
                       className="flex items-center justify-center w-10 h-10 rounded-[5px] bg-gray-2 text-dark ease-out duration-200 hover:text-blue"
-                      disabled={quantity < 0 && true}
+                      disabled={quantity <= 1}
                     >
                       <svg
                         className="fill-current"
@@ -360,7 +352,7 @@ const QuickViewModal = () => {
                     </span>
 
                     <button
-                      onClick={() => setQuantity(quantity + 1)}
+                      disabled={quantity >= remaining} onClick={() => quantity < remaining && setQuantity(quantity + 1)}
                       aria-label="button for add product"
                       className="flex items-center justify-center w-10 h-10 rounded-[5px] bg-gray-2 text-dark ease-out duration-200 hover:text-blue"
                     >
@@ -392,7 +384,7 @@ const QuickViewModal = () => {
 
               <div className="flex flex-wrap items-center gap-4">
                 <button
-                  disabled={quantity === 0 && true}
+                  disabled={!canAdd}
                   onClick={() => handleAddToCart()}
                   className={`inline-flex font-medium text-white bg-blue py-3 px-7 rounded-md ease-out duration-200 hover:bg-blue-dark
                   `}

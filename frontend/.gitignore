@@ -13,9 +13,10 @@
 .next/
 /out/
 
+tsconfig.tsbuildinfo
 # production
 /build
-
+tsconfig.json
 # misc
 .DS_Store
 *.pem

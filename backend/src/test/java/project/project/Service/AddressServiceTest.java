@@ -189,6 +189,30 @@ class AddressServiceTest {
                 service.getAllAddressesByCustomerId(1L));
     }
 
+    @Test
+    void settingDefaultClearsPreviousDefault() {
+        Address previous = address(10L, true);
+        Address selected = address(11L, false);
+        when(customerRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(customer));
+        when(addressRepository.findOwnedAddressForUpdate(1L, 11L)).thenReturn(Optional.of(selected));
+        when(addressRepository.findByCustomer_CustomerIdOrderByIsDefaultDescAddressIdAsc(1L))
+                .thenReturn(List.of(previous, selected));
+        when(addressRepository.save(selected)).thenReturn(selected);
+        assertSame(selected, service.setDefaultAddress(1L, 11L));
+        assertFalse(previous.getIsDefault());
+        assertTrue(selected.getIsDefault());
+    }
+
+    @Test
+    void settingDefaultForUnownedAddressDoesNotChangeDefaults() {
+        when(customerRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(customer));
+        when(addressRepository.findOwnedAddressForUpdate(1L, 99L)).thenReturn(Optional.empty());
+        assertThrows(jakarta.persistence.EntityNotFoundException.class,
+                () -> service.setDefaultAddress(1L, 99L));
+        verify(addressRepository, never()).flush();
+        verify(addressRepository, never()).save(any(Address.class));
+    }
+
     private Address address(Long id, boolean isDefault) {
         Address address = new Address();
         address.setAddressId(id);

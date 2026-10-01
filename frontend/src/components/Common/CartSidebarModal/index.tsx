@@ -2,21 +2,16 @@
 import React, { useEffect, useState } from "react";
 
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
-import {
-  removeItemFromCart,
-  selectTotalPrice,
-} from "@/redux/features/cart-slice";
-import { useAppSelector } from "@/redux/store";
-import { useSelector } from "react-redux";
+import { useCart } from "@/app/context/CartContext";
 import SingleItem from "./SingleItem";
 import Link from "next/link";
 import EmptyCart from "./EmptyCart";
 
 const CartSidebarModal = () => {
   const { isCartModalOpen, closeCartModal } = useCartModalContext();
-  const cartItems = useAppSelector((state) => state.cartReducer.items);
+  const { items: cartItems, totalPrice, removeItemFromCart, isLoading, isPending, error, refreshCart } = useCart();
 
-  const totalPrice = useSelector(selectTotalPrice);
+  useEffect(() => { if (isCartModalOpen) void refreshCart(); }, [isCartModalOpen, refreshCart]);
 
   useEffect(() => {
     // closing modal while clicking outside
@@ -77,12 +72,12 @@ const CartSidebarModal = () => {
           <div className="h-[66vh] overflow-y-auto no-scrollbar">
             <div className="flex flex-col gap-6">
               {/* <!-- cart item --> */}
-              {cartItems.length > 0 ? (
+              {isLoading ? <p role="status">Loading your cart…</p> : error && cartItems.length === 0 ? <p role="alert">{error}</p> : cartItems.length > 0 ? (
                 cartItems.map((item, key) => (
                   <SingleItem
                     key={key}
                     item={item}
-                    removeItemFromCart={removeItemFromCart}
+                    removeItemFromCart={removeItemFromCart} disabled={isPending}
                   />
                 ))
               ) : (
@@ -108,7 +103,7 @@ const CartSidebarModal = () => {
               </Link>
 
               <Link
-                href="/checkout"
+                href="/checkout" aria-disabled={isPending} onClick={event => { if (isPending) event.preventDefault(); else closeCartModal(); }}
                 className="w-full flex justify-center font-medium text-white bg-dark py-[13px] px-6 rounded-md ease-out duration-200 hover:bg-opacity-95"
               >
                 Checkout

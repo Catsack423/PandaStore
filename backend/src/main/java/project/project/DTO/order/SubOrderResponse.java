@@ -3,6 +3,8 @@ package project.project.DTO.order;
 import lombok.Getter;
 import lombok.Setter;
 import project.project.DTO.shipping.ShipmentResponse;
+import project.project.DTO.address.AddressResponse;
+import project.project.Entity.order.OrderGroupPaymentStatus;
 import project.project.Entity.order.Order;
 import project.project.Entity.order.OrderStatus;
 
@@ -23,6 +25,10 @@ public class SubOrderResponse {
     private String shopName;
     private BigDecimal subtotal;
     private BigDecimal shippingFee;
+    private String shippingMethod;
+
+    public String getShippingMethod() { return shippingMethod; }
+    public void setShippingMethod(String shippingMethod) { this.shippingMethod = shippingMethod; }
     private BigDecimal sellerDiscount;
     private BigDecimal totalAmount;
     private OrderStatus orderStatus;
@@ -32,6 +38,16 @@ public class SubOrderResponse {
     private LocalDateTime createdAt;
     private List<OrderItemResponse> items = new ArrayList<>();
     private ShipmentResponse shipment;
+    private OrderGroupPaymentStatus paymentStatus;
+    private String customerName;
+    private AddressResponse shippingAddress;
+
+    public OrderGroupPaymentStatus getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(OrderGroupPaymentStatus paymentStatus) { this.paymentStatus = paymentStatus; }
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
+    public AddressResponse getShippingAddress() { return shippingAddress; }
+    public void setShippingAddress(AddressResponse shippingAddress) { this.shippingAddress = shippingAddress; }
 
     public SubOrderResponse() {
     }
@@ -79,7 +95,7 @@ public class SubOrderResponse {
                 ? ShipmentResponse.fromEntity(order.getShipment())
                 : null;
 
-        return new SubOrderResponse(
+        SubOrderResponse response = new SubOrderResponse(
                 order.getOrderId(),
                 order.getSubOrderNumber(),
                 orderGroupId,
@@ -97,6 +113,14 @@ public class SubOrderResponse {
                 itemResponses,
                 shipmentResponse
         );
+        response.setShippingMethod(order.getShippingMethod());
+        var group = order.getOrderGroup();
+        if (group != null) {
+            response.setPaymentStatus(group.getPaymentStatus());
+            response.setCustomerName(group.getCustomer() == null ? null : group.getCustomer().getFullName());
+            response.setShippingAddress(group.getShippingAddress() == null ? null : AddressResponse.fromEntity(group.getShippingAddress()));
+        }
+        return response;
     }
 
     public Long getOrderId() {

@@ -128,6 +128,56 @@ class AuthCartControllerTest {
         }
 
         @Test
+        void cartAvailabilityFailuresHaveSpecificCodesAndPreserveQuantity() throws Exception {
+                String token = register("stockcustomer");
+                long itemId = addItem(token, 2);
+                Product product = products.findById(productId).orElseThrow();
+                product.setStock(0);
+                products.save(product);
+                mvc.perform(post("/api/cart/items").header("Authorization", token)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"productId\":" + productId + ",\"quantity\":1}"))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.error.code").value("OUT_OF_STOCK"));
+                product.setStock(1);
+                products.save(product);
+                mvc.perform(patch("/api/cart/items/" + itemId).header("Authorization", token)
+                                .contentType(MediaType.APPLICATION_JSON).content("{\"quantity\":3}"))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.error.code").value("INSUFFICIENT_STOCK"));
+                product.setStatus(project.project.Entity.product.ProductStatus.INACTIVE);
+                products.save(product);
+                mvc.perform(post("/api/cart/items").header("Authorization", token)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"productId\":" + productId + ",\"quantity\":1}"))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.error.code").value("PRODUCT_UNAVAILABLE"));
+                mvc.perform(get("/api/cart").header("Authorization", token))
+                                .andExpect(status().isOk()).andExpect(jsonPath("$.data.items[0].quantity").value(2));
+        }
+
+        @Test
+        void stockSyncRemovesSoldOutItemAndReportsRemoval() throws Exception {
+                String token = register("syncstockcustomer");
+                long itemId = addItem(token, 2);
+                Product product = products.findById(productId).orElseThrow();
+                product.setStock(0);
+                products.save(product);
+                mvc.perform(post("/api/cart/sync").header("Authorization", token))
+                                .andExpect(status().isOk()).andExpect(jsonPath("$.data.items").isEmpty())
+                                .andExpect(jsonPath("$.data.removedProducts[0]").value("Test Product"));
+                assertFalse(context.getBean(CartItemRepository.class).existsById(itemId));
+                mvc.perform(get("/api/cart").header("Authorization", token))
+                                .andExpect(status().isOk()).andExpect(jsonPath("$.data.items").isEmpty());
+                mvc.perform(post("/api/cart/sync").header("Authorization", token))
+                                .andExpect(status().isOk()).andExpect(jsonPath("$.data.removedProducts").isEmpty());
+                mvc.perform(post("/api/cart/sync"))
+                                .andExpect(status().isUnauthorized());
+                mvc.perform(post("/api/cart/sync").header("Authorization", login("seller")))
+                                .andExpect(status().isForbidden());
+        }
+
+        @Test
         void meReturnsOnlyCurrentAccountFieldsEvenWhenAnotherUserIdIsSupplied() throws Exception {
                 String token = register("customer");
                 String otherToken = register("other");

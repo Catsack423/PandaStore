@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Digits;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -21,10 +22,11 @@ public class CreateProductRequest {
 
     @NotNull(message = "ราคาสินค้าห้ามว่าง")
     @DecimalMin(value = "0.01", message = "ราคาสินค้าต้องมากกว่า 0")
+    @Digits(integer = 10, fraction = 2, message = "Price must fit 10 integer digits and 2 decimal places")
     private BigDecimal price;
 
     @NotNull(message = "จำนวนสต็อกห้ามว่าง")
-    @Min(value = 0, message = "จำนวนสต็อกต้องไม่ติดลบ")
+    @Min(value = 1, message = "จำนวนสต็อกต้องมีอย่างน้อย 1 ชิ้น")
     private Integer stock;
 
     @Size(max = 255, message = "ข้อมูลการจัดส่งต้องมีความยาวไม่เกิน 255 ตัวอักษร")
@@ -32,7 +34,8 @@ public class CreateProductRequest {
 
     private Set<Long> categoryIds;
 
-    private List<String> imageUrls = new ArrayList<>();
+    @Size(max = 5, message = "Choose no more than 5 product images")
+    private List<@Size(max = 255, message = "Image URL must not exceed 255 characters") String> imageUrls = new ArrayList<>();
 
     public CreateProductRequest() {
     }

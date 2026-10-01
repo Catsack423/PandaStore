@@ -1,29 +1,31 @@
-"use server";
-
+import { Suspense } from "react";
+import type { Metadata } from "next";
 import Home from "@/components/Home";
-import { Metadata } from "next";
+import NewArrival from "@/components/Home/NewArrivals";
+import NewArrivalsSkeleton from "@/components/Home/NewArrivals/Skeleton";
+import { HOME_PRODUCT_LIMIT } from "@/components/Home/constants";
+import { searchProducts } from "@/ServerAction/products";
 
-import { getProducts } from "@/ServerAction/products";
-import { useProductContext } from "../context/ProductContext";
-
- const metadata: Metadata = {
-  title: "NextCommerce | Nextjs E-commerce template",
-  description: "This is Home for NextCommerce Template",
-  // other metadata
+export const metadata: Metadata = {
+  title: "PandaStore | New Arrivals",
+  description: "Discover the latest products from shops on PandaStore.",
 };
 
-export default async function HomePage() {
- 
-  const response = await getProducts();
-  console.log("loadingสำเร็จ",response);
-  
-  const initialProducts =
-    response.success && response.data ? response.data : [];
+async function LatestProducts() {
+  try {
+    const result = await searchProducts({ sort: "latest", page: 0, size: HOME_PRODUCT_LIMIT });
+    return <NewArrival products={result.items} />;
+  } catch {
+    return <NewArrival products={[]} loadError />;
+  }
+}
 
-  
+export default function HomePage() {
   return (
-    <>
-      <Home initialProducts={initialProducts}></Home>
-    </>
+    <Home>
+      <Suspense fallback={<NewArrivalsSkeleton />}>
+        <LatestProducts />
+      </Suspense>
+    </Home>
   );
 }

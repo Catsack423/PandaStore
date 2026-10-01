@@ -418,4 +418,25 @@ public class SellerApplicationServiceTest {
         assertEquals(501L, responses.get(0).getApplicationId());
         assertEquals("สมชาย อิเล็กทรอนิกส์", responses.get(0).getShopName());
     }
+
+    @Test
+    @DisplayName("Admin history includes reviewed applications, newest first")
+    void testGetAllApplicationResponses_IncludesReviewedStatuses() {
+        sampleApplication.setApplicationId(501L);
+        sampleApplication.setStatus(SellerApplicationStatus.PENDING);
+        SellerApplication reviewed = new SellerApplication();
+        reviewed.setApplicationId(502L);
+        reviewed.setShopName("Reviewed shop");
+        reviewed.setStatus(SellerApplicationStatus.NEED_MORE_DOC);
+        reviewed.setAdminNote("Upload a clearer document");
+        when(applicationRepository.findAll()).thenReturn(List.of(sampleApplication, reviewed));
+
+        List<SellerApplicationResponse> responses = sellerApplicationService.getAllApplicationResponses();
+
+        assertEquals(2, responses.size());
+        assertEquals(502L, responses.get(0).getApplicationId());
+        assertEquals(SellerApplicationStatus.NEED_MORE_DOC, responses.get(0).getStatus());
+        assertEquals("Upload a clearer document", responses.get(0).getAdminNote());
+        assertEquals(501L, responses.get(1).getApplicationId());
+    }
 }
