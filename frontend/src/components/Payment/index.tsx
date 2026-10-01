@@ -4,54 +4,46 @@ import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
 import { CheckCircle2, Loader2, QrCode } from "lucide-react";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { money } from "@/components/Checkout/api";
-import { cancelOrder, confirmPayment, isPendingPayment, paymentStatusLabel, type PaymentOrder } from "./api";
+import { confirmPayment, isPendingPayment, paymentStatusLabel, type PaymentOrder } from "./api";
 
 const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue";
 const primary = `h-11 rounded-lg bg-blue px-5 text-white hover:bg-blue-dark ${focus}`;
 const outline = `h-11 rounded-lg border border-gray-3 bg-white px-5 text-dark hover:bg-gray-1 ${focus}`;
 
-export default function Payment({ initialOrder, mockEnabled, qrSource, loadError = false }: {
-  initialOrder: PaymentOrder | null; mockEnabled: boolean; qrSource: string; loadError?: boolean;
+export default function Payment({ initialOrder, qrSource, loadError = false }: {
+  initialOrder: PaymentOrder | null; qrSource: string; loadError?: boolean;
 }) {
   const router = useRouter();
   const [updatedOrder, setOrder] = useState<PaymentOrder | null>(null);
   const order = updatedOrder || initialOrder;
-  const [processing, setProcessing] = useState<"confirm" | "cancel" | null>(null);
+  const [processing, setProcessing] = useState(false);
   const inFlight = useRef(false);
   const [refreshing, startRefresh] = useTransition();
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const [cancelDialog, setCancelDialog] = useState(false);
   const [qrFailed, setQrFailed] = useState(false);
   const pending = order && isPendingPayment(order);
-  const busy = processing !== null || refreshing;
+  const busy = processing || refreshing;
 
-  async function submit(action: "confirm" | "cancel") {
-    if (!order || !pending || inFlight.current || (action === "confirm" && !mockEnabled)) return;
+  async function submit() {
+    if (!order || !pending || inFlight.current) return;
     inFlight.current = true;
-    setProcessing(action);
+    setProcessing(true);
     setError("");
-    setCancelDialog(false);
     try {
-      const result = await (action === "confirm" ? confirmPayment(order.orderGroupId) : cancelOrder(order.orderGroupId));
+      const result = await confirmPayment(order.orderGroupId);
       setOrder(result);
-      if (action === "confirm") setConfirmed(true);
-      else {
-        toast.success("Order cancelled. Reserved stock has been returned.");
-        router.push("/order-history");
-      }
+      setConfirmed(true);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not update your order. Please try again.");
     } finally {
       inFlight.current = false;
-      setProcessing(null);
+      setProcessing(false);
     }
   }
 
@@ -83,19 +75,19 @@ export default function Payment({ initialOrder, mockEnabled, qrSource, loadError
                   : <Image src={qrSource} alt="Payment QR code" width={260} height={260} unoptimized className="h-full w-full object-contain" onError={() => setQrFailed(true)} />}
               </div>
               <p className="text-center text-sm text-dark-4">This is a demo. No real payment is processed.</p>
-              {!mockEnabled && <p role="status" className="mt-3 text-center font-medium text-dark">Payment is not available</p>}
               {error && <div role="alert" className="mt-5 rounded-lg border border-red/20 bg-red/5 p-4 text-sm text-red">
                 <p>{error}</p><Button variant="outline" className={`mt-3 ${outline}`} disabled={busy} onClick={() => startRefresh(() => router.refresh())}>Refresh order status</Button>
               </div>}
               <div className="mt-7 flex flex-col gap-3 sm:flex-row" aria-busy={busy}>
-                <Button variant="outline" className={`w-full sm:flex-1 ${outline}`} disabled={busy} aria-label="Cancel order" onClick={() => setCancelDialog(true)}>
-                  {processing === "cancel" && <Loader2 aria-hidden="true" className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" />}Cancel order
+                <Button variant="outline" className={`w-full sm:flex-1 ${outline}`} disabled aria-label="Cancel order" aria-describedby="payment-cancellation-note">
+                  Cancel order
                 </Button>
-                <Button className={`w-full sm:flex-1 ${primary}`} disabled={busy || !mockEnabled} aria-label="Confirm payment" onClick={() => void submit("confirm")}>
-                  {processing === "confirm" && <Loader2 aria-hidden="true" className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" />}Confirm payment
+                <Button className={`w-full sm:flex-1 ${primary}`} disabled={busy} aria-label="Confirm payment" onClick={() => void submit()}>
+                  {processing && <Loader2 aria-hidden="true" className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" />}Confirm payment
                 </Button>
               </div>
-              {processing && <p role="status" className="mt-3 text-center text-sm text-dark-4">{processing === "confirm" ? "Confirming payment…" : "Cancelling order…"}</p>}
+              <p id="payment-cancellation-note" className="mt-3 text-center text-xs text-dark-4">Cancellation is not available while payment is pending.</p>
+              {processing && <p role="status" className="mt-3 text-center text-sm text-dark-4">Confirming payment…</p>}
             </> : <div role="status" className="mt-6 text-center">
               <p className="text-sm text-dark-4">{confirmed ? "Your payment is recorded. The seller can now confirm your order." : "This order is no longer pending payment."}</p>
               <Link href="/order-history" className={`mt-6 inline-flex items-center justify-center text-sm font-medium ${primary}`}>View Order History</Link>
@@ -104,15 +96,5 @@ export default function Payment({ initialOrder, mockEnabled, qrSource, loadError
         </CardContent>
       </Card>
     </section>
-    <Dialog open={cancelDialog} onOpenChange={setCancelDialog}>
-      <DialogContent showCloseButton={false}>
-        <DialogTitle className="text-xl font-semibold text-dark">Cancel this order?</DialogTitle>
-        <DialogDescription className="mt-3 text-sm text-dark-4">All items in this order group will be cancelled. Reserved stock will be returned.</DialogDescription>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-          <Button variant="outline" className={outline} disabled={busy} onClick={() => setCancelDialog(false)}>Keep order</Button>
-          <Button className={primary} disabled={busy} aria-label="Confirm cancellation" onClick={() => void submit("cancel")}>Cancel order</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
   </main>;
 }

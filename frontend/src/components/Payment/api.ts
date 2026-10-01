@@ -1,4 +1,4 @@
-import { checkoutApi, type PlacedOrder } from "@/components/Checkout/api";
+import { type PlacedOrder } from "@/components/Checkout/api";
 
 export type PaymentOrder = PlacedOrder;
 
@@ -14,11 +14,9 @@ export function paymentStatusLabel(order: PaymentOrder): string {
     REFUNDED: "Payment refunded", FAILED: "Payment failed" }[order.paymentStatus] || "Payment is not available");
 }
 
-// TODO: Replace the server's demo transition with a payment gateway integration.
-export function confirmPayment(orderGroupId: number): Promise<PaymentOrder> {
-  return checkoutApi<PaymentOrder>(`orders/${orderGroupId}/confirm-payment`, {});
-}
-
-export function cancelOrder(orderGroupId: number): Promise<PaymentOrder> {
-  return checkoutApi<PaymentOrder>(`orders/${orderGroupId}/cancel`, {});
+export async function confirmPayment(orderGroupId: number): Promise<PaymentOrder> {
+  const response = await fetch(`/api/payment/${orderGroupId}`, { method: "POST", cache: "no-store" });
+  const result = await response.json().catch(() => null);
+  if (!response.ok || !result?.success) throw new Error(result?.message || "Could not confirm payment. Please try again.");
+  return result.data as PaymentOrder;
 }

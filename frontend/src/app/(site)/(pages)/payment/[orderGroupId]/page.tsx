@@ -27,6 +27,5 @@ export default async function PaymentPage({ params }: { params: Promise<{ orderG
   } catch { /* Render a retryable service error without exposing order information. */ }
   if (missing) notFound();
   if (unauthorized) redirect(`/signin?callbackUrl=${encodeURIComponent(`/payment/${orderGroupId}`)}`);
-  const mockEnabled = process.env.MOCK_PAYMENT_ENABLED === "true" && process.env.NEXT_PUBLIC_MOCK_PAYMENT === "true";
-  return <Payment initialOrder={order} mockEnabled={mockEnabled} qrSource="/images/payment/qr-code.svg" loadError={!order} />;
+  return <Payment initialOrder={order} qrSource="/images/payment/qr-code.svg" loadError={!order} />;
 }

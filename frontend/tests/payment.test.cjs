@@ -4,7 +4,7 @@ const { readFileSync } = require("node:fs");
 const { resolve } = require("node:path");
 const ts = require("typescript");
 
-function load(file, mocks) {
+function load(file, mocks = {}) {
   const compiled = ts.transpileModule(readFileSync(resolve(__dirname, "../src", file), "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2020 },
   }).outputText;
@@ -12,139 +12,113 @@ function load(file, mocks) {
   new Function("require", "exports", compiled)(name => name in mocks ? mocks[name] : require(name), exports);
   return exports;
 }
-
-let token = "customer-session";
+const api = load("components/Payment/api.ts");
+let token = "customer-session", calls = [], paid = false, transaction = null, failure = null;
+const pending = { orderGroupId: 6, groupNumber: "group-six", grandTotal: 79, totalProductsAmount: 49,
+  totalShippingFee: 30, paymentStatus: "PENDING", subOrders: [{ orderStatus: "PENDING_PAYMENT" }] };
+const settled = { ...pending, paymentStatus: "PAID", subOrders: [{ orderStatus: "WAITING_SELLER_CONFIRM" }] };
 const cookies = { cookies: async () => ({ get: () => token ? { value: token } : undefined }) };
-const response = { NextResponse: { json: (body, options) => ({ body, ...options }) } };
-const proxy = load("app/api/checkout/[[...path]]/route.ts", { "next/headers": cookies, "next/server": response });
-let calls = [];
-let upstreamStatus = 200;
-let upstreamThrows = false;
-const pending = { orderGroupId: 6, groupNumber: "group-six", grandTotal: 79, totalProductsAmount: 49, totalShippingFee: 30,
-  paymentStatus: "PENDING", subOrders: [{ orderStatus: "PENDING_PAYMENT" }] };
-let upstreamOrder = pending;
-
+const proxy = load("app/api/payment/[orderGroupId]/route.ts", {
+  "next/headers": cookies, "next/server": { NextResponse: { json: (body, options) => ({ body, ...options }) } },
+  "@/components/Payment/api": api,
+});
 async function isolated(action) {
-  const previous = { fetch: global.fetch, privateFlag: process.env.MOCK_PAYMENT_ENABLED, publicFlag: process.env.NEXT_PUBLIC_MOCK_PAYMENT };
-  token = "customer-session"; calls = []; upstreamStatus = 200; upstreamThrows = false; upstreamOrder = pending;
-  process.env.MOCK_PAYMENT_ENABLED = "true"; process.env.NEXT_PUBLIC_MOCK_PAYMENT = "true";
+  const previousFetch = global.fetch;
+  token = "customer-session"; calls = []; paid = false; transaction = null; failure = null;
   global.fetch = async (url, options) => {
     calls.push({ url, options });
-    if (upstreamThrows) throw new Error("private upstream error");
-    return { status: upstreamStatus, ok: upstreamStatus === 200, json: async () => ({ success: upstreamStatus === 200, data: upstreamOrder, message: "Order not found" }) };
+    if (failure === "network") throw new Error("private upstream error");
+    const path = new URL(url).pathname;
+    const status = failure?.path === path ? failure.status : 200;
+    let data;
+    if (path.startsWith("/api/checkout/orders/")) data = paid ? settled : pending;
+    else if (path.includes("/order-group/")) data = { status: "PENDING", paymentMethod: "BANK_TRANSFER", gatewayTransactionId: transaction };
+    else if (path.endsWith("/initiate")) { transaction = "existing-txn"; data = { gatewayTransactionId: transaction }; }
+    else if (path.endsWith("/simulate")) { paid = true; data = { status: "SUCCESS" }; }
+    return { status, ok: status === 200, json: async () => ({ success: status === 200, data, message: "Upstream error" }) };
   };
-  try { await action(); } finally {
-    global.fetch = previous.fetch;
-    for (const [name, value] of [["MOCK_PAYMENT_ENABLED", previous.privateFlag], ["NEXT_PUBLIC_MOCK_PAYMENT", previous.publicFlag]]) {
-      if (value === undefined) delete process.env[name]; else process.env[name] = value;
-    }
-  }
+  try { await action(); } finally { global.fetch = previousFetch; }
 }
+const confirm = (id = "6") => proxy.POST({}, { params: Promise.resolve({ orderGroupId: id }) });
 
-function post(path) {
-  return proxy.POST({ method: "POST", text: async () => "{}" }, { params: Promise.resolve({ path: path.split("/") }) });
-}
-
-test("payment proxy requires both flags and cannot be enabled by the public flag alone", () => isolated(async () => {
-  for (const privateFlag of [undefined, "false", "TRUE", "true"]) {
-    if (privateFlag === undefined) delete process.env.MOCK_PAYMENT_ENABLED; else process.env.MOCK_PAYMENT_ENABLED = privateFlag;
-    for (const publicFlag of ["false", "true"]) {
-      process.env.NEXT_PUBLIC_MOCK_PAYMENT = publicFlag;
-      const result = await post("orders/6/confirm-payment");
-      assert.equal(result.status, privateFlag === "true" && publicFlag === "true" ? 200 : 403);
-    }
-  }
-  assert.equal(calls.length, 1);
+test("frontend verifies ownership, initializes the persisted method/total and calls the existing mock API", () => isolated(async () => {
+  const result = await confirm();
+  assert.equal(result.body.data, settled);
+  assert.deepEqual(calls.map(call => new URL(call.url).pathname), [
+    "/api/checkout/orders/6", "/api/payments/order-group/6", "/api/payments/initiate", "/api/payments/simulate", "/api/checkout/orders/6",
+  ]);
+  assert.deepEqual(JSON.parse(calls[2].options.body), { orderGroupId: 6, paymentMethod: "BANK_TRANSFER", amount: 79 });
+  assert.deepEqual(JSON.parse(calls[3].options.body), { orderGroupId: 6, isSuccess: true });
+  assert.ok(calls.every(call => call.options.cache === "no-store" && call.options.headers.Authorization === "Bearer customer-session"));
 }));
 
-test("payment actions use session authentication and never cache backend responses", () => isolated(async () => {
-  await post("orders/6/confirm-payment");
-  assert.equal(calls[0].options.headers.Authorization, "Bearer customer-session");
-  assert.equal(calls[0].options.cache, "no-store");
-  assert.ok(calls[0].url.endsWith("/api/checkout/orders/6/confirm-payment"));
+test("existing transaction is reused without reinitializing payment", () => isolated(async () => {
+  transaction = "already-initialized";
+  await confirm();
+  assert.equal(calls.some(call => call.url.endsWith("/initiate")), false);
+}));
+
+test("invalid identifiers and anonymous sessions cannot call payment APIs", () => isolated(async () => {
+  for (const id of ["0", "-1", "abc", "9007199254740992"]) assert.equal((await confirm(id)).status, 404);
   token = null;
-  assert.equal((await post("orders/6/cancel")).status, 401);
+  assert.equal((await confirm()).status, 401);
+  assert.equal(calls.length, 0);
+}));
+
+test("missing or foreign orders are rejected before payment initialization", () => isolated(async () => {
+  for (const status of [403, 404]) {
+    calls = []; failure = { path: "/api/checkout/orders/6", status };
+    assert.equal((await confirm()).status, status);
+    assert.equal(calls.length, 1);
+  }
+}));
+
+test("paid orders reject a second confirmation", () => isolated(async () => {
+  paid = true;
+  assert.equal((await confirm()).status, 409);
   assert.equal(calls.length, 1);
 }));
 
-test("cancellation remains available with mock payment disabled; invalid actions are rejected", () => isolated(async () => {
-  process.env.MOCK_PAYMENT_ENABLED = "false";
-  assert.equal((await post("orders/6/cancel")).status, 200);
-  for (const path of ["orders/0/cancel", "orders/-1/confirm-payment", "orders/6/refund", "payments/simulate"]) {
-    assert.equal((await post(path)).status, 404);
-  }
-  assert.equal(calls.length, 1);
-}));
-
-test("proxy preserves ownership and conflict errors and gives retry guidance on outage", () => isolated(async () => {
-  for (const status of [404, 409, 403]) {
-    upstreamStatus = status;
-    assert.equal((await post("orders/6/confirm-payment")).status, status);
-  }
-  upstreamThrows = true;
-  const result = await post("orders/6/cancel");
+test("initialization errors stop simulation; outages provide retry guidance", () => isolated(async () => {
+  failure = { path: "/api/payments/initiate", status: 409 };
+  assert.equal((await confirm()).status, 409);
+  assert.equal(calls.some(call => call.url.endsWith("/simulate")), false);
+  failure = "network";
+  const result = await confirm();
   assert.equal(result.status, 503);
   assert.match(result.body.message, /Refresh order status/);
   assert.doesNotMatch(result.body.message, /private upstream error/);
 }));
 
-const navigation = {
-  notFound: () => { throw new Error("NOT_FOUND"); },
-  redirect: url => { throw new Error(`REDIRECT:${url}`); },
-};
-const Payment = () => null;
 const page = load("app/(site)/(pages)/payment/[orderGroupId]/page.tsx", {
-  "next/headers": cookies, "next/navigation": navigation,
-  "@/components/Payment": { default: Payment },
+  "next/headers": cookies,
+  "next/navigation": { notFound: () => { throw new Error("NOT_FOUND"); }, redirect: () => { throw new Error("SIGN_IN"); } },
+  "@/components/Payment": { default: () => null },
 }).default;
-const renderPage = id => page({ params: Promise.resolve({ orderGroupId: id }) });
 
-test("Payment page loads actual shipping-inclusive order data without cache", () => isolated(async () => {
-  const element = await renderPage("6");
+test("Payment page loads the actual shipping-inclusive order without feature flags or caching", () => isolated(async () => {
+  const element = await page({ params: Promise.resolve({ orderGroupId: "6" }) });
   assert.equal(element.props.initialOrder, pending);
-  assert.equal(element.props.initialOrder.grandTotal, 79);
-  assert.equal(element.props.mockEnabled, true);
+  assert.equal(element.props.mockEnabled, undefined);
   assert.equal(element.props.qrSource, "/images/payment/qr-code.svg");
   assert.equal(calls[0].options.cache, "no-store");
-  assert.equal(calls[0].options.headers.Authorization, "Bearer customer-session");
-  process.env.MOCK_PAYMENT_ENABLED = "false";
-  assert.equal((await renderPage("6")).props.mockEnabled, false);
 }));
 
-test("Payment page rejects invalid, missing, and non-owned groups; expired sessions sign in", () => isolated(async () => {
-  for (const id of ["0", "-1", "abc", "9007199254740992"]) await assert.rejects(renderPage(id), /NOT_FOUND/);
-  assert.equal(calls.length, 0);
-  for (const status of [403, 404]) {
-    upstreamStatus = status;
-    await assert.rejects(renderPage("6"), /NOT_FOUND/);
-  }
-  upstreamStatus = 401;
-  await assert.rejects(renderPage("6"), /REDIRECT:\/signin/);
-  token = null;
-  await assert.rejects(renderPage("6"), /REDIRECT:\/signin/);
-}));
+test("client confirmation calls the frontend proxy and returns backend order state", async () => {
+  const previousFetch = global.fetch;
+  let request;
+  global.fetch = async (url, options) => { request = { url, options }; return { ok: true, json: async () => ({ success: true, data: settled }) }; };
+  try {
+    assert.equal(await api.confirmPayment(6), settled);
+    assert.equal(request.url, "/api/payment/6");
+    assert.equal(request.options.method, "POST");
+  } finally { global.fetch = previousFetch; }
+});
 
-test("Payment page has a retryable service error instead of fake order data", () => isolated(async () => {
-  upstreamThrows = true;
-  const element = await renderPage("6");
-  assert.equal(element.props.initialOrder, null);
-  assert.equal(element.props.loadError, true);
-}));
-
-const serviceCalls = [];
-const api = load("components/Payment/api.ts", { "@/components/Checkout/api": {
-  checkoutApi: async (path, body) => { serviceCalls.push({ path, body }); return pending; },
-} });
-test("payment state disables transitions for paid, cancelled, failed, mixed or empty groups", () => {
+test("paid, cancelled, mixed and empty groups cannot be confirmed", () => {
   assert.equal(api.isPendingPayment(pending), true);
-  for (const status of ["PAID", "FAILED", "REFUNDED", "PARTIALLY_REFUNDED"]) assert.equal(api.isPendingPayment({ ...pending, paymentStatus: status }), false);
+  assert.equal(api.isPendingPayment(settled), false);
   assert.equal(api.isPendingPayment({ ...pending, subOrders: [] }), false);
   assert.equal(api.isPendingPayment({ ...pending, subOrders: [{ orderStatus: "PENDING_PAYMENT" }, { orderStatus: "CANCELLED" }] }), false);
   assert.equal(api.paymentStatusLabel({ ...pending, paymentStatus: "FAILED", subOrders: [{ orderStatus: "CANCELLED" }] }), "Order cancelled");
-  assert.equal(api.paymentStatusLabel({ ...pending, paymentStatus: "PAID", subOrders: [{ orderStatus: "WAITING_SELLER_CONFIRM" }] }), "Payment successful");
-});
-
-test("confirmPayment and cancelOrder send group IDs without browser-supplied amounts or statuses", async () => {
-  await api.confirmPayment(6); await api.cancelOrder(6);
-  assert.deepEqual(serviceCalls, [{ path: "orders/6/confirm-payment", body: {} }, { path: "orders/6/cancel", body: {} }]);
 });

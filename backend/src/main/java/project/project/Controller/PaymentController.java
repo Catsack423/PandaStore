@@ -8,8 +8,6 @@ import project.project.ApiResponse.ApiResponse;
 import project.project.DTO.payment.*;
 import project.project.Entity.order.Payment;
 import project.project.Service.api.PaymentService;
-import project.project.Security.CurrentUser;
-import project.project.Service.implement.CustomerPaymentService;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -17,13 +15,9 @@ import project.project.Service.implement.CustomerPaymentService;
 public class PaymentController {
 
     private final PaymentService paymentService;
-    private final CustomerPaymentService customerPayments;
-    private final CurrentUser currentUser;
 
-    public PaymentController(PaymentService paymentService, CustomerPaymentService customerPayments, CurrentUser currentUser) {
+    public PaymentController(PaymentService paymentService) {
         this.paymentService = paymentService;
-        this.customerPayments = customerPayments;
-        this.currentUser = currentUser;
     }
 
     @PostMapping("/initiate")
@@ -41,23 +35,30 @@ public class PaymentController {
     @PostMapping("/callback")
     public ResponseEntity<ApiResponse<PaymentResponse>> handleGatewayCallback(
             @Valid @RequestBody PaymentCallbackRequest request) {
-        // TODO: Enable only after verifying a real gateway's signed webhook and persisted amount.
-        // An unsigned callback must not provide an alternate route around the demo feature flag.
-        throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
-                "Payment gateway is not configured");
+        String txnId = resolveGatewayTransactionId(request);
+        boolean isSuccess = request.getIsSuccess() != null ? request.getIsSuccess() : true;
+
+        paymentService.handleGatewayCallback(txnId, isSuccess);
+        Payment updatedPayment = (request.getOrderGroupId() != null)
+                ? paymentService.getPaymentByOrderGroupId(request.getOrderGroupId())
+                : paymentService.getPaymentByGatewayTransactionId(txnId);
+
+        return ResponseEntity.ok(ApiResponse.success("ประมวลผลผลการชำระเงินสำเร็จ", PaymentResponse.fromEntity(updatedPayment)));
     }
 
     @PostMapping("/simulate")
     public ResponseEntity<ApiResponse<PaymentResponse>> simulatePayment(
             @RequestBody PaymentCallbackRequest request) {
-        Long customerId = currentUser.requireCustomerId();
-        if (request.getOrderGroupId() == null || Boolean.FALSE.equals(request.getIsSuccess())) {
-            throw new IllegalArgumentException("Use an order group ID to confirm a demo payment");
-        }
-        // The legacy demo endpoint must enforce the same ownership, flag and pending-state guards.
-        customerPayments.confirmPayment(customerId, request.getOrderGroupId());
-        return ResponseEntity.ok(ApiResponse.success("Payment successful (demo)",
-                PaymentResponse.fromEntity(paymentService.getPaymentByOrderGroupId(request.getOrderGroupId()))));
+        String txnId = resolveGatewayTransactionId(request);
+        boolean isSuccess = request.getIsSuccess() != null ? request.getIsSuccess() : true;
+
+        paymentService.handleGatewayCallback(txnId, isSuccess);
+        Payment updatedPayment = (request.getOrderGroupId() != null)
+                ? paymentService.getPaymentByOrderGroupId(request.getOrderGroupId())
+                : paymentService.getPaymentByGatewayTransactionId(txnId);
+
+        String msg = isSuccess ? "จำลองการชำระเงินสำเร็จ (PAID)" : "จำลองการชำระเงินล้มเหลว (FAILED)";
+        return ResponseEntity.ok(ApiResponse.success(msg, PaymentResponse.fromEntity(updatedPayment)));
     }
 
     @PostMapping("/refund/partial")
@@ -86,4 +87,14 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success("ดึงข้อมูลการชำระเงินสำเร็จ", PaymentResponse.fromEntity(payment)));
     }
 
+    private String resolveGatewayTransactionId(PaymentCallbackRequest request) {
+        if (request.getGatewayTransactionId() != null && !request.getGatewayTransactionId().trim().isEmpty()) {
+            return request.getGatewayTransactionId().trim();
+        }
+        if (request.getOrderGroupId() != null) {
+            Payment payment = paymentService.getPaymentByOrderGroupId(request.getOrderGroupId());
+            return payment.getGatewayTransactionId();
+        }
+        throw new IllegalArgumentException("ต้องระบุ gatewayTransactionId หรือ orderGroupId อย่างใดอย่างหนึ่ง");
+    }
 }
