@@ -14,7 +14,7 @@ import ProductImage from "@/components/Common/ProductImage";
 import ProductStore from "./ProductStore";
 import { productUrl } from "@/lib/productUrl";
 
-const SingleGridItem = ({ item, readOnly = false }: { item: Product; readOnly?: boolean }) => {
+const SingleGridItem = ({ item, readOnly = false, showImageSkeleton = false }: { item: Product; readOnly?: boolean; showImageSkeleton?: boolean }) => {
   const { addItemToCart } = useCart();
   const { canAdd } = useProductAvailability(item);
   const { openModal } = useModalContext();
@@ -47,7 +47,7 @@ const SingleGridItem = ({ item, readOnly = false }: { item: Product; readOnly?: 
   return (
     <div className="group">
       <div className="relative mb-4 overflow-hidden rounded-lg bg-white shadow-1">
-        <Link href={productUrl(item)} aria-label={`View ${item.title}`} className="block w-full"><ProductImage src={item.imgs?.previews?.[0]} alt={item.title} size="fill" /></Link>
+        <Link href={productUrl(item)} aria-label={`View ${item.title}`} className="block w-full"><ProductImage src={item.imgs?.previews?.[0]} alt={item.title} size="fill" showSkeleton={showImageSkeleton} /></Link>
 
         {!readOnly && <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
           <button
