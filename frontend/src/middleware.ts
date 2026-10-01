@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   "/admin": ["ADMIN"],
   "/seller/products": ["SELLER"],
-  "/seller": ["SELLER", "ADMIN"],
+  "/seller": ["SELLER"],
   "/seller-dashboard": ["SELLER"],
   "/account": ["CUSTOMER", "SELLER", "ADMIN"],
 };
@@ -46,11 +46,6 @@ function signInRedirect(request: NextRequest, pathname: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  // Only the order detail preview is public. It uses local demo data and never calls seller APIs.
-  if (/^\/seller\/[^/]+$/.test(pathname) && request.nextUrl.searchParams.get("demo") === "1") {
-    return NextResponse.next();
-  }
-
   const token = request.cookies.get("auth_token")?.value;
   const accountPath = Object.keys(ACCOUNT_PAGES).find((route) =>
     pathname === route || pathname.startsWith(route + "/")

@@ -22,11 +22,13 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
   const pathname = usePathname();
   const { openCartModal } = useCartModalContext();
   const { user, isLoading: authLoading } = useAuth();
+
   const isSeller = user?.role === "SELLER";
   const isAdminLayout = mode === "admin";
   const showSearch = !isAdminLayout && !authLoading && !isSeller;
   const showShopping = !isAdminLayout && !authLoading && (!user || user.role === "CUSTOMER");
   const sellerUserId = user?.id;
+
   const canViewStorefront = !isAdminLayout && !authLoading && isSeller && user.status === "ACTIVE";
   const [sellerShop, setSellerShop] = useState<{ userId: string; sellerId: number } | null>(null);
   const storefrontHref = canViewStorefront && sellerShop?.userId === sellerUserId ? `/shop/${sellerShop.sellerId}` : null;
@@ -34,10 +36,12 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
 
   const { count, totalPrice, isLoading: cartLoading } = useCart();
 
+
   const handleOpenCartModal = () => {
     openCartModal();
   };
 
+  
   useEffect(() => {
     setSellerShop(null);
     if (!canViewStorefront || !sellerUserId) return;
