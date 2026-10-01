@@ -23,15 +23,17 @@ public class PaymentServiceImp implements PaymentService {
     private final OrderGroupRepository orderGroupRepository;
     private final OrderRepository orderRepository;
     private final NotificationService notificationService;
+    private final OrderStateLock stateLock;
 
     public PaymentServiceImp(PaymentRepository paymentRepository,
                              OrderGroupRepository orderGroupRepository,
                              OrderRepository orderRepository,
-                             @Autowired(required = false) NotificationService notificationService) {
+                             @Autowired(required = false) NotificationService notificationService, OrderStateLock stateLock) {
         this.paymentRepository = paymentRepository;
         this.orderGroupRepository = orderGroupRepository;
         this.orderRepository = orderRepository;
         this.notificationService = notificationService;
+        this.stateLock = stateLock;
     }
 
     @Override
@@ -106,6 +108,9 @@ public class PaymentServiceImp implements PaymentService {
 
         Payment payment = paymentRepository.findByGatewayTransactionId(gatewayTransactionId.trim())
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with gateway transaction id: " + gatewayTransactionId));
+        stateLock.lock(payment);
+        if (!gatewayTransactionId.trim().equals(payment.getGatewayTransactionId()))
+            throw new IllegalStateException("Payment transaction has changed");
 
         if (payment.getStatus() == PaymentStatus.SUCCESS) {
             if (isSuccess) {
@@ -129,7 +134,8 @@ public class PaymentServiceImp implements PaymentService {
                 orderGroup.setPaymentStatus(OrderGroupPaymentStatus.PAID);
                 if (orderGroup.getSubOrders() != null) {
                     for (Order subOrder : orderGroup.getSubOrders()) {
-                        if (subOrder.getOrderStatus() == null || subOrder.getOrderStatus() == OrderStatus.WAITING_SELLER_CONFIRM) {
+                        stateLock.lock(subOrder);
+                        if (subOrder.getOrderStatus() == null || subOrder.getOrderStatus() == OrderStatus.PENDING_PAYMENT || subOrder.getOrderStatus() == OrderStatus.WAITING_SELLER_CONFIRM) {
                             subOrder.setOrderStatus(OrderStatus.WAITING_SELLER_CONFIRM);
                         }
                     }
@@ -175,6 +181,7 @@ public class PaymentServiceImp implements PaymentService {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        stateLock.lock(order);
 
         if (order.getTotalAmount() != null && refundAmount.compareTo(order.getTotalAmount()) > 0) {
             throw new IllegalArgumentException("Refund amount (" + refundAmount + ") cannot exceed sub-order total amount (" + order.getTotalAmount() + ")");
@@ -187,6 +194,7 @@ public class PaymentServiceImp implements PaymentService {
 
         Payment payment = paymentRepository.findByOrderGroup_OrderGroupId(orderGroup.getOrderGroupId())
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order group id: " + orderGroup.getOrderGroupId()));
+        stateLock.lock(payment);
 
         if (payment.getStatus() != PaymentStatus.SUCCESS && payment.getStatus() != PaymentStatus.PARTIALLY_REFUNDED) {
             throw new IllegalStateException("Cannot refund payment with status: " + payment.getStatus());
@@ -230,9 +238,11 @@ public class PaymentServiceImp implements PaymentService {
 
         OrderGroup orderGroup = orderGroupRepository.findById(orderGroupId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order group not found with id: " + orderGroupId));
+        stateLock.lockGroup(orderGroup);
 
         Payment payment = paymentRepository.findByOrderGroup_OrderGroupId(orderGroupId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order group id: " + orderGroupId));
+        stateLock.lock(payment);
 
         if (payment.getStatus() != PaymentStatus.SUCCESS && payment.getStatus() != PaymentStatus.PARTIALLY_REFUNDED) {
             throw new IllegalStateException("Cannot refund payment with status: " + payment.getStatus());

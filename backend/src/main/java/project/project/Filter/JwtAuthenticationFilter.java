@@ -36,6 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final List<String> MONITORED_PATH_PREFIXES = List.of(
             "/api/cart",
             "/api/checkout",
+            "/api/sub-orders",
             "/api/auth",
             "/api/seller-applications");
 
