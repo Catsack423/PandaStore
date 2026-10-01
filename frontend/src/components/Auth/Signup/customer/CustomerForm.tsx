@@ -21,7 +21,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   onSubmit,
 }) => {
   return (
-    <form onSubmit={onSubmit} className="space-y-4.5 w-full">
+    <form method="post" onSubmit={onSubmit} className="space-y-4.5 w-full">
       {errors.general && (
         <div className="p-3.5 rounded-lg bg-red-light-6 border border-red-light-3 text-red text-sm flex items-center gap-2">
           <svg
@@ -49,6 +49,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         <Input
           id="username"
           name="username"
+          autoComplete="username"
+          maxLength={50}
           placeholder="เช่น panda_shopper (3-50 ตัวอักษร)"
           value={formData.username}
           onChange={onChange}
@@ -67,6 +69,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         <Input
           id="fullName"
           name="fullName"
+          autoComplete="name"
+          maxLength={100}
           placeholder="เช่น สมชาย ใจดี"
           value={formData.fullName}
           onChange={onChange}
@@ -86,6 +90,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           id="email"
           name="email"
           type="email"
+          autoComplete="email"
+          maxLength={100}
           placeholder="example@mail.com"
           value={formData.email}
           onChange={onChange}
@@ -105,6 +111,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           id="phoneNumber"
           name="phoneNumber"
           type="tel"
+          autoComplete="tel"
           placeholder="เช่น 0812345678 (9-15 หลัก)"
           value={formData.phoneNumber}
           onChange={onChange}
@@ -125,6 +132,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             id="password"
             name="password"
             type="password"
+            autoComplete="new-password"
+            maxLength={72}
             placeholder="อย่างน้อย 6 ตัวอักษร"
             value={formData.password}
             onChange={onChange}
@@ -143,6 +152,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             id="confirmPassword"
             name="confirmPassword"
             type="password"
+            autoComplete="new-password"
+            maxLength={72}
             placeholder="กรอกรหัสผ่านอีกครั้ง"
             value={formData.confirmPassword}
             onChange={onChange}
