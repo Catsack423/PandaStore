@@ -164,7 +164,7 @@ function formHarness(upload, create, getCategories = async () => [{ id: 2, name:
 const deferred = () => { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; };
 const flush = async () => { await new Promise(setImmediate); await new Promise(setImmediate); };
 
-test("preview shows local photos during upload, follows the primary, browses independently and recovers after removals", async () => {
+test("full-width preview actions target the active photo, preserve main order and recover indices after removals", async () => {
   const originalCreate = URL.createObjectURL, originalRevoke = URL.revokeObjectURL;
   URL.createObjectURL = file => `blob:${file.name}`; URL.revokeObjectURL = () => {};
   const pending = deferred(), writes = [];
@@ -172,33 +172,58 @@ test("preview shows local photos during upload, follows the primary, browses ind
   const form = formHarness(file => ++uploadCount === 1 ? pending.promise : Promise.resolve({ url: `https://example.com/${file.name}`, key: file.name, removalToken: "receipt" }), data => { writes.push(data); return { success: false, message: "Keep the form open" }; });
   const gallery = () => form.find(node => node.type === "gallery");
   const remove = async index => { form.find(node => node.props?.["aria-label"] === `Remove photo ${index}`).props.onClick(); await flush(); };
+  const assertActive = (id, index, total) => {
+    assert.equal(gallery().props.activeImageId, id);
+    assert.equal(gallery().props.images.length, total);
+    const rendered = imageHarness().ProductImageGallery(gallery().props);
+    const counter = rendered.props.children[0].props.children[2];
+    assert.deepEqual(counter && counter.props.children, total > 1 ? [index, " / ", total] : false);
+  };
   try {
     await flush();
     assert.equal(gallery(), undefined);
+    assert.equal(form.find(node => node.props?.["aria-label"] === "Remove photo 1"), undefined);
     form.find(node => node.props?.type === "file").props.onChange({ target: { files: Array.from({ length: 5 }, (_, index) => ({ name: `${index + 1}.png`, type: "image/png", size: 12 })), value: "" } });
     const ids = gallery().props.images.map(image => image.id);
     assert.deepEqual(gallery().props.images.map(image => image.src), ["blob:1.png", "blob:2.png", "blob:3.png", "blob:4.png", "blob:5.png"]);
     assert.equal(gallery().props.activeImageId, ids[0]);
     assert.equal(form.find(node => node.type === "fieldset").props.disabled, true);
     pending.resolve({ url: "https://example.com/1.png", key: "1.png", removalToken: "receipt" }); await flush();
-    form.find(node => node.props?.["aria-label"] === "Use photo 5 as main image").props.onChange();
-    assert.equal(gallery().props.activeImageId, ids[4]);
+    assert.equal(form.find(node => node.props?.type === "radio"), undefined);
+    assert.equal(form.find(node => node.props?.title === "1.png"), undefined);
+    assert.equal(form.find(node => node.props?.["aria-label"] === "Photo 1 is the main image").props.disabled, true);
+    gallery().props.onActiveImageChange(ids[4]);
+    const setMain = form.find(node => node.props?.["aria-label"] === "Use photo 5 as main image");
+    assert.equal(setMain.props.type, "button");
+    assert.equal(setMain.props.disabled, false);
+    assert.match(setMain.props.className, /focus-visible:ring-2/);
+    setMain.props.onClick();
+    assertActive(ids[4], 1, 5);
     assert.equal(gallery().props.images[0].id, ids[4]);
     gallery().props.onActiveImageChange(ids[1]);
-    assert.equal(gallery().props.activeImageId, ids[1]);
-    assert.equal(form.find(node => node.props?.["aria-label"] === "Use photo 1 as main image").props.checked, true);
+    assertActive(ids[1], 3, 5);
+    assert.equal(gallery().props.images[0].id, ids[4]);
+    assert.match(form.find(node => node.props?.["aria-label"] === "Remove photo 3").props.className, /focus-visible:ring-2/);
     for (const [id, value] of [["product-name", "My product"], ["product-price", "12.34"], ["product-stock", "2"]]) form.find(node => node.props?.id === id).props.onChange({ target: { value } });
     form.find(node => node.props?.type === "checkbox").props.onChange({ target: { checked: true } });
     await form.find(node => node.type === "form").props.onSubmit({ preventDefault() {} }); await flush();
     assert.equal(writes[0].imageUrls[0], "https://example.com/5.png");
     await remove(3);
-    assert.equal(gallery().props.activeImageId, ids[4]);
-    assert.equal(gallery().props.images.length, 4);
+    assertActive(ids[2], 3, 4);
+    assert.equal(gallery().props.images[0].id, ids[4]);
+    gallery().props.onActiveImageChange(ids[3]);
+    await remove(4);
+    assertActive(ids[2], 3, 3);
+    gallery().props.onActiveImageChange(ids[4]);
     await remove(1);
-    assert.equal(gallery().props.activeImageId, ids[0]);
-    assert.equal(gallery().props.images.length, 3);
-    assert.equal(form.find(node => node.props?.["aria-label"] === "Use photo 1 as main image").props.checked, true);
+    assertActive(ids[0], 1, 2);
+    assert.equal(gallery().props.images[0].id, ids[0]);
+    assert.equal(form.find(node => node.props?.["aria-label"] === "Photo 1 is the main image").props.disabled, true);
+    await remove(1);
+    assertActive(ids[2], 1, 1);
     while (gallery()) await remove(1);
+    assert.equal(form.find(node => node.props?.["aria-label"] === "Remove photo 1"), undefined);
+    assert.equal(form.find(node => node.props?.["aria-label"] === "Photo 1 is the main image"), undefined);
     assert.ok(form.render().some(node => node.props?.children === "Choose images to preview your product."));
   } finally { form.cleanup(); URL.createObjectURL = originalCreate; URL.revokeObjectURL = originalRevoke; }
 });
@@ -238,12 +263,12 @@ test("shared gallery uses stable image IDs, thumbnail buttons, active borders an
   assert.equal(ProductImageGallery({ images: [], activeImageId: "", onActiveImageChange() {}, alt: "Product" }), null);
 });
 
-test("Seller gallery fills a 4:3 contain frame, labels the main image and distinguishes the active thumbnail", () => {
+test("Seller gallery fills a 16:9 contain frame, labels the main image and distinguishes the active thumbnail", () => {
   const { ProductImageGallery } = imageHarness();
   const images = Array.from({ length: 5 }, (_, index) => ({ id: `${index}`, src: `blob:${index}` })), selected = [];
   const main = ProductImageGallery({ images, activeImageId: "0", onActiveImageChange: id => selected.push(id), alt: "Product", compact: true });
   const frame = main.props.children[0];
-  assert.match(frame.props.children[0].props.className, /aspect-\[4\/3\]/);
+  assert.match(frame.props.children[0].props.className, /!aspect-video/);
   assert.equal(frame.props.children[0].props.imageClassName, "p-0");
   assert.equal(frame.props.children[0].props.fit, "contain");
   assert.equal(frame.props.children[1].props.children, "Main");
@@ -361,11 +386,13 @@ test("form uploads sequentially, retries only failed photos, keeps state on save
     first.resolve({ url: "https://example.com/first.png" }); await flush();
     assert.deepEqual(uploads, ["first.png", "second.png"]);
     second.reject(new Error("Upload interrupted")); await flush();
+    const gallery = () => form.find(node => node.type === "gallery");
+    gallery().props.onActiveImageChange(gallery().props.images[1].id);
     form.find(node => node.props?.["aria-label"] === "Retry photo 2").props.onClick(); await flush();
     assert.deepEqual(uploads, ["first.png", "second.png", "second.png"]);
     for (const [id, value] of [["product-name", "My product"], ["product-price", "12.34"], ["product-stock", "2"]]) form.find(node => node.props?.id === id).props.onChange({ target: { value } });
     form.find(node => node.props?.type === "checkbox").props.onChange({ target: { checked: true } });
-    form.find(node => node.props?.["aria-label"] === "Use photo 2 as main image").props.onChange();
+    form.find(node => node.props?.["aria-label"] === "Use photo 2 as main image").props.onClick();
     await form.find(node => node.type === "form").props.onSubmit({ preventDefault() {} });
     assert.equal(form.find(node => node.props?.id === "product-name").props.value, "My product");
     assert.deepEqual(writes[0].imageUrls, ["https://example.com/second.png", "https://example.com/first.png"]);
@@ -431,16 +458,16 @@ test("Remove waits for cloud success, preserves images on failure, retries and b
     await form.find(node => node.type === "form").props.onSubmit({ preventDefault() {} });
     assert.equal(writes.length, 0); assert.equal(removals.length, 1);
     assert.equal(form.find(node => node.type === "fieldset").props.disabled, true);
-    assert.equal(form.render().filter(node => node.type === "preview").length, 2);
+    assert.equal(form.find(node => node.type === "gallery").props.images.length, 2);
     assert.deepEqual(revoked, []);
     pending.resolve({ success: false, message: "Cloud unavailable" }); await flush();
     assert.equal(form.find(node => node.props?.role === "alert").props.children, "Cloud unavailable");
-    assert.equal(form.render().filter(node => node.type === "preview").length, 2);
+    assert.equal(form.find(node => node.type === "gallery").props.images.length, 2);
     form.find(node => node.props?.["aria-label"] === "Remove photo 1").props.onClick(); await flush();
     assert.deepEqual(removals, [{ key: "main.png", removalToken: "receipt" }, { key: "main.png", removalToken: "receipt" }]);
-    assert.equal(form.render().filter(node => node.type === "preview").length, 1);
+    assert.equal(form.find(node => node.type === "gallery").props.images.length, 1);
     assert.deepEqual(revoked, ["blob:main.png"]);
-    assert.equal(form.find(node => node.props?.type === "radio").props.checked, true);
+    assert.equal(form.find(node => node.props?.["aria-label"] === "Photo 1 is the main image").props.disabled, true);
     await form.find(node => node.type === "form").props.onSubmit({ preventDefault() {} });
     assert.deepEqual(writes[0].imageUrls, ["https://example.com/second.png"]);
   } finally { form.cleanup(); URL.createObjectURL = originalCreate; URL.revokeObjectURL = originalRevoke; }
@@ -456,7 +483,7 @@ test("a failed upload with no cloud file is removed locally without a deletion r
     form.find(node => node.type === "input" && node.props.type === "file").props.onChange({ target: { files: [{ name: "failed.png", type: "image/png", size: 12 }], value: "" } }); await flush();
     form.find(node => node.props?.["aria-label"] === "Remove photo 1").props.onClick(); await flush();
     assert.deepEqual(removals, []);
-    assert.equal(form.render().filter(node => node.type === "preview").length, 0);
+    assert.equal(form.find(node => node.type === "gallery"), undefined);
   } finally { form.cleanup(); URL.createObjectURL = originalCreate; URL.revokeObjectURL = originalRevoke; }
 });
 
@@ -526,7 +553,7 @@ test("back/forward cache restoration discards departed photos and keeps entered 
     form.find(node => node.type === "input" && node.props.type === "file").props.onChange({ target: { files: [{ name: "photo", type: "image/png", size: 12 }], value: "" } }); await flush();
     form.listeners.get("pagehide")();
     form.listeners.get("pageshow")({ persisted: true });
-    assert.equal(form.render().filter(node => node.type === "preview").length, 0);
+    assert.equal(form.find(node => node.type === "gallery"), undefined);
     assert.equal(form.find(node => node.props?.id === "product-name").props.value, "Keep my details");
     assert.equal(form.find(node => node.props?.role === "alert").props.children, "Choose your photos again after returning to this page.");
   } finally { form.cleanup(); URL.createObjectURL = originalCreate; URL.revokeObjectURL = originalRevoke; }

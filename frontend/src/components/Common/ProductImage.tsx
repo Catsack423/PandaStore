@@ -69,7 +69,7 @@ export function ProductImageGallery({ images, activeImageId, onActiveImageChange
 
   return <div className={`mx-auto w-full min-w-0 ${compact ? "" : "max-w-[530px]"}`}>
     <div className="relative">
-      <ProductImage src={images[activeIndex].src} alt={alt} size="fill" fit="contain" surface="detail" sizes={sizes} className={compact ? "!aspect-[4/3] rounded-xl" : "max-h-[530px] rounded-xl"} imageClassName={compact ? "p-0" : "p-6 sm:p-10"} showSkeleton />
+      <ProductImage src={images[activeIndex].src} alt={alt} size="fill" fit="contain" surface="detail" sizes={sizes} className={compact ? "!aspect-video rounded-xl" : "max-h-[530px] rounded-xl"} imageClassName={compact ? "p-0" : "p-6 sm:p-10"} showSkeleton />
       {compact && activeIndex === 0 && <span className="absolute left-3 top-3 rounded-md bg-blue px-2.5 py-1 text-xs font-medium text-white">Main</span>}
       {images.length > 1 && <span className={`absolute rounded-full bg-white py-1 text-xs font-medium text-dark shadow-1 ${compact ? "bottom-2 right-2 px-2" : "bottom-4 right-4 px-3"}`} aria-live="polite">{activeIndex + 1} / {images.length}</span>}
     </div>

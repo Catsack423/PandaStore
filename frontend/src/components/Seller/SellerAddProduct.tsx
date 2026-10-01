@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImagePlus, LoaderCircle, RotateCcw, Trash2 } from "lucide-react";
 import Breadcrumb from "@/components/Common/Breadcrumb";
-import ProductImage, { ProductImageGallery } from "@/components/Common/ProductImage";
+import { ProductImageGallery } from "@/components/Common/ProductImage";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -171,10 +171,13 @@ export default function SellerAddProduct() {
       URL.revokeObjectURL(entry.preview);
       previews.current.delete(entry.preview);
       const remaining = imagesRef.current.filter(image => image.id !== id);
+      const ordered = [...imagesRef.current.filter(image => image.id === primaryId), ...imagesRef.current.filter(image => image.id !== primaryId)];
+      const removedIndex = ordered.findIndex(image => image.id === id);
+      const remainingOrdered = ordered.filter(image => image.id !== id);
       updateImages(remaining);
       const nextPrimaryId = primaryId === id ? remaining[0]?.id || "" : primaryId;
       if (primaryId === id) setPrimaryId(nextPrimaryId);
-      if (previewId === id) setPreviewId(nextPrimaryId);
+      if (previewId === id) setPreviewId(remainingOrdered[Math.min(removedIndex, remainingOrdered.length - 1)]?.id || "");
     } catch (failure) {
       if (mounted.current) setError(failure instanceof Error ? failure.message : "Unable to remove image. Please try again.");
     } finally {
@@ -217,6 +220,8 @@ export default function SellerAddProduct() {
   const fieldClass = "mt-2 bg-white";
   const orderedImages = [...images.filter(image => image.id === primaryId), ...images.filter(image => image.id !== primaryId)];
   const previewImages = orderedImages.map(image => ({ id: image.id, src: image.preview }));
+  const activeImage = orderedImages.find(image => image.id === previewId) || orderedImages[0];
+  const activeIndex = orderedImages.findIndex(image => image.id === activeImage?.id);
 
   return <main>
     <Breadcrumb title="Add Product" pages={["Add Product"]} rootHref="/seller-dashboard" />
@@ -233,16 +238,13 @@ export default function SellerAddProduct() {
               </div>
               <p id="image-help" className="mt-2 text-sm text-dark-4">1–5 photos. JPG, PNG, or WebP, up to 4 MB each. Your main photo appears first.</p>
               <input ref={fileInput} type="file" multiple accept={ALLOWED_IMAGE_TYPES.join(",")} className="sr-only" tabIndex={-1} aria-label="Product images" aria-describedby="image-help" onChange={event => { addImages(event.target.files); event.target.value = ""; }} />
-              {previewImages.length ? <div className="mt-4 grid items-start gap-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] md:gap-5">
-                <ProductImageGallery images={previewImages} activeImageId={previewId} onActiveImageChange={setPreviewId} alt={name.trim() || "Product image preview"} sizes="(min-width: 1280px) 730px, (min-width: 768px) 65vw, 100vw" compact />
-                <div className="min-w-0 space-y-3" aria-live="polite">
-                  {orderedImages.map((image, index) => <div key={image.id} className={`flex min-w-0 gap-3 rounded-lg border p-3 ${image.id === primaryId ? "border-blue/40 bg-blue/5" : "border-gray-3"}`}>
-                    <ProductImage src={image.preview} alt={`Product photo ${index + 1}`} size="sm" />
-                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium" title={image.file.name}>{image.file.name}</p>{image.id === primaryId && <span className="mt-1 inline-block rounded bg-blue px-1.5 py-0.5 text-[10px] font-medium text-white">Main</span>}<p className={`mt-1 text-xs ${image.status === "error" ? "text-red" : "text-dark-4"}`}>{image.status === "uploaded" ? "Uploaded" : image.status === "error" ? image.error : image.status === "uploading" ? "Uploading…" : "Waiting to upload"}</p>
-                      <label className="mt-2 flex items-center gap-2 text-xs"><input type="radio" name="primaryImage" className="size-4 accent-blue focus-visible:ring-2 focus-visible:ring-blue" checked={primaryId === image.id} onChange={() => { setPrimaryId(image.id); setPreviewId(image.id); }} aria-label={`Use photo ${index + 1} as main image`} />Main image</label>
-                      <div className="mt-2 flex flex-wrap gap-2">{image.status === "error" && !image.key && <Button type="button" variant="ghost" size="sm" onClick={() => void upload([image])} aria-label={`Retry photo ${index + 1}`} className="gap-1 text-blue"><RotateCcw aria-hidden="true" />Retry</Button>}<Button type="button" variant="ghost" size="sm" onClick={() => void removeImage(image.id)} aria-label={`Remove photo ${index + 1}`} className="gap-1 text-dark-4">{removingId === image.id ? <LoaderCircle className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <Trash2 aria-hidden="true" />}{removingId === image.id ? "Removing…" : "Remove"}</Button></div>
-                    </div>
-                  </div>)}
+              {activeImage ? <div className="mt-4 min-w-0">
+                <ProductImageGallery images={previewImages} activeImageId={activeImage.id} onActiveImageChange={setPreviewId} alt={name.trim() || "Product image preview"} sizes="(min-width: 1280px) 1114px, 100vw" compact />
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <Button type="button" variant="outline" disabled={busy || activeImage.id === primaryId} onClick={() => { if (uploadLock.current || saveLock.current || removeLock.current) return; setPrimaryId(activeImage.id); setPreviewId(activeImage.id); }} aria-label={activeImage.id === primaryId ? `Photo ${activeIndex + 1} is the main image` : `Use photo ${activeIndex + 1} as main image`} className="h-11 border-gray-3 text-blue focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2">{activeImage.id === primaryId ? "Main image" : "Set main"}</Button>
+                  <Button type="button" variant="outline" disabled={busy} onClick={() => void removeImage(activeImage.id)} aria-label={`Remove photo ${activeIndex + 1}`} className="h-11 gap-2 border-gray-3 text-red focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2">{removingId === activeImage.id ? <LoaderCircle className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <Trash2 aria-hidden="true" />}{removingId === activeImage.id ? "Removing…" : "Remove"}</Button>
+                  <p role="status" className={`text-sm ${activeImage.status === "error" ? "text-red" : "text-dark-4"}`}>{activeImage.status === "uploaded" ? "Uploaded" : activeImage.status === "error" ? activeImage.error : activeImage.status === "uploading" ? "Uploading…" : "Waiting to upload"}</p>
+                  {activeImage.status === "error" && !activeImage.key && <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => void upload([activeImage])} aria-label={`Retry photo ${activeIndex + 1}`} className="gap-1 text-blue focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2"><RotateCcw aria-hidden="true" />Retry</Button>}
                 </div>
               </div> : <p className="mt-3 rounded-lg bg-[#F6F7FB] px-4 py-3 text-sm text-dark-4">Choose images to preview your product.</p>}
             </section>
