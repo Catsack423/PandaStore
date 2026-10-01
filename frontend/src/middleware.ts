@@ -13,6 +13,7 @@ const ACCOUNT_PAGES: Record<string, string[]> = {
   "/seller-application/apply": ["CUSTOMER"],
   "/seller-application": ["CUSTOMER", "SELLER"],
   "/order-history": ["CUSTOMER"],
+  "/payment": ["CUSTOMER"],
   "/my-account": ["CUSTOMER", "SELLER", "ADMIN"],
 };
 
@@ -106,6 +107,6 @@ export const config = {
     "/", "/admin/:path*", "/seller/:path*", "/seller-dashboard/:path*", "/account/:path*",
     "/cart/:path*", "/checkout/:path*", "/shop-with-sidebar/:path*",
     "/shop-without-sidebar/:path*", "/shop-details/:path*", "/shop/:path*",
-    "/order-history/:path*", "/my-account/:path*", "/seller-application/:path*", "/wishlist/:path*",
+    "/order-history/:path*", "/payment/:path*", "/my-account/:path*", "/seller-application/:path*", "/wishlist/:path*",
   ],
 };

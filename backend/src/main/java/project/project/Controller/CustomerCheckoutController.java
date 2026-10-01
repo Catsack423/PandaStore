@@ -7,16 +7,19 @@ import project.project.ApiResponse.ApiResponse;
 import project.project.DTO.address.CreateAddressRequest;
 import project.project.Security.CurrentUser;
 import project.project.Service.implement.CustomerCheckoutService;
+import project.project.Service.implement.CustomerPaymentService;
 
 @RestController
 @RequestMapping("/api/checkout")
 public class CustomerCheckoutController {
     private final CurrentUser currentUser;
     private final CustomerCheckoutService checkout;
+    private final CustomerPaymentService payments;
 
-    public CustomerCheckoutController(CurrentUser currentUser, CustomerCheckoutService checkout) {
+    public CustomerCheckoutController(CurrentUser currentUser, CustomerCheckoutService checkout, CustomerPaymentService payments) {
         this.currentUser = currentUser;
         this.checkout = checkout;
+        this.payments = payments;
     }
 
     @GetMapping
@@ -54,5 +57,15 @@ public class CustomerCheckoutController {
     @GetMapping("/orders")
     public ApiResponse<?> orderHistory() {
         return ApiResponse.success("Order history loaded", checkout.orderHistory(currentUser.requireCustomerId()));
+    }
+
+    @PostMapping("/orders/{id}/confirm-payment")
+    public ApiResponse<?> confirmPayment(@PathVariable Long id) {
+        return ApiResponse.success("Payment successful (demo)", payments.confirmPayment(currentUser.requireCustomerId(), id));
+    }
+
+    @PostMapping("/orders/{id}/cancel")
+    public ApiResponse<?> cancelOrder(@PathVariable Long id) {
+        return ApiResponse.success("Order cancelled", payments.cancelOrder(currentUser.requireCustomerId(), id));
     }
 }

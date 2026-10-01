@@ -16,6 +16,10 @@ import project.project.Repository.*;
 import project.project.Security.*;
 import project.project.Service.api.ProductService;
 import project.project.Service.implement.CustomerCheckoutService;
+import project.project.Service.implement.CustomerPaymentService;
+import project.project.Service.implement.OrderStateLock;
+import project.project.Service.api.OrderOrchestrationService;
+import project.project.Service.api.PaymentService;
 import tools.jackson.databind.json.JsonMapper;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,12 +32,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     "spring.jpa.hibernate.ddl-auto=create-drop",
     "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
     "spring.jpa.show-sql=false",
-    "JWT_SECRET=0000000000000000000000000000000000000000000000000000000000000001"
+    "JWT_SECRET=0000000000000000000000000000000000000000000000000000000000000001",
+    "MOCK_PAYMENT_ENABLED=true"
 })
 @Transactional
 class CustomerCheckoutTest {
     @Autowired CurrentUser currentUser;
     @Autowired CustomerCheckoutService checkout;
+    @Autowired CustomerPaymentService payments;
+    @Autowired PaymentService paymentService;
+    @Autowired OrderStateLock stateLock;
+    @Autowired OrderOrchestrationService orchestration;
     @Autowired ProductService products;
     @Autowired UserRepository users;
     @Autowired CustomerRepository customers;
@@ -49,7 +58,8 @@ class CustomerCheckoutTest {
         customerId = customers.save(new Customer(user, "Checkout Tester", "0812345678")).getCustomerId();
         SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(
                 new AuthenticatedUser(user.getUserId(), UserRole.CUSTOMER), null, List.of()));
-        mvc = MockMvcBuilders.standaloneSetup(new CustomerCheckoutController(currentUser, checkout), new ProductController(products, currentUser, sellers))
+        mvc = MockMvcBuilders.standaloneSetup(new CustomerCheckoutController(currentUser, checkout, payments),
+                new PaymentController(paymentService, payments, currentUser), new ProductController(products, currentUser, sellers))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
         seller1 = seller("one"); seller2 = seller("two");
         product1 = product(seller1, "First product", 100); product2 = product(seller2, "Second product", 200);
@@ -135,6 +145,95 @@ class CustomerCheckoutTest {
         mvc.perform(post("/api/checkout/cart").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"items\":[{\"productId\":" + product1 + ",\"quantity\":0}]}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test void demoPaymentPaysEntireGroupIncludingShippingAndCannotRunTwice() throws Exception {
+        long id = pendingGroup();
+        mvc.perform(post("/api/checkout/orders/" + id + "/confirm-payment"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.grandTotal").value(460))
+                .andExpect(jsonPath("$.data.paymentStatus").value("PAID"))
+                .andExpect(jsonPath("$.data.subOrders[0].orderStatus").value("WAITING_SELLER_CONFIRM"))
+                .andExpect(jsonPath("$.data.subOrders[1].orderStatus").value("WAITING_SELLER_CONFIRM"));
+        em.flush(); em.clear();
+        var group = orderGroups.findById(id).orElseThrow();
+        assertEquals(project.project.Entity.order.PaymentStatus.SUCCESS, group.getPayment().getStatus());
+        assertEquals(460, group.getPayment().getAmount().intValueExact());
+        assertNotNull(group.getPayment().getPaidAt());
+        mvc.perform(post("/api/checkout/orders/" + id + "/confirm-payment")).andExpect(status().isConflict());
+        mvc.perform(post("/api/checkout/orders/" + id + "/cancel")).andExpect(status().isConflict());
+        assertEquals(18, productRepository.findById(product1).orElseThrow().getStock());
+        mvc.perform(get("/api/checkout/orders"))
+                .andExpect(jsonPath("$.data[0].paymentStatus").value("PAID"))
+                .andExpect(jsonPath("$.data[0].subOrders[0].orderStatus").value("WAITING_SELLER_CONFIRM"));
+    }
+
+    @Test void unpaidCancellationReturnsReservedStockExactlyOnceForEveryShop() throws Exception {
+        long id = pendingGroup();
+        mvc.perform(post("/api/checkout/orders/" + id + "/cancel"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.paymentStatus").value("FAILED"))
+                .andExpect(jsonPath("$.data.subOrders[0].orderStatus").value("CANCELLED"))
+                .andExpect(jsonPath("$.data.subOrders[1].orderStatus").value("CANCELLED"));
+        em.flush(); em.clear();
+        assertEquals(20, productRepository.findById(product1).orElseThrow().getStock());
+        assertEquals(20, productRepository.findById(product2).orElseThrow().getStock());
+        mvc.perform(post("/api/checkout/orders/" + id + "/cancel")).andExpect(status().isConflict());
+        mvc.perform(post("/api/checkout/orders/" + id + "/confirm-payment")).andExpect(status().isConflict());
+        assertEquals(20, productRepository.findById(product1).orElseThrow().getStock());
+        mvc.perform(get("/api/checkout/orders")).andExpect(jsonPath("$.data[0].subOrders[0].orderStatus").value("CANCELLED"));
+    }
+
+    @Test void paymentActionsAreScopedToTheAuthenticatedCustomerIncludingLegacySimulation() throws Exception {
+        long id = pendingGroup();
+        mvc.perform(post("/api/checkout/orders/999999/confirm-payment")).andExpect(status().isNotFound());
+        var other = users.save(new User("payment-other", "payment-other@test.com", "hash", UserRole.CUSTOMER, UserStatus.ACTIVE));
+        customers.save(new Customer(other, "Other Customer", "0812345678"));
+        SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(
+                new AuthenticatedUser(other.getUserId(), UserRole.CUSTOMER), null, List.of()));
+        mvc.perform(get("/api/checkout/orders/" + id)).andExpect(status().isNotFound());
+        mvc.perform(post("/api/checkout/orders/" + id + "/confirm-payment")).andExpect(status().isNotFound());
+        mvc.perform(post("/api/checkout/orders/" + id + "/cancel")).andExpect(status().isNotFound());
+        mvc.perform(post("/api/payments/simulate").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"orderGroupId\":" + id + "}")).andExpect(status().isNotFound());
+        SecurityContextHolder.clearContext();
+        mvc.perform(post("/api/checkout/orders/" + id + "/confirm-payment")).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/checkout/orders/" + id + "/cancel")).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/payments/simulate").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"orderGroupId\":" + id + "}")).andExpect(status().isUnauthorized());
+        assertEquals(project.project.Entity.order.OrderGroupPaymentStatus.PENDING, orderGroups.findById(id).orElseThrow().getPaymentStatus());
+    }
+
+    @Test void disabledServerFlagRejectsMockButStillAllowsUnpaidCancellation() throws Exception {
+        long id = pendingGroup();
+        var disabled = new CustomerPaymentService(orderGroups, stateLock, orchestration, false);
+        var disabledMvc = MockMvcBuilders.standaloneSetup(new CustomerCheckoutController(currentUser, checkout, disabled),
+                new PaymentController(paymentService, disabled, currentUser))
+                .setControllerAdvice(new GlobalExceptionHandler()).build();
+        disabledMvc.perform(post("/api/checkout/orders/" + id + "/confirm-payment"))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.message").value("Payment is not available"));
+        disabledMvc.perform(post("/api/payments/simulate").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"orderGroupId\":" + id + "}")).andExpect(status().isForbidden());
+        assertEquals(18, productRepository.findById(product1).orElseThrow().getStock());
+        disabledMvc.perform(post("/api/checkout/orders/" + id + "/cancel")).andExpect(status().isOk());
+        assertEquals(20, productRepository.findById(product1).orElseThrow().getStock());
+    }
+
+    @Test void unsignedGatewayCallbackCannotBypassDemoGuards() throws Exception {
+        long id = pendingGroup();
+        SecurityContextHolder.clearContext();
+        mvc.perform(post("/api/payments/callback").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"orderGroupId\":" + id + ",\"isSuccess\":true}"))
+                .andExpect(status().isNotImplemented());
+        assertEquals(project.project.Entity.order.OrderGroupPaymentStatus.PENDING,
+                orderGroups.findById(id).orElseThrow().getPaymentStatus());
+    }
+
+    private long pendingGroup() throws Exception {
+        long addressId = address(); sync();
+        var result = mvc.perform(post("/api/checkout/orders").contentType(MediaType.APPLICATION_JSON)
+                .content(orderBody(addressId, "STANDARD", "STANDARD"))).andExpect(status().isCreated()).andReturn();
+        long id = new JsonMapper().readTree(result.getResponse().getContentAsString()).path("data").path("orderGroupId").asLong();
+        em.flush(); em.clear();
+        return id;
     }
 
     private void sync() throws Exception {

@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export type CustomerOrder = {
   id: string;
+  orderGroupId: number;
   date: string;
   status: "PENDING_PAYMENT" | "WAITING_SELLER_CONFIRM" | "PREPARING" | "SHIPPED" | "COMPLETED" | "CANCELLED";
   total: number;
@@ -35,7 +36,7 @@ const steps: CustomerOrder["status"][] = ["PENDING_PAYMENT", "WAITING_SELLER_CON
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
 type OrderGroup = {
-  groupNumber: string; createdAt: string; paymentStatus: string;
+  orderGroupId: number; groupNumber: string; createdAt: string; paymentStatus: string;
   subOrders: { orderId: number; subOrderNumber: string; orderStatus: CustomerOrder["status"];
     totalAmount: number; shippingFee: number; shippingMethod: string | null;
     items: { productName: string; quantity: number; unitPrice: number }[] }[];
@@ -44,6 +45,7 @@ async function loadOrders(signal?: AbortSignal): Promise<CustomerOrder[]> {
   const groups = await checkoutApi<OrderGroup[]>("orders", undefined, signal);
   return groups.flatMap(group => group.subOrders.map(order => ({
     id: order.subOrderNumber || String(order.orderId),
+    orderGroupId: group.orderGroupId,
     date: new Date(group.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
     status: order.orderStatus, total: Number(order.totalAmount),
     shippingFee: Number(order.shippingFee), shippingMethod: order.shippingMethod,
@@ -71,9 +73,12 @@ function OrderRow({ order }: { order: CustomerOrder }) {
           </div>
         </div>
         <div><span className="block text-xs text-dark-4 lg:hidden">Total</span><span className="font-medium text-dark">{currency.format(order.total)}</span></div>
+        <div className="flex flex-wrap items-center gap-2">
+          {order.status === "PENDING_PAYMENT" && order.paymentStatus === "PENDING" && <Link href={`/payment/${order.orderGroupId}`} aria-label={`Pay now for order group ${order.orderGroupId}`} className="inline-flex h-9 items-center justify-center rounded-lg bg-blue px-3 text-sm text-white hover:bg-blue-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">Pay now</Link>}
         <Button variant="outline" aria-expanded={expanded} aria-controls={`order-${order.id}`} onClick={() => setExpanded(!expanded)}>
           Details <ChevronDown className={`ml-1 transition-transform ${expanded ? "rotate-180" : ""}`} />
         </Button>
+        </div>
       </div>
       {expanded && <div id={`order-${order.id}`} className="border-t border-gray-3 bg-gray-1 px-5 py-6 sm:px-7">
         <h3 className="mb-4 font-medium text-dark">Items in this order</h3>

@@ -104,7 +104,12 @@ export default function Checkout() {
       : placedOrder ? <Card><CardContent className="py-10 sm:p-10"><CheckCircle2 className="mb-4 size-10 text-blue" /><h2 className="text-2xl font-semibold text-dark">Your order has been placed</h2>
         <p className="mt-2">Order group #{placedOrder.orderGroupId}</p><p className="mt-2 text-sm">Payment pending. Your order is saved; payment has not been collected.</p>
         <div className="mt-6 space-y-3">{placedOrder.subOrders.map(order => <div key={order.orderId} className="flex flex-wrap justify-between gap-3 rounded-lg border border-gray-3 p-4 text-sm"><span className="text-dark">Order #{order.orderId} · {methodLabel(order.shippingMethod)}</span><span>Shipping {money(order.shippingFee)} · {money(order.totalAmount)}</span></div>)}</div>
-        <p className="mt-6 text-lg font-semibold text-dark">Total {money(placedOrder.grandTotal)}</p><Link href="/shop-with-sidebar" className="mt-6 inline-flex rounded-lg bg-blue px-5 py-3 text-sm text-white">Continue shopping</Link>
+        <p className="mt-6 text-lg font-semibold text-dark">Total {money(placedOrder.grandTotal)}</p>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <Link href={`/payment/${placedOrder.orderGroupId}`} className="inline-flex items-center justify-center rounded-lg bg-blue px-5 py-3 text-sm text-white hover:bg-blue-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">Pay now</Link>
+          <Link href="/shop-with-sidebar" className="inline-flex items-center justify-center rounded-lg border border-gray-3 px-5 py-3 text-sm text-dark hover:bg-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">Continue shopping</Link>
+          <Link href="/order-history" className="inline-flex items-center justify-center rounded-lg border border-gray-3 px-5 py-3 text-sm text-dark hover:bg-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">View order</Link>
+        </div>
       </CardContent></Card>
       : <>
         {error && <div role="alert" className="mb-6 rounded-lg border border-red/20 bg-white p-4 text-sm text-red">{error}<Button type="button" variant="outline" className="ml-3" onClick={() => setReload(value => value + 1)}>Reload checkout</Button></div>}

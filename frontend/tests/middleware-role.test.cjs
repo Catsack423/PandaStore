@@ -16,6 +16,14 @@ const moduleExports = {};
 new Function("require", "exports", compiled)(() => ({ NextResponse: response }), moduleExports);
 const { middleware } = moduleExports;
 
+test("Payment requires a verified customer session for nested group routes", async () => {
+  assert.equal(new URL((await middleware(request("/payment/6"))).url).pathname, "/signin");
+  for (const role of ["CUSTOMER", "SELLER", "ADMIN", null]) await withIdentity(role, async () => {
+    const result = await middleware(request("/payment/6", { auth_token: "session" }));
+    assert.equal(result.kind, role === "CUSTOMER" ? "next" : "redirect");
+  });
+});
+
 test("seller order demo query cannot bypass login and Admin retains its own routes", async () => {
   const anonymous = request("/seller/4"); anonymous.nextUrl.searchParams.set("demo", "1");
   assert.equal(new URL((await middleware(anonymous)).url).pathname, "/signin");
