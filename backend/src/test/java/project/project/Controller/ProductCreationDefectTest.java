@@ -9,6 +9,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import project.project.Security.CurrentUser;
+import project.project.Security.AuthenticatedUser;
+import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +54,7 @@ class ProductCreationDefectTest {
     @Autowired SellerRepository sellers;
     @Autowired UserRepository users;
     @Autowired EntityManager entityManager;
+    @Autowired CurrentUser currentUser;
     private MockMvc mvc;
     private Long sellerId;
 
@@ -63,8 +70,79 @@ class ProductCreationDefectTest {
         seller.setShopAddress("Bangkok");
         seller.setStatus(SellerStatus.ACTIVE);
         sellerId = sellers.save(seller).getSellerId();
-        mvc = MockMvcBuilders.standaloneSetup(new ProductController(productService))
+        SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(
+                new AuthenticatedUser(user.getUserId(), UserRole.SELLER), null, List.of()));
+        mvc = MockMvcBuilders.standaloneSetup(new ProductController(productService, currentUser, sellers))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
+    }
+
+    @AfterEach void clearIdentity() { SecurityContextHolder.clearContext(); }
+
+    @Test void anonymousCannotCreateProduct() throws Exception {
+        SecurityContextHolder.clearContext();
+        mvc.perform(post("/api/products").param("sellerId", sellerId.toString()).contentType(MediaType.APPLICATION_JSON)
+                .content(body("[\"" + IMAGE + "\"]", ""))).andExpect(status().isUnauthorized());
+    }
+
+    @Test void customersAndAdminsCannotCreateProduct() throws Exception {
+        long before = products.count();
+        for (var role : List.of(UserRole.CUSTOMER, UserRole.ADMIN)) {
+            SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(
+                    new AuthenticatedUser(123, role), null, List.of()));
+            mvc.perform(post("/api/products").param("sellerId", sellerId.toString()).contentType(MediaType.APPLICATION_JSON)
+                    .content(body("[\"" + IMAGE + "\"]", ""))).andExpect(status().isForbidden());
+        }
+        assertEquals(before, products.count());
+    }
+
+    @Test void sellerCannotCreateForAnotherShopOrInactiveShop() throws Exception {
+        long before = products.count();
+        mvc.perform(post("/api/products").param("sellerId", "999999").contentType(MediaType.APPLICATION_JSON)
+                .content(body("[\"" + IMAGE + "\"]", ""))).andExpect(status().isForbidden());
+        for (var state : List.of(SellerStatus.PENDING, SellerStatus.REJECTED, SellerStatus.SUSPENDED)) {
+            sellers.findById(sellerId).orElseThrow().setStatus(state);
+            mvc.perform(post("/api/products").param("sellerId", sellerId.toString()).contentType(MediaType.APPLICATION_JSON)
+                    .content(body("[\"" + IMAGE + "\"]", ""))).andExpect(status().isForbidden());
+        }
+        assertEquals(before, products.count());
+    }
+
+    @Test void multipleCategoriesAndPrimaryImageOrderSurviveReload() throws Exception {
+        long first = categoryService.createCategory("Clothing", null).getCategoryId();
+        long second = categoryService.createCategory("Gifts", null).getCategoryId();
+        var result = mvc.perform(post("/api/products").param("sellerId", sellerId.toString()).contentType(MediaType.APPLICATION_JSON)
+                .content(body("[\"https://example.com/main.png\",\"https://example.com/other.png\"]", "\"categoryIds\":[" + first + "," + second + "]")))
+                .andExpect(status().isCreated()).andReturn();
+        long id = new JsonMapper().readTree(result.getResponse().getContentAsString()).path("data").path("productId").asLong();
+        entityManager.flush();
+        // Reverse database order independently of insertion order to verify the read contract.
+        var stored = products.findById(id).orElseThrow();
+        stored.getImages().getFirst().setDisplayOrder(1);
+        stored.getImages().getLast().setDisplayOrder(0);
+        entityManager.flush(); entityManager.clear();
+        stored = products.findById(id).orElseThrow();
+        assertEquals(2, stored.getCategories().size());
+        assertEquals("https://example.com/other.png", stored.getImages().getFirst().getImageUrl());
+        assertEquals("https://example.com/main.png", stored.getImages().getLast().getImageUrl());
+        assertEquals("ACTIVE", stored.getStatus().name());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "-1", "1.234", "10000000000"})
+    void rejectsPricesOutsideDatabasePrecision(String price) throws Exception {
+        long before = products.count();
+        mvc.perform(post("/api/products").param("sellerId", sellerId.toString()).contentType(MediaType.APPLICATION_JSON)
+                .content(body("[\"" + IMAGE + "\"]", "").replace("\"price\":390", "\"price\":" + price)))
+                .andExpect(status().isBadRequest());
+        assertEquals(before, products.count());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1})
+    void rejectsNonPositiveCreationStock(int stock) throws Exception {
+        mvc.perform(post("/api/products").param("sellerId", sellerId.toString()).contentType(MediaType.APPLICATION_JSON)
+                .content(body("[\"" + IMAGE + "\"]", "").replace("\"stock\":10", "\"stock\":" + stock)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

@@ -12,6 +12,11 @@ import project.project.DTO.product.PageResponse;
 import project.project.DTO.product.UpdateProductRequest;
 import project.project.Entity.product.Product;
 import project.project.Service.api.ProductService;
+import project.project.Security.CurrentUser;
+import project.project.Repository.SellerRepository;
+import project.project.Entity.user.UserRole;
+import project.project.Entity.seller.SellerStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.math.BigDecimal;
@@ -21,15 +26,26 @@ import java.math.BigDecimal;
 public class ProductController {
 
     private final ProductService productService;
+    private final CurrentUser currentUser;
+    private final SellerRepository sellers;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, CurrentUser currentUser, SellerRepository sellers) {
         this.productService = productService;
+        this.currentUser = currentUser;
+        this.sellers = sellers;
     }
 
     @PostMapping
     public ResponseEntity<ApiResponse<ProductResponse>> createProduct(
             @RequestParam Long sellerId,
             @Valid @RequestBody CreateProductRequest request) {
+        var identity = currentUser.requireIdentity();
+        if (identity.role() != UserRole.SELLER)
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Seller account required");
+        var shop = sellers.findByUser_UserId(identity.userId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Active shop required"));
+        if (shop.getStatus() != SellerStatus.ACTIVE || !shop.getSellerId().equals(sellerId))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only add products to your active shop");
         Product product = new Product();
         product.setName(request.getName());
         product.setDescription(request.getDescription());

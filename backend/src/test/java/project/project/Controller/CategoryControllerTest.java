@@ -50,11 +50,13 @@ class CategoryControllerTest {
 
     @Test
     void otherUsersCannotCreateCategory() throws Exception {
-        when(currentUser.requireIdentity()).thenReturn(new AuthenticatedUser(2, UserRole.CUSTOMER));
+        for (var role : java.util.List.of(UserRole.CUSTOMER, UserRole.SELLER)) {
+        when(currentUser.requireIdentity()).thenReturn(new AuthenticatedUser(2, role));
 
         mvc.perform(post("/api/categories").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"categoryName\":\"Keyboard\"}"))
                 .andExpect(status().isForbidden());
+        }
         verifyNoInteractions(categories);
     }
 

@@ -49,7 +49,7 @@ class CustomerCheckoutTest {
         customerId = customers.save(new Customer(user, "Checkout Tester", "0812345678")).getCustomerId();
         SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(
                 new AuthenticatedUser(user.getUserId(), UserRole.CUSTOMER), null, List.of()));
-        mvc = MockMvcBuilders.standaloneSetup(new CustomerCheckoutController(currentUser, checkout), new ProductController(products))
+        mvc = MockMvcBuilders.standaloneSetup(new CustomerCheckoutController(currentUser, checkout), new ProductController(products, currentUser, sellers))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
         seller1 = seller("one"); seller2 = seller("two");
         product1 = product(seller1, "First product", 100); product2 = product(seller2, "Second product", 200);
@@ -158,9 +158,14 @@ class CustomerCheckoutTest {
         return sellers.save(seller).getSellerId();
     }
     private Long product(Long seller, String name, int price) throws Exception {
+        var previous = SecurityContextHolder.getContext().getAuthentication();
+        SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(
+                new AuthenticatedUser(sellers.findById(seller).orElseThrow().getUser().getUserId(), UserRole.SELLER), null, List.of()));
+        try {
         var result = mvc.perform(post("/api/products").param("sellerId", seller.toString()).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"" + name + "\",\"description\":\"Checkout fixture\",\"price\":" + price + ",\"stock\":20,\"imageUrls\":[\"https://example.com/product.jpg\"]}"))
                 .andExpect(status().isCreated()).andReturn();
         return new JsonMapper().readTree(result.getResponse().getContentAsString()).path("data").path("productId").asLong();
+        } finally { SecurityContextHolder.getContext().setAuthentication(previous); }
     }
 }

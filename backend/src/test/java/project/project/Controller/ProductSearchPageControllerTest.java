@@ -20,7 +20,7 @@ class ProductSearchPageControllerTest {
     void catalogSummaryReturnsPriceAndCategoryCounts() throws Exception {
         ProductService service = mock(ProductService.class);
         when(service.getCatalogSummary()).thenReturn(new CatalogSummary(new BigDecimal("200.00"), Map.of(3L, 2L)));
-        var mvc = MockMvcBuilders.standaloneSetup(new ProductController(service)).build();
+        var mvc = MockMvcBuilders.standaloneSetup(new ProductController(service, org.mockito.Mockito.mock(project.project.Security.CurrentUser.class), org.mockito.Mockito.mock(project.project.Repository.SellerRepository.class))).build();
         mvc.perform(get("/api/products/catalog-summary"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.maxPrice").value(200))
@@ -35,7 +35,7 @@ class ProductSearchPageControllerTest {
         var page = new PageImpl<>(List.of(product), PageRequest.of(0, 1), 2);
         when(service.searchProductsPage("keyboard", List.of(3L), null, null, null, 0, 1)).thenReturn(page);
 
-        var mvc = MockMvcBuilders.standaloneSetup(new ProductController(service)).build();
+        var mvc = MockMvcBuilders.standaloneSetup(new ProductController(service, org.mockito.Mockito.mock(project.project.Security.CurrentUser.class), org.mockito.Mockito.mock(project.project.Repository.SellerRepository.class))).build();
         mvc.perform(get("/api/products/search")
                 .param("keyword", "keyboard")
                 .param("categoryId", "3")
@@ -58,7 +58,7 @@ class ProductSearchPageControllerTest {
         var page = new PageImpl<>(List.of(product), PageRequest.of(1, 1), 2);
         when(service.searchProductsPage(null, 3L, 1, 1)).thenReturn(page);
 
-        var mvc = MockMvcBuilders.standaloneSetup(new ProductController(service)).build();
+        var mvc = MockMvcBuilders.standaloneSetup(new ProductController(service, org.mockito.Mockito.mock(project.project.Security.CurrentUser.class), org.mockito.Mockito.mock(project.project.Repository.SellerRepository.class))).build();
         mvc.perform(get("/api/products/category/3")
                 .param("page", "1")
                 .param("size", "1"))

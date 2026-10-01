@@ -65,6 +65,7 @@ public class Product {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("displayOrder ASC")
     @BatchSize(size = 50)
     private List<ProductImage> images = new ArrayList<>();
 
