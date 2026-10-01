@@ -7,7 +7,7 @@ import { ArrowUpRight, ClipboardCheck, Package, Store, Wallet } from "lucide-rea
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import { useSellerPreview, type SellerOrderPreview } from "@/app/context/SellerPreviewContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { DemoNotice, SellerNav, StatusBadge } from "./Shared";
+import { DemoNotice, StatusBadge } from "./Shared";
 import { useAuth } from "@/app/context/AuthContext";
 
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
@@ -46,7 +46,7 @@ export default function SellerDashboard() {
   return <main>
     <Breadcrumb title="Shop Dashboard" pages={["Seller", "Dashboard"]} />
     <section className="bg-gray-2 py-12 sm:py-16"><div className="mx-auto w-full max-w-[1170px] px-4 sm:px-8 xl:px-0">
-      <div className="grid gap-7 lg:grid-cols-[260px_minmax(0,1fr)]"><SellerNav /><div className="min-w-0">
+      <div className="min-w-0">
       {application?.status === "APPROVED" && <DemoNotice>Sales and orders shown here are example data. Seller actions stay in this browser session and never reach the backend.</DemoNotice>}
       {!approved ? <Card className="mx-auto max-w-2xl"><CardContent className="px-6 py-14 text-center"><div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-full bg-blue/10 text-blue"><Store className="size-8" /></div><h2 className="text-xl font-semibold text-dark">Dashboard opens after approval</h2><p className="mx-auto mt-2 max-w-md text-sm">{application ? "Your current application status does not allow shop management yet." : "Start a seller application to see the approval flow."}</p><Link href="/seller-application" className="mt-6 inline-flex h-10 items-center rounded-lg bg-blue px-5 text-sm font-medium text-white hover:bg-blue-dark">View application</Link></CardContent></Card> : <>
         {user?.role === "SELLER" && !application && <p role="status" className="mb-6 rounded-lg border border-blue/20 bg-white px-5 py-4 text-sm text-dark">Your shop is approved. Order totals and history will appear when the seller order API is connected; no sample orders are shown.</p>}
@@ -59,6 +59,6 @@ export default function SellerDashboard() {
         </div>
         <Card className="overflow-hidden"><div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-3 px-5 py-5 sm:px-6"><div><h3 className="text-lg font-semibold text-dark">Orders</h3><p className="mt-1 text-sm text-dark-4">Review incoming orders and past activity.</p></div><div className="flex rounded-lg border border-gray-3 bg-gray-1 p-1"><button type="button" onClick={() => setView("active")} className={`rounded-md px-3 py-2 text-sm font-medium ${view === "active" ? "bg-white text-blue shadow-sm" : "text-dark-4"}`}>Active ({active.length})</button><button type="button" onClick={() => setView("history")} className={`rounded-md px-3 py-2 text-sm font-medium ${view === "history" ? "bg-white text-blue shadow-sm" : "text-dark-4"}`}>History ({history.length})</button></div></div><div className="hidden grid-cols-[1fr_1fr_1.5fr_1fr_auto] gap-3 bg-gray-1 px-6 py-3 text-xs font-medium text-dark lg:grid"><span>Order</span><span>Date</span><span>Status</span><span>Total</span><span>Action</span></div><OrderList orders={view === "active" ? active : history} /></Card>
       </>}
-    </div></div></div></section>
+    </div></div></section>
   </main>;
 }

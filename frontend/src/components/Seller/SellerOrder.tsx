@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DemoNotice, SellerNav, StatusBadge } from "./Shared";
+import { DemoNotice, StatusBadge } from "./Shared";
 
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
@@ -33,7 +33,6 @@ export default function SellerOrder({ orderId }: { orderId: string }) {
   return <main>
     <Breadcrumb title="Seller Order" pages={["Seller", "Order"]} />
     <section className="bg-gray-2 py-12 sm:py-16"><div className="mx-auto w-full max-w-[1170px] px-4 sm:px-8 xl:px-0">
-      <SellerNav />
       <DemoNotice>This page uses example orders. Accepting, rejecting and shipping change local preview state only.</DemoNotice>
       {application?.status !== "APPROVED" ? <Card><CardContent className="py-14 text-center"><h2 className="text-xl font-semibold text-dark">Shop approval required</h2><p className="mt-2 text-sm">You can manage orders after your application is approved.</p><Link href="/seller-application" className="mt-5 inline-flex h-10 items-center rounded-lg bg-blue px-5 text-sm font-medium text-white">View application</Link></CardContent></Card> : !order ? <Card><CardContent className="py-14 text-center"><h2 className="text-xl font-semibold text-dark">Order not found in this demo</h2><Link href="/seller-dashboard" className="mt-5 inline-flex text-sm font-medium text-blue hover:underline">Back to dashboard</Link></CardContent></Card> : <>
         <Link href="/seller-dashboard" className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-blue hover:underline"><ArrowLeft className="size-4" />Back to dashboard</Link>

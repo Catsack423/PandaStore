@@ -1,12 +1,17 @@
+"use client";
+
 import Link from "next/link";
 import React from "react";
+import { useAuth } from "@/app/context/AuthContext";
 
-const Breadcrumb = ({ title, pages, rootLabel = "Home", rootHref = "/" }: {
+const Breadcrumb = ({ title, pages, rootLabel = "Home", rootHref }: {
   title: string;
   pages: string[];
   rootLabel?: string;
   rootHref?: string;
 }) => {
+  const { user } = useAuth();
+  const homeHref = rootHref ?? (user?.role === "SELLER" && user.status === "ACTIVE" ? "/seller-dashboard" : "/");
   return (
     <div className="overflow-hidden shadow-breadcrumb pt-[209px] sm:pt-[155px] xl:pt-[165px]">
       <div className="border-t border-gray-3">
@@ -18,7 +23,7 @@ const Breadcrumb = ({ title, pages, rootLabel = "Home", rootHref = "/" }: {
 
             <ul aria-label="Breadcrumb" className="flex items-center gap-2">
               <li className="text-custom-sm hover:text-blue">
-                <Link href={rootHref}>{rootLabel} /</Link>
+                <Link href={homeHref}>{rootLabel} /</Link>
               </li>
 
               {pages.length > 0 &&

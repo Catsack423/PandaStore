@@ -1,16 +1,17 @@
 "use client";
 import React, { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import HeaderSearch from "./HeaderSearch";
 import { menuData } from "./menuData";
 import { useCart } from "@/app/context/CartContext";
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import HeaderLogo from "./HeaderLogo";
 import { useAuth } from "@/app/context/AuthContext";
-import { Store } from "lucide-react";
+import { Store, PackagePlus, type LucideIcon } from "lucide-react";
 import HeaderIdentity from "./HeaderIdentity";
 
-type NavItem = { id: number; title: string; path: string };
+type NavItem = { id: number; title: string; path: string; icon?: LucideIcon };
 
 const MainLayout = ({ mode = "main", adminNavItems = [] }: {
   mode?: "main" | "admin";
@@ -18,18 +19,39 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
 }) => {
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
+  const pathname = usePathname();
   const { openCartModal } = useCartModalContext();
   const { user, isLoading: authLoading } = useAuth();
   const isSeller = user?.role === "SELLER";
   const isAdminLayout = mode === "admin";
   const showSearch = !isAdminLayout && !authLoading && !isSeller;
   const showShopping = !isAdminLayout && !authLoading && (!user || user.role === "CUSTOMER");
+  const sellerUserId = user?.id;
+  const canViewStorefront = !isAdminLayout && !authLoading && isSeller && user.status === "ACTIVE";
+  const [sellerShop, setSellerShop] = useState<{ userId: string; sellerId: number } | null>(null);
+  const storefrontHref = canViewStorefront && sellerShop?.userId === sellerUserId ? `/shop/${sellerShop.sellerId}` : null;
+  const isStorefrontActive = storefrontHref && (pathname === storefrontHref || pathname.startsWith(`${storefrontHref}/`));
 
   const { count, totalPrice, isLoading: cartLoading } = useCart();
 
   const handleOpenCartModal = () => {
     openCartModal();
   };
+
+  useEffect(() => {
+    setSellerShop(null);
+    if (!canViewStorefront || !sellerUserId) return;
+    const controller = new AbortController();
+    fetch("/api/seller-shop", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        const body = await response.json();
+        if (response.ok && body.success && body.data?.status === "ACTIVE" && Number.isInteger(body.data?.sellerId) && body.data.sellerId > 0 && !controller.signal.aborted) {
+          setSellerShop({ userId: sellerUserId, sellerId: body.data.sellerId });
+        }
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [canViewStorefront, sellerUserId]);
 
   useEffect(() => {
     let isSticky = window.scrollY >= 80;
@@ -47,7 +69,10 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const mainNavItems = isAdminLayout ? adminNavItems : showShopping ? menuData : [];
+  const mainNavItems: NavItem[] = isAdminLayout ? adminNavItems : isSeller ? [
+    ...(user.status === "ACTIVE" ? [{ id: 2, title: "Shop dashboard", path: "/seller-dashboard", icon: Store }] : []),
+    ...(canViewStorefront && storefrontHref ? [{ id: 3, title: "Add Product", path: "/seller/products/add", icon: PackagePlus }] : []),
+  ] : showShopping ? menuData.map((item) => ({ ...item, path: item.path || "/" })) : [];
 
   return (
     <header
@@ -192,27 +217,34 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
               {/* <!-- Main Nav Start --> */}
               <nav>
                 <ul className="flex xl:items-center flex-col xl:flex-row gap-5 xl:gap-6">
-                  {mainNavItems.map((menuItem) =>
+                  {mainNavItems.map((menuItem) => {
+                    const Icon = menuItem.icon;
+                    const isActive = isSeller && (pathname === menuItem.path ||
+                      (menuItem.path === "/seller-dashboard" && /^\/seller\/\d+$/.test(pathname)));
+                    return (
                       <li
                         key={menuItem.id}
                         className="group relative before:w-0 before:h-[3px] before:bg-blue before:absolute before:left-0 before:top-0 before:rounded-b-[3px] before:ease-out before:duration-200 hover:before:w-full "
                       >
                         <Link
                           href={menuItem.path}
+                          aria-current={isActive ? "page" : undefined}
                           onClick={() => setNavigationOpen(false)}
-                          className={`hover:text-blue text-custom-sm font-medium text-dark flex ${
+                          className={`hover:text-blue text-custom-sm font-medium flex items-center gap-2 ${isActive ? "text-blue" : "text-dark"} ${
                             stickyMenu ? "xl:py-4" : "xl:py-6"
                           }`}
                         >
+                          {Icon && <Icon size={16} aria-hidden="true" />}
                           {menuItem.title}
                         </Link>
                       </li>
-                  )}
+                    );
+                  })}
                   {user?.role === "CUSTOMER" && <>
                     <li className="xl:hidden"><Link href="/order-history" onClick={() => setNavigationOpen(false)} className="flex py-2 font-medium text-custom-sm text-dark hover:text-blue">Order history</Link></li>
                     <li className="xl:hidden"><Link href="/seller-application" onClick={() => setNavigationOpen(false)} className="flex py-2 font-medium text-custom-sm text-dark hover:text-blue">Seller applications</Link></li>
                   </>}
-                  {isSeller && <li className="xl:hidden"><Link href="/seller-dashboard" onClick={() => setNavigationOpen(false)} className="flex py-2 font-medium text-custom-sm text-dark hover:text-blue">Seller dashboard</Link></li>}
+                  {storefrontHref && <li className="xl:hidden"><Link href={storefrontHref} aria-current={isStorefrontActive ? "page" : undefined} onClick={() => setNavigationOpen(false)} className={`flex items-center gap-2 py-2 text-custom-sm font-medium hover:text-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 ${isStorefrontActive ? "text-blue" : "text-dark"}`}><Store size={16} aria-hidden="true" />View storefront</Link></li>}
                 </ul>
               </nav>
               {/* //   <!-- Main Nav End --> */}
@@ -222,6 +254,11 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
             {/* // <!--=== Nav Right Start ===--> */}
             <div className="hidden xl:block">
               <ul className="flex items-center gap-5.5">
+                {storefrontHref && <li className="group relative before:w-0 before:h-[3px] before:bg-blue before:absolute before:left-0 before:top-0 before:rounded-b-[3px] before:ease-out before:duration-200 hover:before:w-full">
+                  <Link href={storefrontHref} aria-current={isStorefrontActive ? "page" : undefined} className={`flex items-center gap-2 text-custom-sm font-medium hover:text-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 ${isStorefrontActive ? "text-blue" : "text-dark"} ${stickyMenu ? "xl:py-4" : "xl:py-6"}`}>
+                    <Store size={16} aria-hidden="true" />View storefront
+                  </Link>
+                </li>}
                 {user?.role === "CUSTOMER" && <li className="py-4">
                   <a
                     href="/order-history"
@@ -248,13 +285,13 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
                   </a>
                 </li>}
 
-                {user && user.role !== "ADMIN" && <li className="py-4">
+                {user?.role === "CUSTOMER" && <li className="py-4">
                   <Link
-                    href={isSeller ? "/seller-dashboard" : "/seller-application"}
+                    href="/seller-application"
                     className="flex items-center gap-1.5 font-medium text-custom-sm text-dark hover:text-blue"
                   >
                     <Store size={16} aria-hidden="true" />
-                    {isSeller ? "Seller Dashboard" : "Seller Applications"}
+                    Seller Applications
                   </Link>
                 </li>}
               </ul>

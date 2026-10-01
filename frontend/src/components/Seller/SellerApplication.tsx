@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ClipboardList, Store } from "lucide-react";
 import Breadcrumb from "@/components/Common/Breadcrumb";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth, type User } from "@/app/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
@@ -13,29 +14,82 @@ import type { SellerApplicationRecord } from "@/types/sellerApplication";
 
 export default function SellerApplication() {
   const { user, isLoading, refreshUser } = useAuth();
+  const router = useRouter();
+  const userId = user?.id;
+  const auth = useRef({ user, refreshUser });
+  const redirecting = useRef(false);
   const [applications, setApplications] = useState<SellerApplicationRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reload, setReload] = useState(0);
+  const [approvalAccount, setApprovalAccount] = useState<{ userId: string; previousUser: User | null } | null>(null);
 
   useEffect(() => {
-    if (!user) { setLoading(false); return; }
+    auth.current = { user, refreshUser };
+  }, [user, refreshUser]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    redirecting.current = false;
+    setApprovalAccount(null);
+    if (!userId) { setApplications([]); setLoading(false); return; }
     let active = true;
-    setLoading(true);
-    fetch("/api/seller-applications", { cache: "no-store" })
-      .then(async (response) => {
+    let inFlight = false;
+    let latestStatus: SellerApplicationRecord["status"] | undefined;
+    let awaitingAccess = false;
+    const controller = new AbortController();
+
+    async function loadApplications(initial = false) {
+      if (!active || inFlight || redirecting.current || (!initial && (document.visibilityState !== "visible" || (latestStatus !== "PENDING" && !awaitingAccess)))) return;
+      inFlight = true;
+      if (initial) setLoading(true);
+      try {
+        const response = await fetch("/api/seller-applications", { cache: "no-store", signal: controller.signal });
         const body = await response.json();
         if (!response.ok || !body.success || !Array.isArray(body.data)) throw new Error(body.message || "Could not load applications");
-        if (active) {
-          setApplications(body.data);
-          setError("");
-          if (body.data[0]?.status === "APPROVED" && user.role === "CUSTOMER") void refreshUser();
+        if (!active) return;
+        const wasPending = latestStatus === "PENDING";
+        latestStatus = body.data[0]?.status;
+        setApplications(body.data);
+        setError("");
+        if (latestStatus === "APPROVED" && (wasPending || awaitingAccess || auth.current.user?.role === "CUSTOMER")) {
+          awaitingAccess = true;
+          const previousUser = auth.current.user;
+          await auth.current.refreshUser();
+          if (active) setApprovalAccount({ userId, previousUser });
+        } else {
+          awaitingAccess = false;
+          setApprovalAccount(null);
         }
-      })
-      .catch((reason) => { if (active) setError(reason instanceof Error ? reason.message : "Could not load applications"); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [user?.id, reload]);
+      } catch (reason) {
+        if (active) setError(reason instanceof Error ? reason.message : "Could not load applications");
+      } finally {
+        inFlight = false;
+        if (active && initial) setLoading(false);
+      }
+    }
+
+    void loadApplications(true);
+    const interval = window.setInterval(() => void loadApplications(), 60_000);
+    const onFocus = () => void loadApplications();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      active = false;
+      controller.abort();
+      window.clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [userId, isLoading, reload]);
+
+  useEffect(() => {
+    // A failed refresh keeps the same identity object; only a newly verified seller can enter.
+    if (!redirecting.current && !isLoading && approvalAccount && approvalAccount.userId === user?.id && user !== approvalAccount.previousUser && user?.role === "SELLER" && user.status === "ACTIVE") {
+      redirecting.current = true;
+      router.replace("/seller-dashboard");
+    }
+  }, [approvalAccount, user, isLoading, router]);
 
   const latest = applications[0];
   const canApply = !latest || latest.status === "REJECTED" || latest.status === "NEED_MORE_DOC";
@@ -59,7 +113,7 @@ export default function SellerApplication() {
                   </span>
                   <div>
                     <h2 className="text-2xl font-semibold leading-tight text-dark">Waiting for review</h2>
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-dark-3">Your seller application has been submitted. No action is needed right now; check this page for the review decision.</p>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-dark-3">Your seller application has been submitted. This page checks for updates automatically and opens your shop dashboard after approval.</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-yellow/30 px-6 py-4 text-sm sm:px-8">
