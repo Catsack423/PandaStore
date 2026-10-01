@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { sellerActionSchemas, sellerOrderSchema, sellerShopSchema, type SellerOrderAction } from "@/lib/sellerOrders";
+import { hasAllowedRequestOrigin } from "@/lib/requestOrigin";
 
 type Context = { params: Promise<{ path?: string[] }> };
 const backend = process.env.BACKEND_API_URL || "http://localhost:8080";
@@ -16,7 +17,7 @@ async function forward(request: NextRequest, context: Context) {
       (request.method === "GET" ? path.length > 1 : path.length !== 2 || !Object.hasOwn(sellerActionSchemas, action)))
     return reply({ success: false, message: "Not found" }, 404);
   if (request.nextUrl.searchParams.has("sellerId")) return reply({ success: false, message: "Shop identity comes from your session" }, 400);
-  if (request.method === "POST" && request.headers.get("origin") !== request.nextUrl.origin)
+  if (request.method === "POST" && !hasAllowedRequestOrigin(request))
     return reply({ success: false, message: "Invalid request origin" }, 403);
 
   const token = (await cookies()).get("auth_token")?.value;
