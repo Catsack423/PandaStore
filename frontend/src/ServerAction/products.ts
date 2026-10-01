@@ -6,6 +6,10 @@ import { templateShopName } from "@/lib/templateShops";
 import { templateCategoryIds } from "@/lib/templateCategories";
 import type { Category } from "@/types/category";
 import { z } from "zod";
+import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
+import { UTApi } from "uploadthing/server";
+import { verifyProductImageRemoval } from "@/lib/productImageRemoval";
 
 const backendProductSchema = z.object({
   productId: z.number().int(),
@@ -217,16 +221,16 @@ export async function getProducts(): Promise<ApiResponse<Product[]>> {
   }
 }
 
-export async function getCategories(): Promise<Category[]> {
+export async function getCategories(options?: { throwOnError?: boolean }): Promise<Category[]> {
   try {
     const base = process.env.BACKEND_API_URL || "http://localhost:8080";
     const response = await fetch(`${base}/api/categories`, {
       cache: "no-store",
       signal: AbortSignal.timeout(2500),
     });
-    if (!response.ok) return [];
+    if (!response.ok) throw new Error("Categories are unavailable. Please try again.");
     const body = await response.json();
-    if (!body?.success) return [];
+    if (!body?.success) throw new Error("Categories are unavailable. Please try again.");
     return z
       .array(
         z.object({ categoryId: z.number().int(), categoryName: z.string() }),
@@ -236,7 +240,84 @@ export async function getCategories(): Promise<Category[]> {
         id: category.categoryId,
         name: category.categoryName,
       }));
-  } catch {
+  } catch (error) {
+    if (options?.throwOnError) throw error;
     return [];
+  }
+}
+
+async function requireSellerShop() {
+  const token = (await cookies()).get("auth_token")?.value;
+  if (!token) throw new Error("Please sign in first.");
+  const base = process.env.BACKEND_API_URL || "http://localhost:8080";
+  const options = { cache: "no-store" as const, headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(8000) };
+  const meResponse = await fetch(`${base}/api/auth/me`, options);
+  const me = await meResponse.json();
+  if (!meResponse.ok || !me.success || me.data?.role !== "SELLER" || me.data?.status !== "ACTIVE")
+    throw new Error("An active Seller account is required.");
+  const shopResponse = await fetch(`${base}/api/seller/shops/user/${me.data.userId}`, options);
+  const shop = await shopResponse.json();
+  if (!shopResponse.ok || !shop.success || shop.data?.status !== "ACTIVE" || !Number.isSafeInteger(shop.data?.sellerId) || shop.data.sellerId < 1)
+    throw new Error("An active shop is required to add products.");
+  return { token, base, sellerId: shop.data.sellerId as number, userId: String(me.data.userId) };
+}
+
+export async function getSellerProductAccess(): Promise<boolean> {
+  try { await requireSellerShop(); return true; } catch { return false; }
+}
+
+export async function removeSellerProductImage(input: { key: string; removalToken: string }): Promise<ApiResponse<null>> {
+  try {
+    const data = z.object({ key: z.string().min(1).max(512), removalToken: z.string().regex(/^[a-f0-9]{64}$/) }).parse(input);
+    const { userId, sellerId } = await requireSellerShop();
+    if (!verifyProductImageRemoval(data.key, userId, data.removalToken))
+      return { success: false, message: "You can only remove product images you uploaded.", data: null, error: "FORBIDDEN" };
+    // Cleanup must not delete images if a save completed while the page was closing.
+    const products = await fetchBackendProducts(`/api/products/seller/${sellerId}`);
+    const referenced = products.some(product => product.imageUrls?.some(url => {
+      try { return decodeURIComponent(new URL(url).pathname.split("/").pop() || "") === data.key; } catch { return false; }
+    }));
+    if (referenced)
+      return { success: false, message: "This image is already used by a saved product.", data: null, error: "IMAGE_IN_USE" };
+    try {
+      const result = await new UTApi().deleteFiles(data.key);
+      if (!result.success) throw new Error("Deletion failed");
+    } catch {
+      return { success: false, message: "Unable to delete image from Cloud. Please try again.", data: null, error: "DELETE_FAILED" };
+    }
+    return { success: true, message: "Image removed from Cloud", data: null, error: null };
+  } catch (error) {
+    const message = error instanceof z.ZodError ? "Invalid image removal request." : error instanceof Error ? error.message : "Unable to remove image. Please try again.";
+    return { success: false, message, data: null, error: message };
+  }
+}
+
+const sellerProductInput = z.object({
+  name: z.string().trim().min(1, "Enter a product name.").max(200),
+  description: z.string(),
+  price: z.string().regex(/^\d{1,10}(\.\d{1,2})?$/, "Enter a price with up to two decimal places.").refine(value => Number(value) >= 0.01 && Number(value) <= 9999999999.99, "Price must be between 0.01 and 9,999,999,999.99."),
+  stock: z.number().int().min(1).max(2147483647),
+  shippingInfo: z.string().max(255),
+  categoryIds: z.array(z.number().int().positive().safe()).min(1, "Select at least one category."),
+  imageUrls: z.array(z.string().url().max(255).refine(value => value.startsWith("https://"), "Upload a product image first.")).min(1).max(5),
+});
+
+export async function createSellerProduct(input: z.infer<typeof sellerProductInput>): Promise<ApiResponse<Product>> {
+  try {
+    const data = sellerProductInput.parse(input);
+    const { token, base, sellerId } = await requireSellerShop();
+    const response = await fetch(`${base}/api/products?sellerId=${sellerId}`, {
+      method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ...data, price: Number(data.price), categoryIds: Array.from(new Set(data.categoryIds)) }),
+      cache: "no-store", signal: AbortSignal.timeout(15000),
+    });
+    const body = await response.json();
+    if (!response.ok || !body.success) throw new Error(body.message || "Unable to add product. Please try again.");
+    const product = mapBackendProducts([backendProductSchema.parse(body.data)], base)[0];
+    revalidatePath(`/shop/${sellerId}`);
+    return { success: true, message: "Product added", data: product, error: null };
+  } catch (error) {
+    const message = error instanceof z.ZodError ? error.issues[0].message : error instanceof Error ? error.message : "Unable to add product. Please try again.";
+    return { success: false, message, data: null, error: message };
   }
 }

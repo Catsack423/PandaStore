@@ -9,7 +9,7 @@ const { uploadFiles } = genUploader<UploadRouter>();
 export async function uploadSingleImage(
   file: File,
   endpoint: keyof UploadRouter,
-): Promise<{ url: string; key: string }> {
+): Promise<{ url: string; key: string; removalToken?: string; userId?: string }> {
   if (!ALLOWED_IMAGE_TYPES.includes(file.type as (typeof ALLOWED_IMAGE_TYPES)[number])) {
     throw new Error("Choose a JPG, PNG, or WebP image");
   }
@@ -22,5 +22,10 @@ export async function uploadSingleImage(
   if (!result?.ufsUrl || !result.key) {
     throw new Error("Image upload did not return a file URL. Please try again.");
   }
-  return { url: result.ufsUrl, key: result.key };
+  const serverData = result.serverData;
+  return {
+    url: result.ufsUrl,
+    key: result.key,
+    ...(serverData && "removalToken" in serverData ? { removalToken: serverData.removalToken, userId: serverData.userId } : {}),
+  };
 }

@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   "/admin": ["ADMIN"],
+  "/seller/products": ["SELLER"],
   "/seller": ["SELLER", "ADMIN"],
   "/seller-dashboard": ["SELLER"],
   "/account": ["CUSTOMER", "SELLER", "ADMIN"],

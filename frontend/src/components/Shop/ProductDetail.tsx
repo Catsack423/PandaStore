@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import ProductImage from "@/components/Common/ProductImage";
+import { ProductImageGallery } from "@/components/Common/ProductImage";
 import { MessageSquareText, Minus, Plus, ShoppingCart, Star, Store } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
@@ -27,8 +27,8 @@ export default function ProductDetail({ product, categoryNames, reviews, sample 
   reviews: ProductReview[] | null;
   sample: boolean;
 }) {
-  const images = product.imgs?.previews?.length ? product.imgs.previews : ["/images/products/product-placeholder.svg"];
-  const [activeImage, setActiveImage] = useState(0);
+  const images = (product.imgs?.previews?.length ? product.imgs.previews : ["/images/products/product-placeholder.svg"]).map((src, index) => ({ id: `${src}-${index}`, src }));
+  const [activeImageId, setActiveImageId] = useState(images[0].id);
   const [quantity, setQuantity] = useState(1);
   const { addItemToCart } = useCart();
   const { user, isLoading } = useAuth();
@@ -43,17 +43,7 @@ export default function ProductDetail({ product, categoryNames, reviews, sample 
     <div className="bg-gray-2 pb-16 pt-6 sm:pb-20 sm:pt-10">
       <div className="mx-auto w-full max-w-[1170px] px-4 sm:px-8 xl:px-0">
         <section className="grid gap-5 rounded-xl bg-white p-4 shadow-1 sm:gap-8 sm:p-8 lg:grid-cols-2 lg:gap-12" aria-labelledby="product-title">
-          <div className="mx-auto w-full min-w-0 max-w-[530px]">
-            <div className="relative">
-              <ProductImage src={images[activeImage]} alt={product.title} size="fill" surface="detail" sizes="(max-width: 1024px) 100vw, 530px" className="max-h-[530px] rounded-xl" imageClassName="p-6 sm:p-10" />
-              {images.length > 1 && <span className="absolute bottom-4 right-4 rounded-full bg-white px-3 py-1 text-xs font-medium text-dark shadow-1" aria-live="polite">{activeImage + 1} / {images.length}</span>}
-            </div>
-            {images.length > 1 && <div className="mt-4 flex gap-3 overflow-x-auto pb-2" role="group" aria-label="Choose product image">
-              {images.map((src, index) => <Button key={`${src}-${index}`} type="button" variant="outline" onClick={() => setActiveImage(index)} aria-label={`View image ${index + 1} of ${images.length}`} aria-pressed={activeImage === index} className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border-2 bg-[#F6F7FB] p-0 sm:h-24 sm:w-24 ${activeImage === index ? "border-blue" : "border-gray-3 hover:border-blue"}`}>
-                <ProductImage src={src} alt="" size="fill" surface="detail" sizes="(min-width: 640px) 96px, 80px" imageClassName="p-2" />
-              </Button>)}
-            </div>}
-          </div>
+          <ProductImageGallery images={images} activeImageId={activeImageId} onActiveImageChange={setActiveImageId} alt={product.title} />
 
           <div className="flex min-w-0 flex-col justify-center py-2">
             {product.sellerShopName && <div className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-blue"><Store className="size-4" aria-hidden="true" />{product.sellerShopName}</div>}
@@ -69,7 +59,7 @@ export default function ProductDetail({ product, categoryNames, reviews, sample 
             <p className={`mt-4 text-sm font-medium sm:mt-6 ${stock === 0 || remaining === 0 ? "text-red" : "text-dark-4"}`}>
               {stock == null ? "Stock information is unavailable" : stock === 0 ? "Out of stock" : remaining === 0 ? "All available items are in your cart" : `${remaining} available`}
             </p>
-            {readOnly ? user?.role === "SELLER" && <p className="mt-5 rounded-lg border border-blue/20 bg-blue/5 px-4 py-3 text-sm font-medium text-blue">Storefront preview · Read only</p> : <div className="mt-4 flex min-w-0 items-center gap-2 sm:mt-5 sm:gap-3">
+            {!readOnly && <div className="mt-4 flex min-w-0 items-center gap-2 sm:mt-5 sm:gap-3">
               <div className="inline-flex h-11 w-28 shrink-0 items-center justify-between rounded-lg border border-gray-3 sm:h-12 sm:w-36" aria-label="Quantity">
                 <Button type="button" variant="ghost" size="icon" onClick={() => setQuantity((value) => Math.max(1, value - 1))} disabled={quantity <= 1} aria-label="Decrease quantity" className="h-10 w-9 text-dark-4 hover:text-blue sm:h-11 sm:w-11"><Minus className="size-4" /></Button>
                 <span className="min-w-4 text-center font-medium text-dark" aria-live="polite">{quantity}</span>

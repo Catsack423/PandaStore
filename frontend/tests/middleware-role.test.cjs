@@ -16,6 +16,14 @@ const moduleExports = {};
 new Function("require", "exports", compiled)(() => ({ NextResponse: response }), moduleExports);
 const { middleware } = moduleExports;
 
+test("Add Product permits only a verified Seller, including nested product paths", async () => {
+  assert.equal(new URL((await middleware(request("/seller/products/add"))).url).pathname, "/signin");
+  for (const role of ["CUSTOMER", "ADMIN", "SELLER"]) await withIdentity(role, async () => {
+    const result = await middleware(request("/seller/products/add", { auth_token: "session" }));
+    assert.equal(result.kind, role === "SELLER" ? "next" : "redirect");
+  });
+});
+
 function request(path, cookies = {}) {
   return {
     url: `http://localhost:3000${path}`,

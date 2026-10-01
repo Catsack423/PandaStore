@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { cleanupPendingProductImages } from "@/lib/pendingProductImages";
 
 export interface User {
   id: string;
@@ -44,6 +46,16 @@ async function post(path: string, body: object) {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const cleanup = () => { void cleanupPendingProductImages(user.id); };
+    cleanup();
+    const timer = window.setInterval(cleanup, 60000);
+    window.addEventListener("online", cleanup);
+    return () => { window.clearInterval(timer); window.removeEventListener("online", cleanup); };
+  }, [user?.id, pathname]);
 
   async function refreshUser() {
     try {
