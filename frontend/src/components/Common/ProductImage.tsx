@@ -51,7 +51,7 @@ export default function ProductImage({ src, alt, size, fit = "contain", surface 
     <Image key={imageSrc} src={imageSrc} alt={alt} fill sizes={sizes || imageSizes[size]}
       unoptimized className={`${fit === "cover" ? "object-cover" : "object-contain"} ${imageClassName} ${showSkeleton ? `transition-opacity duration-200 motion-reduce:transition-none ${loading ? "opacity-0" : "opacity-100"}` : ""}`}
       onLoad={() => setLoadedSource(imageSrc)}
-      onError={() => { setFailedSource(src || null); if (imageSrc === fallback) setLoadedSource(fallback); }} />
+      onError={() => { setFailedSource(src || null); setLoadedSource(fallback); }} />
     {loading && <Skeleton aria-hidden="true" className="absolute inset-0 rounded-[inherit] bg-gray-3 motion-reduce:animate-none" />}
   </div>;
 }
