@@ -16,7 +16,30 @@ async function forward(request: NextRequest, context: Context) {
       (request.method === "GET" ? path.length > 1 : path.length !== 2 || !Object.hasOwn(sellerActionSchemas, action)))
     return reply({ success: false, message: "Not found" }, 404);
   if (request.nextUrl.searchParams.has("sellerId")) return reply({ success: false, message: "Shop identity comes from your session" }, 400);
-  if (request.method === "POST" && request.headers.get("origin") !== request.nextUrl.origin)
+  const origin = request.headers.get("origin");
+  const host = request.headers.get("host");
+  const allowedOrigins = new Set([
+    request.nextUrl.origin,
+    host ? `http://${host}` : "",
+    host ? `https://${host}` : "",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://172.27.0.1:3000",
+  ]);
+  let isAllowedOrigin = !origin || allowedOrigins.has(origin);
+  if (origin && !isAllowedOrigin) {
+    try {
+      const originUrl = new URL(origin);
+      const isLoopback = ["localhost", "127.0.0.1", "::1"].includes(originUrl.hostname);
+      const isSameHost = Boolean(host && (host === originUrl.host || host.split(":")[0] === originUrl.hostname));
+      if (isLoopback || isSameHost) {
+        isAllowedOrigin = true;
+      }
+    } catch {
+      isAllowedOrigin = false;
+    }
+  }
+  if (request.method === "POST" && !isAllowedOrigin)
     return reply({ success: false, message: "Invalid request origin" }, 403);
 
   const token = (await cookies()).get("auth_token")?.value;
