@@ -81,19 +81,30 @@ public class ProductServiceImp implements ProductService {
             throw new IllegalArgumentException("Product stock cannot be negative");
         }
         if (imageUrls == null || imageUrls.isEmpty()
-                || imageUrls.stream().anyMatch(url -> url == null || url.isBlank())) {
+                || imageUrls.stream().anyMatch(url -> url == null || url.trim().isEmpty())) {
             throw new IllegalArgumentException("At least one product image is required");
         }
 
         Set<Category> categories = new HashSet<>();
-        if (categoryIds != null) {
-            for (Long categoryId : categoryIds) {
-                if (categoryId == null || categoryId <= 0) {
-                    throw new IllegalArgumentException("categoryIds ต้องเป็นรหัสหมวดหมู่ที่มากกว่า 0");
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            for (Long catId : categoryIds) {
+                if (catId == null || catId <= 0) {
+                    throw new IllegalArgumentException("Category นี้ไม่มีในระบบ: " + catId);
                 }
-                categories.add(categoryRepository.findById(categoryId)
-                        .orElseThrow(() -> new IllegalArgumentException("Category นี้ไม่มีในระบบ: " + categoryId)));
+                Category cat = categoryRepository.findById(catId)
+                        .orElseThrow(() -> new IllegalArgumentException("Category นี้ไม่มีในระบบ: " + catId));
+                categories.add(cat);
             }
+            product.setCategories(categories);
+        } else if (product.getCategories() != null && !product.getCategories().isEmpty()) {
+            for (Category c : product.getCategories()) {
+                if (c != null && c.getCategoryId() != null) {
+                    Category cat = categoryRepository.findById(c.getCategoryId())
+                            .orElseThrow(() -> new IllegalArgumentException("Category นี้ไม่มีในระบบ: " + c.getCategoryId()));
+                    categories.add(cat);
+                }
+            }
+            product.setCategories(categories);
         }
         product.setCategories(categories);
         product.setSeller(seller);
@@ -113,7 +124,7 @@ public class ProductServiceImp implements ProductService {
         for (int i = 0; i < imageUrls.size(); i++) {
             ProductImage img = new ProductImage();
             img.setProduct(savedProduct);
-            img.setImageUrl(imageUrls.get(i));
+            img.setImageUrl(imageUrls.get(i).trim());
             img.setIsPrimary(i == 0);
             img.setDisplayOrder(i);
             images.add(productImageRepository.save(img));
@@ -166,7 +177,15 @@ public class ProductServiceImp implements ProductService {
             existing.setShippingInfo(updatedProduct.getShippingInfo());
         }
         if (updatedProduct.getCategories() != null && !updatedProduct.getCategories().isEmpty()) {
-            existing.setCategories(updatedProduct.getCategories());
+            Set<Category> categories = new HashSet<>();
+            for (Category c : updatedProduct.getCategories()) {
+                if (c != null && c.getCategoryId() != null) {
+                    Category cat = categoryRepository.findById(c.getCategoryId())
+                            .orElseThrow(() -> new IllegalArgumentException("Categoryนี้ไม่มีในระบบ"));
+                    categories.add(cat);
+                }
+            }
+            existing.setCategories(categories);
         }
 
         return productRepository.save(existing);

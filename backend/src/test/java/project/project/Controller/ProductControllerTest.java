@@ -10,12 +10,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import project.project.Entity.product.Category;
 import project.project.Entity.product.Product;
 import project.project.Entity.product.ProductStatus;
 import project.project.Service.api.ProductService;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -25,6 +27,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import project.project.DTO.product.ProductResponse;
+import project.project.Entity.seller.Seller;
+import project.project.Entity.seller.SellerStatus;
+import project.project.Entity.user.UserRole;
+import project.project.Repository.SellerRepository;
+import project.project.Security.AuthenticatedUser;
+import project.project.Security.CurrentUser;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import java.util.Optional;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.lenient;
+
 @ExtendWith(MockitoExtension.class)
 public class ProductControllerTest {
 
@@ -33,11 +48,22 @@ public class ProductControllerTest {
     @Mock
     private ProductService productService;
 
+    @Mock
+    private CurrentUser currentUser;
+
+    @Mock
+    private SellerRepository sellers;
+
     @InjectMocks
     private ProductController productController;
 
     @BeforeEach
     void setUp() {
+        Seller shop = new Seller();
+        shop.setSellerId(1L);
+        shop.setStatus(SellerStatus.ACTIVE);
+        lenient().when(currentUser.requireIdentity()).thenReturn(new AuthenticatedUser(10L, UserRole.SELLER));
+        lenient().when(sellers.findByUser_UserId(10L)).thenReturn(Optional.of(shop));
         mockMvc = MockMvcBuilders.standaloneSetup(productController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -65,7 +91,7 @@ public class ProductControllerTest {
         created.setStock(50);
         created.setStatus(ProductStatus.ACTIVE);
 
-        when(productService.createProduct(eq(sellerId), any(Product.class), any())).thenReturn(created);
+        when(productService.createProduct(eq(sellerId), any(Product.class), any(), any())).thenReturn(created);
 
         mockMvc.perform(post("/api/products")
                         .param("sellerId", String.valueOf(sellerId))
@@ -75,6 +101,121 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.productId").value(101L))
                 .andExpect(jsonPath("$.data.name").value("Panda Gaming T-Shirt Limited Edition"));
+    }
+
+    @Test
+    @DisplayName("DEF-007: POST /api/products - ส่ง categoryIds แล้วได้รับ category_id / categoryIds ในผลลัพธ์")
+    void createProduct_WithCategories_Success() throws Exception {
+        Long sellerId = 1L;
+        String requestJson = """
+                {
+                    "name": "Panda Gaming T-Shirt Limited Edition",
+                    "description": "เสื้อยืดสกรีนลายแพนด้า",
+                    "price": 350.00,
+                    "stock": 50,
+                    "categoryIds": [1],
+                    "imageUrls": ["https://images.unsplash.com/photo-1521572267360-ee0c2909d518"]
+                }
+                """;
+
+        Product created = new Product();
+        created.setProductId(101L);
+        created.setName("Panda Gaming T-Shirt Limited Edition");
+        created.setPrice(new BigDecimal("350.00"));
+        created.setStock(50);
+        created.setStatus(ProductStatus.ACTIVE);
+        Category category = new Category(1L, "เสื้อผ้า", "หมวดหมู่เสื้อผ้า");
+        created.setCategories(Set.of(category));
+
+        when(productService.createProduct(eq(sellerId), any(Product.class), any(), any())).thenReturn(created);
+
+        mockMvc.perform(post("/api/products")
+                        .param("sellerId", String.valueOf(sellerId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.categoryIds[0]").value(1L))
+                .andExpect(jsonPath("$.data.category_id[0]").value(1L));
+    }
+
+    @Test
+    @DisplayName("DEF-008: POST /api/products - ส่ง Category ที่ไม่มีในระบบ คืนค่า 400 Bad Request 'Categoryนี้ไม่มีในระบบ'")
+    void createProduct_NonExistentCategory_BadRequest() throws Exception {
+        Long sellerId = 1L;
+        String requestJson = """
+                {
+                    "name": "Panda Gaming T-Shirt",
+                    "description": "เสื้อยืดสกรีนลายแพนด้า",
+                    "price": 350.00,
+                    "stock": 50,
+                    "categoryIds": [999],
+                    "imageUrls": ["https://images.unsplash.com/photo-1521572267360-ee0c2909d518"]
+                }
+                """;
+
+        when(productService.createProduct(eq(sellerId), any(Product.class), any(), any()))
+                .thenThrow(new IllegalArgumentException("Category นี้ไม่มีในระบบ: 999999"));
+
+        mockMvc.perform(post("/api/products")
+                        .param("sellerId", String.valueOf(sellerId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Category นี้ไม่มีในระบบ: 999999"));
+    }
+
+    @Test
+    @DisplayName("DEF-009: POST /api/products - ส่ง imageUrls เป็น empty string [\"\"] คืนค่า 400 Bad Request")
+    void createProduct_EmptyImage_BadRequest() throws Exception {
+        Long sellerId = 1L;
+        String requestJson = """
+                {
+                    "name": "Panda Gaming T-Shirt",
+                    "description": "เสื้อยืดสกรีนลายแพนด้า",
+                    "price": 350.00,
+                    "stock": 50,
+                    "imageUrls": [""]
+                }
+                """;
+
+        when(productService.createProduct(eq(sellerId), any(Product.class), any(), any()))
+                .thenThrow(new IllegalArgumentException("At least one product image is required"));
+
+        mockMvc.perform(post("/api/products")
+                        .param("sellerId", String.valueOf(sellerId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("At least one product image is required"));
+    }
+
+    @Test
+    @DisplayName("DEF-010: POST /api/products - ส่ง imageUrls เป็น whitespace [\" \"] คืนค่า 400 Bad Request")
+    void createProduct_WhitespaceImage_BadRequest() throws Exception {
+        Long sellerId = 1L;
+        String requestJson = """
+                {
+                    "name": "Panda Gaming T-Shirt",
+                    "description": "เสื้อยืดสกรีนลายแพนด้า",
+                    "price": 350.00,
+                    "stock": 50,
+                    "imageUrls": ["   "]
+                }
+                """;
+
+        when(productService.createProduct(eq(sellerId), any(Product.class), any(), any()))
+                .thenThrow(new IllegalArgumentException("At least one product image is required"));
+
+        mockMvc.perform(post("/api/products")
+                        .param("sellerId", String.valueOf(sellerId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("At least one product image is required"));
     }
 
     @Test
@@ -119,13 +260,15 @@ public class ProductControllerTest {
         p1.setProductId(1L);
         p1.setName("Panda Cap");
 
-        when(productService.searchProducts(eq("panda"), any())).thenReturn(List.of(p1));
+        Page<ProductResponse> page = new PageImpl<>(List.of(ProductResponse.fromEntity(p1)));
+        when(productService.searchProductsPage(eq("panda"), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(page);
 
         mockMvc.perform(get("/api/products/search")
                         .param("keyword", "panda"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data[0].name").value("Panda Cap"));
+                .andExpect(jsonPath("$.data.items[0].name").value("Panda Cap"));
     }
 
     @Test

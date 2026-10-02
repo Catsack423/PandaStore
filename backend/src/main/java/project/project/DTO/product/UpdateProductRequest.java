@@ -1,5 +1,7 @@
 package project.project.DTO.product;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
@@ -26,6 +28,8 @@ public class UpdateProductRequest {
     @Size(max = 255, message = "ข้อมูลการจัดส่งต้องมีความยาวไม่เกิน 255 ตัวอักษร")
     private String shippingInfo;
 
+    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+    @JsonAlias({"category_id", "categoryId", "categories"})
     private Set<Long> categoryIds;
 
     public UpdateProductRequest() {

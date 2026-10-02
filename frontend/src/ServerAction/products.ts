@@ -321,3 +321,46 @@ export async function createSellerProduct(input: z.infer<typeof sellerProductInp
     return { success: false, message, data: null, error: message };
   }
 }
+
+const updateSellerProductInput = z.object({
+  productId: z.number().int().positive(),
+  name: z.string().trim().min(1, "Enter a product name.").max(200).optional(),
+  description: z.string().optional(),
+  price: z.string().regex(/^\d{1,10}(\.\d{1,2})?$/, "Enter a price with up to two decimal places.").refine(value => Number(value) >= 0.01 && Number(value) <= 9999999999.99, "Price must be between 0.01 and 9,999,999,999.99.").optional(),
+  stock: z.number().int().min(0).max(2147483647).optional(),
+  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+  shippingInfo: z.string().max(255).optional(),
+  categoryIds: z.array(z.number().int().positive().safe()).optional(),
+});
+
+export async function updateSellerProduct(input: z.infer<typeof updateSellerProductInput>): Promise<ApiResponse<Product>> {
+  try {
+    const data = updateSellerProductInput.parse(input);
+    const { token, base, sellerId } = await requireSellerShop();
+    const payload: Record<string, unknown> = {};
+    if (data.name !== undefined) payload.name = data.name;
+    if (data.description !== undefined) payload.description = data.description;
+    if (data.price !== undefined) payload.price = Number(data.price);
+    if (data.stock !== undefined) payload.stock = data.stock;
+    if (data.status !== undefined) payload.status = data.status;
+    if (data.shippingInfo !== undefined) payload.shippingInfo = data.shippingInfo;
+    if (data.categoryIds !== undefined) payload.categoryIds = Array.from(new Set(data.categoryIds));
+
+    const response = await fetch(`${base}/api/products/${data.productId}?sellerId=${sellerId}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+      signal: AbortSignal.timeout(15000),
+    });
+    const body = await response.json();
+    if (!response.ok || !body.success) throw new Error(body.message || "Unable to update product. Please try again.");
+    const product = mapBackendProducts([backendProductSchema.parse(body.data)], base)[0];
+    revalidatePath(`/shop/${sellerId}`);
+    return { success: true, message: "Product updated", data: product, error: null };
+  } catch (error) {
+    const message = error instanceof z.ZodError ? error.issues[0].message : error instanceof Error ? error.message : "Unable to update product. Please try again.";
+    return { success: false, message, data: null, error: message };
+  }
+}
+

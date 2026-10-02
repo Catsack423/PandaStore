@@ -115,8 +115,26 @@ public class ProductController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(
             @PathVariable Long id,
-            @RequestParam Long sellerId,
+            @RequestParam(required = false) Long sellerId,
             @Valid @RequestBody UpdateProductRequest request) {
+        Long effectiveSellerId = sellerId;
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()
+                && (authentication.getPrincipal() instanceof project.project.Security.AuthenticatedUser identity)) {
+            if (identity.role() == UserRole.SELLER) {
+                var shop = sellers.findByUser_UserId(identity.userId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Shop required"));
+                if (effectiveSellerId == null) {
+                    effectiveSellerId = shop.getSellerId();
+                } else if (!shop.getSellerId().equals(effectiveSellerId)) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot update product for another seller");
+                }
+            }
+        }
+        if (effectiveSellerId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Seller ID is required");
+        }
+
         Product product = new Product();
         product.setName(request.getName());
         product.setDescription(request.getDescription());
@@ -124,8 +142,19 @@ public class ProductController {
         product.setStock(request.getStock());
         product.setStatus(request.getStatus());
         product.setShippingInfo(request.getShippingInfo());
+        if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
+            java.util.Set<project.project.Entity.product.Category> categories = new java.util.HashSet<>();
+            for (Long catId : request.getCategoryIds()) {
+                if (catId != null) {
+                    project.project.Entity.product.Category cat = new project.project.Entity.product.Category();
+                    cat.setCategoryId(catId);
+                    categories.add(cat);
+                }
+            }
+            product.setCategories(categories);
+        }
 
-        Product updated = productService.updateProduct(sellerId, id, product);
+        Product updated = productService.updateProduct(effectiveSellerId, id, product);
         return ResponseEntity.ok(ApiResponse.success("แก้ไขข้อมูลสินค้าสำเร็จ", ProductResponse.fromEntity(updated)));
     }
 

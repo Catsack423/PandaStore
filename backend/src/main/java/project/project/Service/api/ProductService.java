@@ -10,8 +10,11 @@ import project.project.DTO.product.CatalogSummary;
 
 public interface ProductService {
     CatalogSummary getCatalogSummary();
-    Product createProduct(Long sellerId, Product product, List<String> imageUrls);
     Product createProduct(Long sellerId, Product product, List<String> imageUrls, Set<Long> categoryIds);
+
+    default Product createProduct(Long sellerId, Product product, List<String> imageUrls) {
+        return createProduct(sellerId, product, imageUrls, null);
+    }
     Product updateProduct(Long sellerId, Long productId, Product updatedProduct);
     Product getProductById(Long productId);
     List<Product> getAllActiveProducts();
