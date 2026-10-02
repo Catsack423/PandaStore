@@ -40,6 +40,12 @@ public class CustomerCheckoutController {
                 checkout.addAddress(currentUser.requireCustomerId(), request)));
     }
 
+    @PutMapping("/addresses/{id}")
+    public ResponseEntity<?> updateAddress(@PathVariable("id") Long id, @Valid @RequestBody CreateAddressRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("Address updated",
+                checkout.updateAddress(currentUser.requireCustomerId(), id, request)));
+    }
+
     @PostMapping("/orders")
     public ResponseEntity<?> order(@Valid @RequestBody CustomerCheckoutService.PlaceOrder request) {
         return ResponseEntity.status(201).body(ApiResponse.success("Order created",

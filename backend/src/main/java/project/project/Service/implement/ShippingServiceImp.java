@@ -84,11 +84,11 @@ public class ShippingServiceImp implements ShippingService {
                     "คำสั่งซื้อนี้ไม่ใช่ของร้านค้า sellerId: " + sellerId);
         }
 
-        // 3. ตรวจสถานะ — ต้อง PREPARING หรือ SHIPPED (อนุญาตให้อัปเดต tracking ซ้ำได้)
-        if (order.getOrderStatus() != OrderStatus.PREPARING && order.getOrderStatus() != OrderStatus.SHIPPED) {
-            throw new IllegalArgumentException(
+        // 3. ตรวจสถานะ — ต้อง PREPARING เท่านั้น
+        if (order.getOrderStatus() != OrderStatus.PREPARING) {
+            throw new IllegalStateException(
                     "ไม่สามารถกรอก Tracking ได้ สถานะปัจจุบัน: " + order.getOrderStatus()
-                            + " (ต้องเป็น PREPARING หรือ SHIPPED)");
+                            + " (ต้องเป็น PREPARING เท่านั้น)");
         }
 
         var paymentStatus = order.getOrderGroup().getPaymentStatus();

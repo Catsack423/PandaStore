@@ -27,6 +27,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import project.project.Security.CurrentUser;
+import static org.mockito.Mockito.lenient;
+
 @ExtendWith(MockitoExtension.class)
 public class ReviewControllerTest {
 
@@ -35,11 +38,15 @@ public class ReviewControllerTest {
     @Mock
     private ReviewService reviewService;
 
+    @Mock
+    private CurrentUser currentUser;
+
     @InjectMocks
     private ReviewController reviewController;
 
     @BeforeEach
     void setUp() {
+        lenient().when(currentUser.requireCustomerId()).thenReturn(1L);
         mockMvc = MockMvcBuilders.standaloneSetup(reviewController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();

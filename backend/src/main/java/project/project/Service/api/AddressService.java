@@ -11,6 +11,8 @@ public interface AddressService {
 
     Address addAddressToCustomerByCustomerId(Long customerId, CreateAddressRequest request);
 
+    Address updateAddress(Long customerId, Long addressId, CreateAddressRequest request);
+
     boolean removeAddressCustomerByCustomerIdAndAddressId(Long customerId, Long addressId);
 
     List<Address> getAllAddressesByCustomerId(Long customerId);

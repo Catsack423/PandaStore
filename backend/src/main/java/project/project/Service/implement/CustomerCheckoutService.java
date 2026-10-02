@@ -116,6 +116,13 @@ public class CustomerCheckoutService {
     }
 
     @Transactional
+    public AddressResponse updateAddress(Long customerId, Long addressId, CreateAddressRequest request) {
+        var ownedRequest = new CreateAddressRequest(customerId, request.receiverName(), request.phoneNumber(),
+                request.addressLine(), request.district(), request.province(), request.postalCode(), request.isDefault());
+        return AddressResponse.fromEntity(addresses.updateAddress(customerId, addressId, ownedRequest));
+    }
+
+    @Transactional
     public OrderGroupResponse placeOrder(Long customerId, PlaceOrder request) {
         requireAddress(customerId, request.shippingAddressId());
         var cart = carts.createCart(customerId);

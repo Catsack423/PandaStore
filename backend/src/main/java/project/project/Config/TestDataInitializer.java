@@ -105,10 +105,14 @@ public class TestDataInitializer implements CommandLineRunner {
 
     @Transactional
     public synchronized void seedData() {
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = 
+            new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(12);
+
+        // 1. Create Seller User (ID=1)
         User sellerUser = new User();
         sellerUser.setUsername("seller1");
         sellerUser.setEmail("seller@pandastore.com");
-        sellerUser.setPasswordHash("$2a$10$abcdefghijklmnopqrstuv");
+        sellerUser.setPasswordHash(encoder.encode("password123"));
         sellerUser.setRole(UserRole.SELLER);
         sellerUser.setStatus(UserStatus.ACTIVE);
         sellerUser = userRepository.save(sellerUser);
@@ -129,10 +133,27 @@ public class TestDataInitializer implements CommandLineRunner {
         User customerUser = new User();
         customerUser.setUsername("customer1");
         customerUser.setEmail("customer@pandastore.com");
-        customerUser.setPasswordHash("$2a$10$abcdefghijklmnopqrstuv");
+        customerUser.setPasswordHash(encoder.encode("password123"));
         customerUser.setRole(UserRole.CUSTOMER);
         customerUser.setStatus(UserStatus.ACTIVE);
         customerUser = userRepository.save(customerUser);
+
+        // Create Admin Users (ID=3, ID=4)
+        User adminUser = new User();
+        adminUser.setUsername("admin");
+        adminUser.setEmail("admin@pandastore.com");
+        adminUser.setPasswordHash(encoder.encode("admin1234"));
+        adminUser.setRole(UserRole.ADMIN);
+        adminUser.setStatus(UserStatus.ACTIVE);
+        userRepository.save(adminUser);
+
+        User checkoutAdmin = new User();
+        checkoutAdmin.setUsername("checkout_admin");
+        checkoutAdmin.setEmail("checkout_admin@example.com");
+        checkoutAdmin.setPasswordHash(encoder.encode("AdminDemo123!"));
+        checkoutAdmin.setRole(UserRole.ADMIN);
+        checkoutAdmin.setStatus(UserStatus.ACTIVE);
+        userRepository.save(checkoutAdmin);
 
         // 4. Create Customer (ID=1)
         Customer customer = new Customer();

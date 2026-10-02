@@ -32,10 +32,9 @@ public class RequestUserResolver {
             return user.getUserId();
         }
         if (principal == null) {
-            // For Postman and local testing without auth headers, fallback to customer1
-            return userRepository.findByUsername("customer1")
-                    .map(u -> u.getUserId())
-                    .orElse(2L);
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "กรุณาเข้าสู่ระบบ");
         }
 
         var user = userRepository.findByUsername(principal.getName())

@@ -72,6 +72,33 @@ public class AddressServiceImp implements AddressService {
     }
 
     @Override
+    @Transactional
+    public Address updateAddress(Long customerId, Long addressId, CreateAddressRequest request) {
+        requirePositiveId(customerId, "customerId");
+        requirePositiveId(addressId, "addressId");
+        lockCustomer(customerId);
+
+        Address address = addressRepository.findOwnedAddressForUpdate(customerId, addressId)
+                .orElseThrow(() -> new EntityNotFoundException("Address not found"));
+
+        address.setReceiverName(request.receiverName());
+        address.setPhoneNumber(request.phoneNumber());
+        address.setAddressLine(request.addressLine());
+        address.setDistrict(request.district());
+        address.setProvince(request.province());
+        address.setPostalCode(request.postalCode());
+
+        if (Boolean.TRUE.equals(request.isDefault())) {
+            var addresses = addressRepository.findByCustomer_CustomerIdOrderByIsDefaultDescAddressIdAsc(customerId);
+            addresses.forEach(a -> a.setIsDefault(false));
+            addressRepository.flush();
+            address.setIsDefault(true);
+        }
+
+        return addressRepository.save(address);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<Address> getAllAddressesByCustomerId(Long customerId) {
         requirePositiveId(customerId, "customerId");
