@@ -96,7 +96,7 @@ public class SubOrderServiceImp implements SubOrderService {
 
         // ตรวจสถานะ — ต้อง WAITING_SELLER_CONFIRM
         if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM) {
-            throw new IllegalArgumentException(
+            throw new IllegalStateException(
                     "ไม่สามารถยืนยันคำสั่งซื้อได้ สถานะปัจจุบัน: " + order.getOrderStatus()
                             + " (ต้องเป็น WAITING_SELLER_CONFIRM)");
         }
@@ -146,11 +146,8 @@ public class SubOrderServiceImp implements SubOrderService {
         if (reason == null || reason.isBlank() || reason.trim().length() > 255) throw new IllegalArgumentException("Enter a rejection reason up to 255 characters");
 
         // ตรวจสถานะ
-        if (order.getOrderStatus() == OrderStatus.CANCELLED) {
-            return;
-        }
         if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM) {
-            throw new IllegalArgumentException(
+            throw new IllegalStateException(
                     "ไม่สามารถปฏิเสธคำสั่งซื้อได้ สถานะปัจจุบัน: " + order.getOrderStatus()
                             + " (ต้องเป็น WAITING_SELLER_CONFIRM)");
         }
@@ -215,7 +212,7 @@ public class SubOrderServiceImp implements SubOrderService {
             return;
         }
         if (order.getOrderStatus() != OrderStatus.SHIPPED) {
-            throw new IllegalArgumentException(
+            throw new IllegalStateException(
                     "ไม่สามารถยืนยันรับสินค้าได้ สถานะปัจจุบัน: " + order.getOrderStatus()
                             + " (ต้องเป็น SHIPPED)");
         }
@@ -278,22 +275,33 @@ public class SubOrderServiceImp implements SubOrderService {
             return;
         }
         if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM &&
-            order.getOrderStatus() != OrderStatus.PREPARING) {
-            throw new IllegalArgumentException(
+            order.getOrderStatus() != OrderStatus.PREPARING &&
+            order.getOrderStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new IllegalStateException(
                     "ไม่สามารถยกเลิกคำสั่งซื้อได้เนื่องจากอยู่ในสถานะ: " + order.getOrderStatus()
                             + " (สามารถยกเลิกได้เฉพาะ WAITING_SELLER_CONFIRM หรือ PREPARING เท่านั้น)");
         }
 
-        order.setRejectionReason(reason);
+        order.setRejectionReason(reason.trim());
         order.setOrderStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
 
         restoreStock(order);
 
-        paymentService.processPartialRefund(orderId, order.getTotalAmount(), "ลูกค้ายกเลิกคำสั่งซื้อ: " + reason);
-        order.setRejectionReason(reason.trim());
+        boolean wasPaid = order.getOrderGroup() != null &&
+                (order.getOrderGroup().getPaymentStatus() == OrderGroupPaymentStatus.PAID ||
+                 order.getOrderGroup().getPaymentStatus() == OrderGroupPaymentStatus.PARTIALLY_REFUNDED);
 
-        updateOrderGroupPaymentStatus(order.getOrderGroup());
+        if (wasPaid) {
+            paymentService.processPartialRefund(orderId, order.getTotalAmount(), "ลูกค้ายกเลิกคำสั่งซื้อ: " + reason.trim());
+            updateOrderGroupPaymentStatus(order.getOrderGroup());
+        } else if (order.getOrderGroup() != null) {
+            List<Order> allSubOrders = orderRepository.findByOrderGroup_OrderGroupId(order.getOrderGroup().getOrderGroupId());
+            boolean allCancelled = allSubOrders.stream().allMatch(o -> o.getOrderStatus() == OrderStatus.CANCELLED);
+            if (allCancelled) {
+                order.getOrderGroup().setPaymentStatus(OrderGroupPaymentStatus.FAILED);
+            }
+        }
 
         try {
             notificationService.sendNotification(

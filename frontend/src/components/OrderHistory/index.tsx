@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export type CustomerOrder = {
   id: string;
+  orderId: number;
   orderGroupId: number;
   date: string;
   status: "PENDING_PAYMENT" | "WAITING_SELLER_CONFIRM" | "PREPARING" | "SHIPPED" | "COMPLETED" | "CANCELLED";
@@ -42,7 +43,7 @@ const statusDotStyles: Record<CustomerOrder["status"], string> = {
 };
 const steps: CustomerOrder["status"][] = ["PENDING_PAYMENT", "WAITING_SELLER_CONFIRM", "PREPARING", "SHIPPED", "COMPLETED"];
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
-const orderColumns = "lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,1.7fr)_minmax(0,0.6fr)_200px]";
+const orderColumns = "lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,1.7fr)_minmax(0,0.6fr)_260px]";
 
 type OrderGroup = {
   orderGroupId: number; groupNumber: string; createdAt: string; paymentStatus: string;
@@ -54,6 +55,7 @@ async function loadOrders(signal?: AbortSignal): Promise<CustomerOrder[]> {
   const groups = await checkoutApi<OrderGroup[]>("orders", undefined, signal);
   return groups.flatMap(group => group.subOrders.map(order => ({
     id: order.subOrderNumber || String(order.orderId),
+    orderId: order.orderId,
     orderGroupId: group.orderGroupId,
     date: new Date(group.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
     status: order.orderStatus, total: Number(order.totalAmount),
@@ -63,9 +65,51 @@ async function loadOrders(signal?: AbortSignal): Promise<CustomerOrder[]> {
   })));
 }
 
-function OrderRow({ order }: { order: CustomerOrder }) {
+function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const currentStep = steps.indexOf(order.status);
+
+  async function handleConfirmDelivered() {
+    if (!window.confirm("Are you sure you want to confirm delivery for this order?")) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/sub-orders/${order.orderId}/confirm-delivered`, { method: "POST" });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        alert(data?.message || "Failed to confirm delivery");
+      } else {
+        onRefresh();
+      }
+    } catch {
+      alert("Could not connect to service. Please try again.");
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleCancelOrder() {
+    const reason = window.prompt("Reason for cancellation:", "I changed my mind");
+    if (!reason || !reason.trim()) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/sub-orders/${order.orderId}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reason.trim() }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        alert(data?.message || "Failed to cancel order");
+      } else {
+        onRefresh();
+      }
+    } catch {
+      alert("Could not connect to service. Please try again.");
+    } finally {
+      setActionLoading(false);
+    }
+  }
 
   return (
     <div className="border-t border-gray-3">
@@ -92,6 +136,16 @@ function OrderRow({ order }: { order: CustomerOrder }) {
         <div className="lg:text-right"><span className="block text-xs text-dark-4 lg:hidden">Total</span><span className="whitespace-nowrap font-medium text-dark">{currency.format(order.total)}</span></div>
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           {order.status === "PENDING_PAYMENT" && order.paymentStatus === "PENDING" && <Link href={`/payment/${order.orderGroupId}`} aria-label={`Pay now for order group ${order.orderGroupId}`} className="inline-flex h-9 items-center justify-center rounded-lg bg-blue px-3 text-sm text-white hover:bg-blue-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">Pay now</Link>}
+          {(order.status === "PENDING_PAYMENT" || order.status === "WAITING_SELLER_CONFIRM" || order.status === "PREPARING") && (
+            <Button variant="outline" size="sm" className="h-9 px-3 text-red border-red/30 hover:bg-red/10" disabled={actionLoading} onClick={() => void handleCancelOrder()}>
+              Cancel
+            </Button>
+          )}
+          {order.status === "SHIPPED" && (
+            <Button size="sm" className="h-9 px-3 bg-green-dark hover:bg-green text-white font-medium shadow-sm" disabled={actionLoading} onClick={() => void handleConfirmDelivered()}>
+              Confirm Delivery
+            </Button>
+          )}
           <Button variant="outline" className="h-9 px-3" aria-expanded={expanded} aria-controls={`order-${order.id}`} onClick={() => setExpanded(!expanded)}>
             Details <ChevronDown className={`ml-1 h-4 w-4 transition-transform motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`} />
           </Button>
@@ -143,7 +197,7 @@ export default function OrderHistory({ showBackToAccount = false }: { showBackTo
           : !customer ? <CardContent className="py-16 text-center"><h3 className="font-semibold text-dark">{user ? "Order history is available for customer accounts" : "Sign in to view your orders"}</h3>{!user && <Link href="/signin" className="mt-4 inline-block text-blue hover:underline">Sign in</Link>}</CardContent>
           : history.isError ? <CardContent role="alert" className="py-16 text-center"><p className="text-red">{history.error.message}</p><Button variant="outline" className="mt-4" onClick={() => void history.refetch()} disabled={history.isFetching}>Try again</Button></CardContent>
           : orders.length > 0 ? <>
-            {visibleOrders.length > 0 ? visibleOrders.map((order) => <OrderRow key={order.id} order={order} />) : <p className="px-7 py-10 text-center text-sm">No orders with this status.</p>}
+            {visibleOrders.length > 0 ? visibleOrders.map((order) => <OrderRow key={order.id} order={order} onRefresh={() => void history.refetch()} />) : <p className="px-7 py-10 text-center text-sm">No orders with this status.</p>}
           </> : <CardContent className="flex min-h-[330px] flex-col items-center justify-center px-6 py-14 text-center">
             <div className="mb-5 flex size-16 items-center justify-center rounded-full bg-blue/10 text-blue"><PackageOpen className="size-8" aria-hidden="true" /></div>
             <h3 className="text-lg font-semibold text-dark">No orders yet</h3>

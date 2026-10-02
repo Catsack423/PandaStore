@@ -81,6 +81,10 @@ public class OrderAccess {
             throw denied();
     }
 
+    public Long resolveCustomerId(Long customerId) {
+        return customerId != null ? customerId : currentUser.requireCustomerId();
+    }
+
     public void requireCustomerOrder(Long customerId, Long orderId) {
         if (!currentUser.requireCustomerId().equals(customerId))
             throw denied();
