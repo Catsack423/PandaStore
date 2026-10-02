@@ -259,8 +259,12 @@ const QuickViewModal = () => {
                   </div>
 
                   <span>
-                    <span className="font-medium text-dark"> 4.7 Rating </span>
-                    <span className="text-dark-2"> (5 reviews) </span>
+                    <span className="font-medium text-dark">
+                      {product?.averageRating ? `${product.averageRating.toFixed(1)} Rating ` : product?.reviews ? "4.5 Rating " : "No rating "}
+                    </span>
+                    <span className="text-dark-2">
+                      ({product?.reviews ?? 0} reviews)
+                    </span>
                   </span>
                 </div>
 

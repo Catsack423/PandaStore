@@ -6,9 +6,12 @@ import ProductImage from "@/components/Common/ProductImage";
 import Newsletter from "../Common/Newsletter";
 import RecentlyViewdItems from "./RecentlyViewd";
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
-import { useAppSelector } from "@/redux/store";
+import { AppDispatch, useAppSelector } from "@/redux/store";
+import { useDispatch } from "react-redux";
+import { updateproductDetails } from "@/redux/features/product-details";
 
 const ShopDetails = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const [activeColor, setActiveColor] = useState("blue");
   const { openPreviewModal } = usePreviewSlider();
   const [previewImg, setPreviewImg] = useState(0);
@@ -89,6 +92,9 @@ const ShopDetails = () => {
 
   // pass the product here when you get the real data.
   const handlePreviewSlider = () => {
+    if (product) {
+      dispatch(updateproductDetails(product));
+    }
     openPreviewModal();
   };
 
@@ -272,7 +278,7 @@ const ShopDetails = () => {
                         </svg>
                       </div>
 
-                      <span> (5 customer reviews) </span>
+                      <span> ({product?.reviews ?? 0} customer reviews) </span>
                     </div>
 
                     <div className="flex items-center gap-1.5">
