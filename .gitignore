@@ -95,3 +95,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
+# Temporary comparison and excel files
+frontend-develop/
+*.xlsx
+
+
