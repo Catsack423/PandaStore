@@ -7,12 +7,14 @@ import { cleanupPendingProductImages } from "@/lib/pendingProductImages";
 export interface User {
   id: string;
   name: string;
+  username?: string;
   email: string;
+  phone?: string;
   role: "ADMIN" | "SELLER" | "CUSTOMER";
   status: string;
 }
 
-type AuthResult = { success: true; user?: User } | { success: false; error: string };
+type AuthResult = { success: boolean; user?: User; error?: string };
 type Registration = {
   username: string;
   email: string;
@@ -27,6 +29,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (usernameOrEmail: string, password: string) => Promise<AuthResult>;
   registerCustomer: (details: Registration) => Promise<AuthResult>;
+  updateProfile: (details: { name?: string; email?: string; phone?: string }) => Promise<AuthResult>;
   refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -105,6 +108,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function updateProfile(details: { name?: string; email?: string; phone?: string }): Promise<AuthResult> {
+    try {
+      const response = await fetch("/api/auth/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(details),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.success) {
+        return { success: false, error: data?.message || "Failed to update profile" };
+      }
+      if (data.user) {
+        setUser(data.user);
+      }
+      return { success: true, user: data.user };
+    } catch {
+      return { success: false, error: "Could not reach the server" };
+    }
+  }
+
   async function logout() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -118,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, registerCustomer, refreshUser, logout }}
+      value={{ user, isLoading, login, registerCustomer, updateProfile, refreshUser, logout }}
     >
       {children}
     </AuthContext.Provider>

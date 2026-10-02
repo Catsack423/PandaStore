@@ -39,4 +39,6 @@ public final class AuthRequests {
     public record ResetPassword(@NotBlank @Size(max = 72) String currentPassword,
             @NotBlank @Size(min = 6, max = 72) String password,
             @NotBlank @Size(max = 72) String confirmPassword) {}
+
+    public record UpdateProfile(String name, String email, String phone) {}
 }

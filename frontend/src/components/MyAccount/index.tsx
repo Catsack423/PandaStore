@@ -14,20 +14,44 @@ import Addresses from "./Addresses";
 type Profile = { name: string; email: string; phone: string };
 
 export default function MyAccount() {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading, logout, updateProfile } = useAuth();
   const [tab, setTab] = useState<"profile" | "address">("profile");
   const [profile, setProfile] = useState<Profile>({ name: "", email: "", phone: "" });
   const [savedProfile, setSavedProfile] = useState<Profile | null>(null);
   const [message, setMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (user) setProfile((current) => ({ ...current, name: current.name || user.name, email: current.email || user.email }));
+    if (user) {
+      setProfile({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+      });
+    }
   }, [user]);
 
-  function saveProfile(event: React.FormEvent<HTMLFormElement>) {
+  async function saveProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSavedProfile({ ...profile });
-    setMessage("Profile saved for this visit. Connect the customer API to keep it permanently.");
+    setIsSaving(true);
+    setMessage("");
+    try {
+      const res = await updateProfile({
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone,
+      });
+      if (res.success) {
+        setSavedProfile({ ...profile });
+        setMessage("บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว (Profile updated successfully)");
+      } else {
+        setMessage(res.error || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      }
+    } catch {
+      setMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return <main>
@@ -54,7 +78,7 @@ export default function MyAccount() {
               <form onSubmit={saveProfile} className="space-y-5">
                 <div className="grid gap-5 sm:grid-cols-2"><div className="space-y-2"><Label htmlFor="profile-name">Full name</Label><Input id="profile-name" required value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} placeholder="Your full name" /></div><div className="space-y-2"><Label htmlFor="profile-email">Email address</Label><Input id="profile-email" type="email" required value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} placeholder="you@example.com" /></div></div>
                 <div className="max-w-sm space-y-2"><Label htmlFor="profile-phone">Phone number</Label><Input id="profile-phone" type="tel" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} placeholder="Your phone number" /></div>
-                <Button type="submit" className="h-10 bg-blue px-5 text-white hover:bg-blue-dark">Save profile</Button>
+                <Button type="submit" disabled={isSaving} className="h-10 bg-blue px-5 text-white hover:bg-blue-dark">{isSaving ? "Saving..." : "Save profile"}</Button>
               </form>
               {savedProfile && <p className="mt-5 text-sm text-dark-4">Current preview: {savedProfile.name} · {savedProfile.email}</p>}
             </CardContent></Card> : <Addresses />}

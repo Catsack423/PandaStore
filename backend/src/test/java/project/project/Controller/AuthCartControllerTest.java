@@ -196,7 +196,7 @@ class AuthCartControllerTest {
                                 .andExpect(jsonPath("$.data.status").value("ACTIVE"))
                                 .andReturn().getResponse().getContentAsString();
                 java.util.Map<String, Object> data = JsonPath.read(body, "$.data");
-                assertEquals(java.util.Set.of("userId", "username", "email", "role", "status"), data.keySet());
+                assertEquals(java.util.Set.of("userId", "username", "email", "role", "status", "fullName", "phoneNumber"), data.keySet());
                 mvc.perform(get("/api/auth/me").header("Authorization", otherToken))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.data.userId").value(other.getUserId()));

@@ -42,8 +42,10 @@ export async function GET(
       {
         user: {
           id: String(data.userId),
-          name: data.username,
+          name: data.fullName || data.username,
+          username: data.username,
           email: data.email,
+          phone: data.phoneNumber || "",
           role: data.role,
           status: data.status,
         },
@@ -53,6 +55,51 @@ export async function GET(
     // Remove the old client-stored role. Authorization uses the verified session.
     result.cookies.delete("user_role");
     return result;
+  } catch {
+    return failure("Authentication service is unavailable", 503);
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ action: string }> },
+) {
+  if ((await params).action !== "me") return failure("Not found", 404);
+
+  const token = (await cookies()).get(cookieName)?.value;
+  if (!token) return failure("Please sign in", 401);
+
+  const input = await request.json().catch(() => null);
+  if (!input || typeof input !== "object") return failure("Invalid request", 400);
+
+  try {
+    const { response, body } = await callBackend("/api/auth/me", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+    });
+    if (!response.ok || !body?.success) {
+      return failure(body?.message || "Failed to update profile", response.status);
+    }
+    const data = body.data;
+    return NextResponse.json(
+      {
+        success: true,
+        user: {
+          id: String(data.userId),
+          name: data.fullName || data.username,
+          username: data.username,
+          email: data.email,
+          phone: data.phoneNumber || "",
+          role: data.role,
+          status: data.status,
+        },
+      },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch {
     return failure("Authentication service is unavailable", 503);
   }
