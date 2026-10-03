@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, PackageOpen, ShoppingBag, RefreshCw, X } from "lucide-react";
+import { ChevronDown, PackageOpen, ShoppingBag, RefreshCw, X, Star, Check } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/app/context/AuthContext";
 import { checkoutApi, methodLabel } from "@/components/Checkout/api";
@@ -10,6 +10,7 @@ import Breadcrumb from "@/components/Common/Breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import ConfirmDialog from "@/components/Common/ConfirmDialog";
+import ReviewModal from "@/components/Common/ReviewModal";
 import toast from "react-hot-toast";
 
 export type CustomerOrder = {
@@ -19,7 +20,14 @@ export type CustomerOrder = {
   date: string;
   status: "PENDING_PAYMENT" | "WAITING_SELLER_CONFIRM" | "PREPARING" | "SHIPPED" | "COMPLETED" | "CANCELLED";
   total: number;
-  items: { name: string; quantity: number; price: number }[];
+  items: {
+    orderItemId?: number;
+    productId?: number;
+    name: string;
+    quantity: number;
+    price: number;
+    isReviewed?: boolean;
+  }[];
   shippingAddress?: string;
   shippingFee: number;
   shippingMethod: string | null;
@@ -51,7 +59,14 @@ type OrderGroup = {
   orderGroupId: number; groupNumber: string; createdAt: string; paymentStatus: string;
   subOrders: { orderId: number; subOrderNumber: string; orderStatus: CustomerOrder["status"];
     totalAmount: number; shippingFee: number; shippingMethod: string | null;
-    items: { productName: string; quantity: number; unitPrice: number }[] }[];
+    items: {
+      orderItemId?: number;
+      productId?: number;
+      productName: string;
+      quantity: number;
+      unitPrice: number;
+      isReviewed?: boolean;
+    }[] }[];
 };
 async function loadOrders(signal?: AbortSignal): Promise<CustomerOrder[]> {
   const groups = await checkoutApi<OrderGroup[]>("orders", undefined, signal);
@@ -63,7 +78,14 @@ async function loadOrders(signal?: AbortSignal): Promise<CustomerOrder[]> {
     status: order.orderStatus, total: Number(order.totalAmount),
     shippingFee: Number(order.shippingFee), shippingMethod: order.shippingMethod,
     paymentStatus: group.paymentStatus, groupNumber: group.groupNumber,
-    items: order.items.map(item => ({ name: item.productName, quantity: item.quantity, price: Number(item.unitPrice) })),
+    items: order.items.map(item => ({
+      orderItemId: item.orderItemId,
+      productId: item.productId,
+      name: item.productName,
+      quantity: item.quantity,
+      price: Number(item.unitPrice),
+      isReviewed: item.isReviewed,
+    })),
   })));
 }
 
@@ -72,6 +94,7 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
   const [actionLoading, setActionLoading] = useState(false);
   const [showConfirmDelivered, setShowConfirmDelivered] = useState(false);
   const [showCancelOrder, setShowCancelOrder] = useState(false);
+  const [reviewingItem, setReviewingItem] = useState<{ orderItemId: number; productName: string } | null>(null);
   const currentStep = steps.indexOf(order.status);
 
   async function handleConfirmDelivered() {
@@ -84,6 +107,10 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
       } else {
         toast.success("Delivery confirmed successfully!");
         onRefresh();
+        const firstItem = order.items.find(i => i.orderItemId);
+        if (firstItem?.orderItemId) {
+          setReviewingItem({ orderItemId: firstItem.orderItemId, productName: firstItem.name });
+        }
       }
     } catch {
       toast.error("Could not connect to service. Please try again.");
@@ -153,6 +180,23 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
               Confirm Delivery
             </Button>
           )}
+          {order.status === "COMPLETED" && (
+            <Button
+              size="sm"
+              className="h-9 px-3 bg-[#FFA645] hover:bg-[#e89230] text-white font-medium shadow-sm flex items-center gap-1.5"
+              onClick={() => {
+                const unreviewed = order.items.find(i => !i.isReviewed && i.orderItemId) || order.items.find(i => i.orderItemId);
+                if (unreviewed?.orderItemId) {
+                  setReviewingItem({ orderItemId: unreviewed.orderItemId, productName: unreviewed.name });
+                } else {
+                  setExpanded(true);
+                }
+              }}
+            >
+              <Star className="size-4 fill-white" />
+              {order.items.some(i => !i.isReviewed) ? "Review" : "Reviewed"}
+            </Button>
+          )}
           <Button variant="outline" className="h-9 px-3" aria-expanded={expanded} aria-controls={`order-${order.id}`} onClick={() => setExpanded(!expanded)}>
             Details <ChevronDown className={`ml-1 h-4 w-4 transition-transform motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`} />
           </Button>
@@ -160,7 +204,39 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
       </div>
       {expanded && <div id={`order-${order.id}`} className="border-t border-gray-3 bg-gray-1 px-5 py-6 sm:px-7">
         <h3 className="mb-4 font-medium text-dark">Items in this order</h3>
-        <div className="space-y-3">{order.items.map((item, index) => <div key={`${item.name}-${index}`} className="flex justify-between gap-5 text-sm"><span>{item.name} × {item.quantity}</span><span className="font-medium text-dark">{currency.format(item.price * item.quantity)}</span></div>)}</div>
+        <div className="space-y-3">
+          {order.items.map((item, index) => (
+            <div key={`${item.name}-${index}`} className="flex flex-wrap items-center justify-between gap-3 text-sm rounded-lg bg-white p-3 border border-gray-3">
+              <div className="min-w-0 flex-1">
+                <span className="font-medium text-dark">{item.name}</span>
+                <span className="ml-2 text-xs text-dark-4">× {item.quantity}</span>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="font-medium text-dark">{currency.format(item.price * item.quantity)}</span>
+                {order.status === "COMPLETED" && item.orderItemId && (
+                  item.isReviewed ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs border-gray-3 text-dark-4 hover:border-blue hover:text-blue"
+                      onClick={() => setReviewingItem({ orderItemId: item.orderItemId!, productName: item.name })}
+                    >
+                      <Check className="mr-1 size-3 text-green" /> Reviewed (Edit)
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="h-8 text-xs bg-[#FFA645] hover:bg-[#e89230] text-white font-medium flex items-center gap-1"
+                      onClick={() => setReviewingItem({ orderItemId: item.orderItemId!, productName: item.name })}
+                    >
+                      <Star className="size-3 fill-white" /> Review
+                    </Button>
+                  )
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
         <div className="mt-5 space-y-2 border-t border-gray-3 pt-4 text-sm">
           <p>Order group: {order.groupNumber}</p>
           <p>Payment: {order.paymentStatus.replaceAll("_", " ")}</p>
@@ -200,6 +276,19 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
         inputRequired={true}
         loading={actionLoading}
       />
+
+      {reviewingItem && (
+        <ReviewModal
+          isOpen={true}
+          orderItemId={reviewingItem.orderItemId}
+          productName={reviewingItem.productName}
+          onClose={() => setReviewingItem(null)}
+          onSuccess={() => {
+            setReviewingItem(null);
+            onRefresh();
+          }}
+        />
+      )}
     </div>
   );
 }
