@@ -6,6 +6,7 @@ import ProductImage from "@/components/Common/ProductImage";
 import Newsletter from "../Common/Newsletter";
 import RecentlyViewdItems from "./RecentlyViewd";
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
+import RatingStars from "@/components/Common/RatingStars";
 import { AppDispatch, useAppSelector } from "@/redux/store";
 import { useDispatch } from "react-redux";
 import { updateproductDetails } from "@/redux/features/product-details";
@@ -170,114 +171,7 @@ const ShopDetails = () => {
 
                   <div className="flex flex-wrap items-center gap-5.5 mb-4.5">
                     <div className="flex items-center gap-2.5">
-                      {/* <!-- stars --> */}
-                      <div className="flex items-center gap-1">
-                        <svg
-                          className="fill-[#FFA645]"
-                          width="18"
-                          height="18"
-                          viewBox="0 0 18 18"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <g clipPath="url(#clip0_375_9172)">
-                            <path
-                              d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z"
-                              fill=""
-                            />
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_375_9172">
-                              <rect width="18" height="18" fill="white" />
-                            </clipPath>
-                          </defs>
-                        </svg>
-
-                        <svg
-                          className="fill-[#FFA645]"
-                          width="18"
-                          height="18"
-                          viewBox="0 0 18 18"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <g clipPath="url(#clip0_375_9172)">
-                            <path
-                              d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z"
-                              fill=""
-                            />
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_375_9172">
-                              <rect width="18" height="18" fill="white" />
-                            </clipPath>
-                          </defs>
-                        </svg>
-
-                        <svg
-                          className="fill-[#FFA645]"
-                          width="18"
-                          height="18"
-                          viewBox="0 0 18 18"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <g clipPath="url(#clip0_375_9172)">
-                            <path
-                              d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z"
-                              fill=""
-                            />
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_375_9172">
-                              <rect width="18" height="18" fill="white" />
-                            </clipPath>
-                          </defs>
-                        </svg>
-
-                        <svg
-                          className="fill-[#FFA645]"
-                          width="18"
-                          height="18"
-                          viewBox="0 0 18 18"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <g clipPath="url(#clip0_375_9172)">
-                            <path
-                              d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z"
-                              fill=""
-                            />
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_375_9172">
-                              <rect width="18" height="18" fill="white" />
-                            </clipPath>
-                          </defs>
-                        </svg>
-
-                        <svg
-                          className="fill-[#FFA645]"
-                          width="18"
-                          height="18"
-                          viewBox="0 0 18 18"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <g clipPath="url(#clip0_375_9172)">
-                            <path
-                              d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z"
-                              fill=""
-                            />
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_375_9172">
-                              <rect width="18" height="18" fill="white" />
-                            </clipPath>
-                          </defs>
-                        </svg>
-                      </div>
-
+                      <RatingStars rating={product.averageRating} reviews={product.reviews} showCount={false} size={18} />
                       <span> ({product?.reviews ?? 0} customer reviews) </span>
                     </div>
 
@@ -312,12 +206,14 @@ const ShopDetails = () => {
 
                   <h3 className="font-medium text-custom-1 mb-4.5">
                     <span className="text-sm sm:text-base text-dark">
-                      Price: ${product.price}
+                      Price: ${product.price > product.discountedPrice ? product.discountedPrice : product.price}
                     </span>
-                    <span className="line-through">
-                      {" "}
-                      ${product.discountedPrice}{" "}
-                    </span>
+                    {product.price > product.discountedPrice && (
+                      <span className="line-through">
+                        {" "}
+                        ${product.price}{" "}
+                      </span>
+                    )}
                   </h3>
 
                   <ul className="flex flex-col gap-2">

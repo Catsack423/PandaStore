@@ -13,6 +13,7 @@ import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 import ProductStore from "@/components/Shop/ProductStore";
 import { productUrl } from "@/lib/productUrl";
+import RatingStars from "@/components/Common/RatingStars";
 
 const ProductItem = ({ item }: { item: Product }) => {
   const { addItemToCart } = useCart();
@@ -40,8 +41,8 @@ const ProductItem = ({ item }: { item: Product }) => {
 
   return (
     <div className="group">
-      <div className="relative mb-4 overflow-hidden rounded-lg bg-[#F6F7FB]">
-        <Link href={productUrl(item)} aria-label={`View ${item.title}`} className="block w-full"><ProductImage src={item.imgs?.previews?.[0]} alt={item.title} size="fill" surface="transparent" /></Link>
+      <div className="relative mb-4 overflow-hidden rounded-lg bg-white border border-gray-3 shadow-1">
+        <Link href={productUrl(item)} aria-label={`View ${item.title}`} className="block w-full"><ProductImage src={item.imgs?.previews?.[0]} alt={item.title} size="fill" surface="white" /></Link>
 
         <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
           <button
@@ -85,42 +86,7 @@ const ProductItem = ({ item }: { item: Product }) => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2.5 mb-2">
-        <div className="flex items-center gap-1">
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={14}
-            height={14}
-          />
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={14}
-            height={14}
-          />
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={14}
-            height={14}
-          />
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={14}
-            height={14}
-          />
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={14}
-            height={14}
-          />
-        </div>
-
-        <p className="text-custom-sm">({item.reviews})</p>
-      </div>
+      <RatingStars rating={item.averageRating} reviews={item.reviews} className="mb-2" />
 
       <h3
         className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5"
@@ -130,8 +96,10 @@ const ProductItem = ({ item }: { item: Product }) => {
       </h3>
 
       <span className="flex items-center gap-2 font-medium text-lg">
-        <span className="text-dark">${item.discountedPrice}</span>
-        <span className="text-dark-4 line-through">${item.price}</span>
+        <span className="text-dark">${item.price > item.discountedPrice ? item.discountedPrice : item.price}</span>
+        {item.price > item.discountedPrice && (
+          <span className="text-dark-4 line-through">${item.price}</span>
+        )}
       </span>
       <ProductStock product={item} />
       <ProductStore product={item} />
