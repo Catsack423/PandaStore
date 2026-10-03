@@ -118,7 +118,9 @@ export default function Checkout() {
         : <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
           <div className="min-w-0 space-y-6">
             <DeliveryAddress customerId={data.customerId} addresses={data.addresses} value={addressId} disabled={submitting}
-              onSelect={id => { setFees({}); setAddressId(id); }} onAdded={address => { setData(current => current ? { ...current, addresses: [...current.addresses, address] } : current); setAddressId(address.addressId); }} />
+              onSelect={id => { setFees({}); setAddressId(id); }}
+              onAdded={address => { setData(current => current ? { ...current, addresses: [...current.addresses, address] } : current); setAddressId(address.addressId); }}
+              onUpdated={address => setData(current => current ? { ...current, addresses: current.addresses.map(a => a.addressId === address.addressId ? address : a) } : current)} />
             {shops.map(([sellerId, items]) => <Card key={sellerId}><CardHeader className="border-b border-gray-3"><CardTitle className="flex items-center gap-2"><Store className="size-5 text-blue" /><Link href={`/shop/${sellerId}`} className="hover:text-blue">{items[0].shopName || `Shop #${sellerId}`}</Link></CardTitle></CardHeader><CardContent className="pt-6">
               <div className="space-y-4">{items.map(item => <div key={item.productId} className="flex min-w-0 items-start gap-4">
                 <ProductImage src={item.imageUrl} alt={item.productName} size="md" surface="soft" />

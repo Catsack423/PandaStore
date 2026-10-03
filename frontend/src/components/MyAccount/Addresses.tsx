@@ -95,6 +95,19 @@ export default function Addresses() {
     void queryClient.invalidateQueries({ queryKey: key });
   }
 
+  function updated(address: Address) {
+    queryClient.setQueryData<CheckoutData>(key, (current) =>
+      current
+        ? {
+            ...current,
+            addresses: current.addresses.map((a) => (a.addressId === address.addressId ? address : a)),
+          }
+        : current,
+    );
+    toast.success("Address updated successfully!");
+    void queryClient.invalidateQueries({ queryKey: key });
+  }
+
   async function setDefault(id: number) {
     setSettingDefault(true);
     setDefaultError("");
@@ -168,6 +181,7 @@ export default function Addresses() {
         disabled={settingDefault || deletingId !== null}
         onSelect={setSelected}
         onAdded={added}
+        onUpdated={updated}
         onSetDefault={setDefault}
         settingDefault={settingDefault}
         onDelete={(id) => setConfirmDeleteId(id)}

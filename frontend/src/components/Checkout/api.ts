@@ -23,9 +23,10 @@ export const methodLabel = (method: string) => ({
   PROMPTPAY: "PromptPay", BANK_TRANSFER: "Bank transfer", WALLET: "Wallet",
 }[method] || method);
 
-export async function checkoutApi<T>(path = "", body?: object, signal?: AbortSignal): Promise<T> {
+export async function checkoutApi<T>(path = "", body?: object, signal?: AbortSignal, method?: "GET" | "POST" | "PUT"): Promise<T> {
+  const httpMethod = method || (body ? "POST" : "GET");
   const response = await fetch(`/api/checkout${path ? `/${path}` : ""}`, {
-    method: body ? "POST" : "GET", cache: "no-store", signal,
+    method: httpMethod, cache: "no-store", signal,
     ...(body ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {}),
   });
   const result = await response.json().catch(() => null);
