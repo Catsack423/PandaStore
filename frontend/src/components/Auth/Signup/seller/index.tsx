@@ -269,6 +269,7 @@ const SellerSignup = () => {
 
             <CardContent className="pt-4 lg:max-w-[500px] lg:justify-center lg:flex lg:mx-auto w-full">
               <form
+                  method="post"
                   onSubmit={(e) => {
                     e.preventDefault();
                     if (currentStage === 3) {
