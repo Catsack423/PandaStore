@@ -48,7 +48,27 @@ export default function DeliveryAddress({ customerId, addresses, value, disabled
               {settingDefault ? "Saving…" : "Set Default"}
             </Button>
           )}
-          {onDelete && <Button type="button" size="sm" variant="outline" disabled={disabled || deletingId === address.addressId} onClick={() => onDelete(address.addressId)} className="border-gray-3 text-dark-4 hover:border-red hover:bg-red/10 hover:text-red">{deletingId === address.addressId ? "Deleting…" : "Delete"}</Button>}
+          {onDelete && (
+            address.hasOrders ? (
+              <span
+                className="inline-flex items-center rounded border border-gray-3 bg-gray-2 px-2.5 py-1.5 text-xs font-medium text-dark-5 cursor-not-allowed select-none"
+                title="This address cannot be deleted because it is referenced by existing orders."
+              >
+                Linked to order
+              </span>
+            ) : (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={disabled || deletingId === address.addressId}
+                onClick={() => onDelete(address.addressId)}
+                className="border-gray-3 text-dark-4 hover:border-red hover:bg-red/10 hover:text-red"
+              >
+                {deletingId === address.addressId ? "Deleting…" : "Delete"}
+              </Button>
+            )
+          )}
         </div></div>)}
         <Button type="button" variant="outline" onClick={() => setOpen(!open)}>{open ? "Close address form" : "Add delivery address"}</Button>
       </fieldset>

@@ -154,8 +154,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     count: items.reduce((sum, item) => sum + item.quantity, 0), isLoading: authLoading || (customer && cart.isPending),
     isPending: mutation.isPending || reloading, error: customer && cart.error ? cart.error.message : "", refreshCart, orderPlaced,
     addItemToCart: item => act({ type: "add", item }), removeItemFromCart: id => act({ type: "remove", id }),
-    updateCartItemQuantity: item => act({ type: "quantity", ...item }), removeAllItemsFromCart: () => act({ type: "clear" }) }}>
-    {children}<Toaster position="bottom-right" />
+    updateCartItemQuantity: item => act({ type: "quantity", ...item }), removeAllItemsFromCart: () => act({ type: "clear" })
+  }}>
+    {children}
   </CartContext.Provider>;
 }
 

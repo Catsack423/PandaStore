@@ -176,7 +176,11 @@ export default function Addresses() {
       <ConfirmDialog
         isOpen={confirmDeleteId !== null}
         onClose={() => setConfirmDeleteId(null)}
-        onConfirm={() => confirmDeleteId !== null && removeAddress(confirmDeleteId)}
+        onConfirm={async () => {
+          if (confirmDeleteId !== null) {
+            await removeAddress(confirmDeleteId);
+          }
+        }}
         title="Delete Address"
         description="Are you sure you want to remove this delivery address? This action cannot be undone."
         confirmText="Delete"

@@ -5,6 +5,7 @@ export type CheckoutItem = {
 export type Address = {
   addressId: number; receiverName: string; phoneNumber: string; addressLine: string;
   district: string; province: string; postalCode: string; isDefault: boolean;
+  hasOrders?: boolean;
 };
 export type CheckoutData = {
   customerId: number; items: CheckoutItem[]; addresses: Address[];
