@@ -8,9 +8,11 @@ import toast from "react-hot-toast";
 export interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
-  orderItemId: number;
-  productName: string;
+  onSuccess: (orderItemIds: number[]) => void;
+  orderItemId?: number;
+  orderItemIds?: number[];
+  productName?: string;
+  productNames?: string[];
 }
 
 const ratingLabels: Record<number, string> = {
@@ -26,7 +28,9 @@ export default function ReviewModal({
   onClose,
   onSuccess,
   orderItemId,
+  orderItemIds,
   productName,
+  productNames,
 }: ReviewModalProps) {
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
@@ -36,10 +40,23 @@ export default function ReviewModal({
 
   if (!isOpen) return null;
 
+  const resolvedItemIds = orderItemIds && orderItemIds.length > 0 
+    ? orderItemIds 
+    : (orderItemId ? [orderItemId] : []);
+  
+  const resolvedNames = productNames && productNames.length > 0
+    ? productNames
+    : (productName ? [productName] : []);
+
   const currentRating = hoverRating ?? rating;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submitting) return;
+    if (resolvedItemIds.length === 0) {
+      setError("No items to review");
+      return;
+    }
     if (rating < 1 || rating > 5) {
       setError("Please select a rating between 1 and 5 stars");
       return;
@@ -49,23 +66,29 @@ export default function ReviewModal({
     setError("");
 
     try {
-      const response = await fetch("/api/reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderItemId,
-          rating,
-          comment: comment.trim(),
-        }),
-      });
+      const results = await Promise.all(
+        resolvedItemIds.map(async (id) => {
+          const response = await fetch("/api/reviews", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderItemId: id,
+              rating,
+              comment: comment.trim(),
+            }),
+          });
+          const data = await response.json().catch(() => null);
+          return { ok: response.ok && data?.success, data, id };
+        })
+      );
 
-      const data = await response.json().catch(() => null);
-      if (!response.ok || !data?.success) {
-        throw new Error(data?.message || "Failed to submit review");
+      const failed = results.filter((r) => !r.ok);
+      if (failed.length === results.length) {
+        throw new Error(failed[0]?.data?.message || "Failed to submit review");
       }
 
       toast.success("Review submitted successfully! Thank you for your feedback.");
-      onSuccess();
+      onSuccess(resolvedItemIds);
       onClose();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to submit review";
@@ -96,10 +119,13 @@ export default function ReviewModal({
 
         <div className="mb-5">
           <h3 id="review-dialog-title" className="text-xl font-semibold text-dark">
-            Review Product
+            Review Product{resolvedNames.length > 1 ? "s" : ""}
           </h3>
           <p className="mt-1 text-sm text-dark-4 line-clamp-2">
-            Share your experience with <span className="font-medium text-dark">{productName}</span>
+            Share your experience with{" "}
+            <span className="font-medium text-dark">
+              {resolvedNames.join(", ")}
+            </span>
           </p>
         </div>
 

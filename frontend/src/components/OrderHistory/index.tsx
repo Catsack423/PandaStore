@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronDown, PackageOpen, ShoppingBag, RefreshCw, X, Star, Check } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -94,8 +94,51 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
   const [actionLoading, setActionLoading] = useState(false);
   const [showConfirmDelivered, setShowConfirmDelivered] = useState(false);
   const [showCancelOrder, setShowCancelOrder] = useState(false);
-  const [reviewingItem, setReviewingItem] = useState<{ orderItemId: number; productName: string } | null>(null);
+  const [reviewingBatch, setReviewingBatch] = useState<{ orderItemIds: number[]; productNames: string[] } | null>(null);
   const currentStep = steps.indexOf(order.status);
+
+  const [reviewedItemIds, setReviewedItemIds] = useState<Set<number>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("pandastore_reviewed_items");
+        if (saved) return new Set(JSON.parse(saved).map(Number));
+      } catch {}
+    }
+    return new Set();
+  });
+
+  const markItemsAsReviewed = (ids: number[]) => {
+    setReviewedItemIds(prev => {
+      const next = new Set(prev);
+      ids.forEach(id => next.add(id));
+      try {
+        localStorage.setItem("pandastore_reviewed_items", JSON.stringify(Array.from(next)));
+      } catch {}
+      return next;
+    });
+  };
+
+  const isItemReviewed = (item: { orderItemId?: number; isReviewed?: boolean }) => {
+    if (item.isReviewed) return true;
+    if (item.orderItemId && reviewedItemIds.has(item.orderItemId)) return true;
+    return false;
+  };
+
+  useEffect(() => {
+    if (order.status !== "COMPLETED") return;
+    order.items.forEach(async (item) => {
+      if (!item.orderItemId || item.isReviewed || reviewedItemIds.has(item.orderItemId)) return;
+      try {
+        const res = await fetch(`/api/reviews/check-eligibility?orderItemId=${item.orderItemId}`);
+        const data = await res.json().catch(() => null);
+        if (res.ok && data?.success && data?.data === false) {
+          markItemsAsReviewed([item.orderItemId]);
+        }
+      } catch {}
+    });
+  }, [order.status, order.items]);
+
+  const allReviewed = order.items.length > 0 && order.items.every(i => isItemReviewed(i));
 
   async function handleConfirmDelivered() {
     setActionLoading(true);
@@ -107,9 +150,12 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
       } else {
         toast.success("Delivery confirmed successfully!");
         onRefresh();
-        const firstItem = order.items.find(i => i.orderItemId);
-        if (firstItem?.orderItemId) {
-          setReviewingItem({ orderItemId: firstItem.orderItemId, productName: firstItem.name });
+        const unreviewed = order.items.filter(i => !isItemReviewed(i) && i.orderItemId);
+        if (unreviewed.length > 0) {
+          setReviewingBatch({
+            orderItemIds: unreviewed.map(i => i.orderItemId!),
+            productNames: unreviewed.map(i => i.name),
+          });
         }
       }
     } catch {
@@ -181,21 +227,30 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
             </Button>
           )}
           {order.status === "COMPLETED" && (
-            <Button
-              size="sm"
-              className="h-9 px-3 bg-[#FFA645] hover:bg-[#e89230] text-white font-medium shadow-sm flex items-center gap-1.5"
-              onClick={() => {
-                const unreviewed = order.items.find(i => !i.isReviewed && i.orderItemId) || order.items.find(i => i.orderItemId);
-                if (unreviewed?.orderItemId) {
-                  setReviewingItem({ orderItemId: unreviewed.orderItemId, productName: unreviewed.name });
-                } else {
-                  setExpanded(true);
-                }
-              }}
-            >
-              <Star className="size-4 fill-white" />
-              {order.items.some(i => !i.isReviewed) ? "Review" : "Reviewed"}
-            </Button>
+            allReviewed ? (
+              <span
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-gray-3 bg-gray-2 px-3 text-xs font-semibold text-dark-5 cursor-default select-none shadow-sm"
+                title="All items in this order have been reviewed."
+              >
+                <Check className="size-4 text-green" /> Reviewed
+              </span>
+            ) : (
+              <Button
+                size="sm"
+                className="h-9 px-3 bg-[#FFA645] hover:bg-[#e89230] text-white font-medium shadow-sm flex items-center gap-1.5"
+                onClick={() => {
+                  const unreviewed = order.items.filter(i => !isItemReviewed(i) && i.orderItemId);
+                  if (unreviewed.length > 0) {
+                    setReviewingBatch({
+                      orderItemIds: unreviewed.map(i => i.orderItemId!),
+                      productNames: unreviewed.map(i => i.name),
+                    });
+                  }
+                }}
+              >
+                <Star className="size-4 fill-white" /> Review
+              </Button>
+            )
           )}
           <Button variant="outline" className="h-9 px-3" aria-expanded={expanded} aria-controls={`order-${order.id}`} onClick={() => setExpanded(!expanded)}>
             Details <ChevronDown className={`ml-1 h-4 w-4 transition-transform motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`} />
@@ -214,20 +269,21 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
               <div className="flex items-center gap-3 shrink-0">
                 <span className="font-medium text-dark">{currency.format(item.price * item.quantity)}</span>
                 {order.status === "COMPLETED" && item.orderItemId && (
-                  item.isReviewed ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 text-xs border-gray-3 text-dark-4 hover:border-blue hover:text-blue"
-                      onClick={() => setReviewingItem({ orderItemId: item.orderItemId!, productName: item.name })}
+                  isItemReviewed(item) ? (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full border border-green-light-3 bg-green-light-6 px-3 py-1 text-xs font-semibold text-green-dark cursor-default select-none"
+                      title="This product has already been reviewed."
                     >
-                      <Check className="mr-1 size-3 text-green" /> Reviewed (Edit)
-                    </Button>
+                      <Check className="size-3 stroke-[2.5]" /> Reviewed
+                    </span>
                   ) : (
                     <Button
                       size="sm"
                       className="h-8 text-xs bg-[#FFA645] hover:bg-[#e89230] text-white font-medium flex items-center gap-1"
-                      onClick={() => setReviewingItem({ orderItemId: item.orderItemId!, productName: item.name })}
+                      onClick={() => setReviewingBatch({
+                        orderItemIds: [item.orderItemId!],
+                        productNames: [item.name],
+                      })}
                     >
                       <Star className="size-3 fill-white" /> Review
                     </Button>
@@ -277,14 +333,15 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
         loading={actionLoading}
       />
 
-      {reviewingItem && (
+      {reviewingBatch && (
         <ReviewModal
           isOpen={true}
-          orderItemId={reviewingItem.orderItemId}
-          productName={reviewingItem.productName}
-          onClose={() => setReviewingItem(null)}
-          onSuccess={() => {
-            setReviewingItem(null);
+          orderItemIds={reviewingBatch.orderItemIds}
+          productNames={reviewingBatch.productNames}
+          onClose={() => setReviewingBatch(null)}
+          onSuccess={(reviewedIds) => {
+            markItemsAsReviewed(reviewedIds);
+            setReviewingBatch(null);
             onRefresh();
           }}
         />
