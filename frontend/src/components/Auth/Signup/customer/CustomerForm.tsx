@@ -105,9 +105,14 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           id="phoneNumber"
           name="phoneNumber"
           type="tel"
-          placeholder="เช่น 0812345678 (9-15 หลัก)"
+          inputMode="numeric"
+          maxLength={10}
+          placeholder="เช่น 0812345678 (10 หลัก)"
           value={formData.phoneNumber}
-          onChange={onChange}
+          onChange={(e) => {
+            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+            onChange({ target: { name: "phoneNumber", value: digits } } as React.ChangeEvent<HTMLInputElement>);
+          }}
           className={errors.phoneNumber ? "border-red focus:ring-red/20" : ""}
         />
         {errors.phoneNumber && (

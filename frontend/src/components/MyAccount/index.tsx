@@ -245,9 +245,14 @@ export default function MyAccount() {
                         <Input
                           id="profile-phone"
                           type="tel"
+                          inputMode="numeric"
+                          maxLength={10}
                           value={profile.phone}
-                          onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                          placeholder="Your phone number"
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            setProfile({ ...profile, phone: digits });
+                          }}
+                          placeholder="08XXXXXXXX (10 digits)"
                         />
                       </div>
                       <Button

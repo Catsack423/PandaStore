@@ -67,9 +67,14 @@ export const Stage2Shop: React.FC<Stage2ShopProps> = ({
             id="shopPhone"
             name="shopPhone"
             type="tel"
-            placeholder="เช่น 021234567"
+            inputMode="numeric"
+            maxLength={10}
+            placeholder="เช่น 021234567 หรือ 0812345678"
             value={formData.shopPhone}
-            onChange={onChange}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+              onChange({ target: { name: "shopPhone", value: digits } } as React.ChangeEvent<HTMLInputElement>);
+            }}
             className={errors.shopPhone ? "border-red" : ""}
           />
           {errors.shopPhone && (

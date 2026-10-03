@@ -54,11 +54,28 @@ export default function DeliveryAddress({ customerId, addresses, value, disabled
       </fieldset>
       {open && <form onSubmit={save} className="mt-5 border-t border-gray-3 pt-5">
         <fieldset disabled={saving || disabled} className="grid gap-4 sm:grid-cols-2">
-          {([ ["receiverName", "Receiver name", "text", 100], ["phoneNumber", "Phone number", "tel", 15],
+          {([ ["receiverName", "Receiver name", "text", 100], ["phoneNumber", "Phone number", "tel", 10],
             ["addressLine", "Street address", "text", 255], ["district", "District", "text", 100],
             ["province", "Province", "text", 100], ["postalCode", "Postal code", "text", 5] ] as const).map(([name, label, type, maxLength]) =>
-              <label key={name} className="text-sm text-dark">{label}<Input name={name} type={type} required maxLength={maxLength} className="mt-2"
-                pattern={name === "phoneNumber" ? "[0-9]{9,15}" : name === "postalCode" ? "[0-9]{5}" : undefined} /></label>)}
+              <label key={name} className="text-sm text-dark">{label}
+                <Input
+                  name={name}
+                  type={type}
+                  required
+                  maxLength={maxLength}
+                  inputMode={name === "phoneNumber" || name === "postalCode" ? "numeric" : undefined}
+                  onInput={(e) => {
+                    if (name === "phoneNumber") {
+                      e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "").slice(0, 10);
+                    } else if (name === "postalCode") {
+                      e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "").slice(0, 5);
+                    }
+                  }}
+                  placeholder={name === "phoneNumber" ? "08XXXXXXXX (10 digits)" : undefined}
+                  className="mt-2"
+                  pattern={name === "phoneNumber" ? "[0-9]{9,10}" : name === "postalCode" ? "[0-9]{5}" : undefined}
+                />
+              </label>)}
           {error && <p role="alert" className="text-sm text-red sm:col-span-2">{error}</p>}
           <Button type="submit" className="bg-blue text-white sm:col-span-2">{saving ? "Saving…" : "Save address"}</Button>
         </fieldset>
