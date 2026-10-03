@@ -36,7 +36,18 @@ export default function DeliveryAddress({ customerId, addresses, value, disabled
             <span className="mt-1 block">{address.addressLine}, {address.district}, {address.province} {address.postalCode}</span></span>
         </label>
         <div className="flex items-center gap-2">
-          {onSetDefault && !address.isDefault && <Button type="button" size="sm" variant="outline" disabled={settingDefault || disabled} onClick={() => onSetDefault(address.addressId)}>{settingDefault ? "Saving…" : "Set Default"}</Button>}
+          {onSetDefault && !address.isDefault && value === address.addressId && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={settingDefault || disabled}
+              onClick={() => onSetDefault(address.addressId)}
+              className="border-blue text-blue hover:bg-blue hover:text-white"
+            >
+              {settingDefault ? "Saving…" : "Set Default"}
+            </Button>
+          )}
           {onDelete && <Button type="button" size="sm" variant="outline" disabled={disabled || deletingId === address.addressId} onClick={() => onDelete(address.addressId)} className="border-gray-3 text-dark-4 hover:border-red hover:bg-red/10 hover:text-red">{deletingId === address.addressId ? "Deleting…" : "Delete"}</Button>}
         </div></div>)}
         <Button type="button" variant="outline" onClick={() => setOpen(!open)}>{open ? "Close address form" : "Add delivery address"}</Button>

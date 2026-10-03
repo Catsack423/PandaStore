@@ -17,41 +17,113 @@ export default function Addresses() {
   const [selected, setSelected] = useState<number | null>(null);
   const [settingDefault, setSettingDefault] = useState(false);
   const [defaultError, setDefaultError] = useState("");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+
   const customer = user?.role === "CUSTOMER";
   const key = ["account-addresses", user?.id];
-  const addresses = useQuery({ queryKey: key,
+  const addresses = useQuery({
+    queryKey: key,
     queryFn: ({ signal }) => checkoutApi<CheckoutData>("", undefined, signal),
-    enabled: !authLoading && customer, staleTime: 0, gcTime: 0,
-    refetchOnWindowFocus: "always", retry: 1 });
+    enabled: !authLoading && customer,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: "always",
+    retry: 1,
+  });
 
-  if (authLoading || (customer && addresses.isPending)) return <Card><CardContent role="status" className="p-6">Loading delivery addresses…</CardContent></Card>;
-  if (!customer) return <Card><CardHeader><CardTitle>Delivery address</CardTitle></CardHeader><CardContent className="pb-6"><p className="text-sm">{user ? "Delivery addresses are available for customer accounts." : "Sign in to view and save your delivery addresses."}</p>{!user && <Link href="/signin" className="mt-4 inline-block text-sm text-blue hover:underline">Sign in</Link>}</CardContent></Card>;
-  if (addresses.isError) return <Card><CardContent role="alert" className="p-6"><p className="text-sm text-red">{addresses.error.message}</p><Button variant="outline" className="mt-4" disabled={addresses.isFetching} onClick={() => void addresses.refetch()}>Try again</Button></CardContent></Card>;
+  if (authLoading || (customer && addresses.isPending)) {
+    return (
+      <Card>
+        <CardContent role="status" className="p-6">
+          Loading delivery addresses…
+        </CardContent>
+      </Card>
+    );
+  }
 
-  const data = addresses.data!;
-  const value = data.addresses.some(address => address.addressId === selected) ? selected
-    : data.addresses.find(address => address.isDefault)?.addressId || data.addresses[0]?.addressId || null;
+  if (!customer) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Delivery address</CardTitle>
+        </CardHeader>
+        <CardContent className="pb-6">
+          <p className="text-sm">
+            {user
+              ? "Delivery addresses are available for customer accounts."
+              : "Sign in to view and save your delivery addresses."}
+          </p>
+          {!user && (
+            <Link href="/signin" className="mt-4 inline-block text-sm text-blue hover:underline">
+              Sign in
+            </Link>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (addresses.isError || !addresses.data) {
+    return (
+      <Card>
+        <CardContent role="alert" className="p-6">
+          <p className="text-sm text-red">{addresses.error?.message || "Could not load addresses"}</p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            disabled={addresses.isFetching}
+            onClick={() => void addresses.refetch()}
+          >
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const data = addresses.data;
+  const value = data.addresses.some((address) => address.addressId === selected)
+    ? selected
+    : data.addresses.find((address) => address.isDefault)?.addressId || data.addresses[0]?.addressId || null;
+
   function added(address: Address) {
-    queryClient.setQueryData<CheckoutData>(key, current => current
-      ? { ...current, addresses: [...current.addresses, address] } : current);
+    queryClient.setQueryData<CheckoutData>(key, (current) =>
+      current ? { ...current, addresses: [...current.addresses, address] } : current,
+    );
     setSelected(address.addressId);
     void queryClient.invalidateQueries({ queryKey: key });
   }
+
   async function setDefault(id: number) {
-    setSettingDefault(true); setDefaultError("");
+    setSettingDefault(true);
+    setDefaultError("");
     try {
       const response = await fetch(`/api/customers/${data.customerId}/addresses/${id}/default`, { method: "PUT" });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.message || "Could not update default address");
-      queryClient.setQueryData<CheckoutData>(key, current => current ? { ...current,
-        addresses: current.addresses.map(address => ({ ...address, isDefault: address.addressId === id })) } : current);
+      queryClient.setQueryData<CheckoutData>(key, (current) =>
+        current
+          ? {
+              ...current,
+              addresses: current.addresses.map((address) => ({
+                ...address,
+                isDefault: address.addressId === id,
+              })),
+            }
+          : current,
+      );
       setSelected(id);
+      toast.success("Default address updated successfully!");
       await queryClient.invalidateQueries({ queryKey: key });
-    } catch (error) { setDefaultError(error instanceof Error ? error.message : "Could not update default address"); }
-    finally { setSettingDefault(false); }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Could not update default address";
+      setDefaultError(msg);
+      toast.error(msg);
+    } finally {
+      setSettingDefault(false);
+    }
   }
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   async function removeAddress(id: number) {
     setDeletingId(id);
@@ -62,13 +134,17 @@ export default function Addresses() {
       if (!response.ok || (result && !result.success)) {
         throw new Error(result?.message || "Could not delete address");
       }
-      queryClient.setQueryData<CheckoutData>(key, current => current ? {
-        ...current,
-        addresses: current.addresses.filter(address => address.addressId !== id),
-      } : current);
+      queryClient.setQueryData<CheckoutData>(key, (current) =>
+        current
+          ? {
+              ...current,
+              addresses: current.addresses.filter((address) => address.addressId !== id),
+            }
+          : current,
+      );
       if (selected === id) {
-        const remaining = data.addresses.filter(a => a.addressId !== id);
-        setSelected(remaining.find(a => a.isDefault)?.addressId || remaining[0]?.addressId || null);
+        const remaining = data.addresses.filter((a) => a.addressId !== id);
+        setSelected(remaining.find((a) => a.isDefault)?.addressId || remaining[0]?.addressId || null);
       }
       toast.success("Address deleted successfully");
       await queryClient.invalidateQueries({ queryKey: key });
