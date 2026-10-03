@@ -145,7 +145,23 @@ export async function POST(
       if (!response.ok || !body?.success) {
         return failure(body?.message || "Failed to update password", response.status);
       }
-      return NextResponse.json({ success: true, message: body?.message || "Password updated successfully" });
+      const newToken = body.data?.token;
+      const result = NextResponse.json({
+        success: true,
+        message: body?.message || "Password updated successfully",
+        data: body.data,
+      });
+      if (newToken) {
+        const options = {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax" as const,
+          path: "/",
+          maxAge: 60 * 60 * 24,
+        };
+        result.cookies.set(cookieName, newToken, options);
+      }
+      return result;
     } catch {
       return failure("Authentication service is unavailable", 503);
     }

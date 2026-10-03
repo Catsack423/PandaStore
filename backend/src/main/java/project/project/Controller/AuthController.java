@@ -175,7 +175,7 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ApiResponse<Map<String, Boolean>> resetPassword(
+    public ApiResponse<Map<String, Object>> resetPassword(
             @Valid @RequestBody AuthRequests.ResetPassword request) {
         var user = currentUser.requireUser();
         if (!passwords.matches(request.currentPassword(), user.getPasswordHash())) {
@@ -184,7 +184,12 @@ public class AuthController {
         if (!auth.resetPassword(user.getUserId(), request.password(), request.confirmPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "รหัสผ่านใหม่ไม่ถูกต้องหรือไม่ตรงกัน");
         }
-        return ApiResponse.success("เปลี่ยนรหัสผ่านสำเร็จ", Map.of("success", true));
+        var newSession = auth.loginWithUser(user.getUsername(), request.password());
+        return ApiResponse.success("เปลี่ยนรหัสผ่านสำเร็จ", Map.of(
+                "success", true,
+                "token", newSession.token(),
+                "user", newSession.user()
+        ));
     }
 
 }

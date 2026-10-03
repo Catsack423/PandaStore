@@ -144,6 +144,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!response.ok || !data?.success) {
         return { success: false, error: data?.message || "Failed to update password" };
       }
+      if (data?.data?.user) {
+        const u = data.data.user;
+        setUser({
+          id: String(u.userId || u.id),
+          name: u.fullName || u.username || u.name,
+          email: u.email,
+          phone: u.phoneNumber || u.phone || "",
+          role: u.role,
+          status: u.status,
+        });
+      }
+      await refreshUser();
       return { success: true };
     } catch {
       return { success: false, error: "Could not reach the server" };
