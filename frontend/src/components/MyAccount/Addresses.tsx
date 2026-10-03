@@ -8,6 +8,8 @@ import DeliveryAddress from "@/components/Checkout/DeliveryAddress";
 import { Address, CheckoutData, checkoutApi } from "@/components/Checkout/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import ConfirmDialog from "@/components/Common/ConfirmDialog";
+import toast from "react-hot-toast";
 
 export default function Addresses() {
   const { user, isLoading: authLoading } = useAuth();
@@ -48,6 +50,63 @@ export default function Addresses() {
     } catch (error) { setDefaultError(error instanceof Error ? error.message : "Could not update default address"); }
     finally { setSettingDefault(false); }
   }
-  return <div className="space-y-3">{defaultError && <p role="alert" className="text-sm text-red">{defaultError}</p>}<DeliveryAddress customerId={data.customerId} addresses={data.addresses} value={value}
-    disabled={settingDefault} onSelect={setSelected} onAdded={added} onSetDefault={setDefault} settingDefault={settingDefault} /></div>;
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+
+  async function removeAddress(id: number) {
+    setDeletingId(id);
+    setDefaultError("");
+    try {
+      const response = await fetch(`/api/customers/${data.customerId}/addresses/${id}`, { method: "DELETE" });
+      const result = await response.json().catch(() => null);
+      if (!response.ok || (result && !result.success)) {
+        throw new Error(result?.message || "Could not delete address");
+      }
+      queryClient.setQueryData<CheckoutData>(key, current => current ? {
+        ...current,
+        addresses: current.addresses.filter(address => address.addressId !== id),
+      } : current);
+      if (selected === id) {
+        const remaining = data.addresses.filter(a => a.addressId !== id);
+        setSelected(remaining.find(a => a.isDefault)?.addressId || remaining[0]?.addressId || null);
+      }
+      toast.success("Address deleted successfully");
+      await queryClient.invalidateQueries({ queryKey: key });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Could not delete address";
+      setDefaultError(msg);
+      toast.error(msg);
+    } finally {
+      setDeletingId(null);
+      setConfirmDeleteId(null);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {defaultError && <p role="alert" className="text-sm text-red">{defaultError}</p>}
+      <DeliveryAddress
+        customerId={data.customerId}
+        addresses={data.addresses}
+        value={value}
+        disabled={settingDefault || deletingId !== null}
+        onSelect={setSelected}
+        onAdded={added}
+        onSetDefault={setDefault}
+        settingDefault={settingDefault}
+        onDelete={(id) => setConfirmDeleteId(id)}
+        deletingId={deletingId}
+      />
+      <ConfirmDialog
+        isOpen={confirmDeleteId !== null}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={() => confirmDeleteId !== null && removeAddress(confirmDeleteId)}
+        title="Delete Address"
+        description="Are you sure you want to remove this delivery address? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+        icon="trash"
+      />
+    </div>
+  );
 }

@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Address, checkoutApi } from "./api";
 
-export default function DeliveryAddress({ customerId, addresses, value, disabled, onSelect, onAdded, onSetDefault, settingDefault }: {
+export default function DeliveryAddress({ customerId, addresses, value, disabled, onSelect, onAdded, onSetDefault, settingDefault, onDelete, deletingId }: {
   customerId: number; addresses: Address[]; value: number | null; disabled: boolean;
   onSelect: (id: number) => void; onAdded: (address: Address) => void;
   onSetDefault?: (id: number) => void; settingDefault?: boolean;
+  onDelete?: (id: number) => void; deletingId?: number | null;
 }) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -33,7 +34,11 @@ export default function DeliveryAddress({ customerId, addresses, value, disabled
           <span className="text-sm"><strong className="text-dark">{address.receiverName}</strong>{address.isDefault && <span className="ml-2 text-xs text-blue">Default</span>}
             <span className="mt-1 block">{address.phoneNumber}</span>
             <span className="mt-1 block">{address.addressLine}, {address.district}, {address.province} {address.postalCode}</span></span>
-        </label>{onSetDefault && !address.isDefault && <Button type="button" variant="outline" disabled={settingDefault} onClick={() => onSetDefault(address.addressId)}>{settingDefault ? "Saving…" : "Set Default"}</Button>}</div>)}
+        </label>
+        <div className="flex items-center gap-2">
+          {onSetDefault && !address.isDefault && <Button type="button" size="sm" variant="outline" disabled={settingDefault || disabled} onClick={() => onSetDefault(address.addressId)}>{settingDefault ? "Saving…" : "Set Default"}</Button>}
+          {onDelete && <Button type="button" size="sm" variant="outline" disabled={disabled || deletingId === address.addressId} onClick={() => onDelete(address.addressId)} className="border-gray-3 text-dark-4 hover:border-red hover:bg-red/10 hover:text-red">{deletingId === address.addressId ? "Deleting…" : "Delete"}</Button>}
+        </div></div>)}
         <Button type="button" variant="outline" onClick={() => setOpen(!open)}>{open ? "Close address form" : "Add delivery address"}</Button>
       </fieldset>
       {open && <form onSubmit={save} className="mt-5 border-t border-gray-3 pt-5">
