@@ -40,23 +40,23 @@ const CustomerSignup = () => {
     // 1. Username
     if (!formData.username.trim()) {
       newErrors.username = "กรุณากรอกชื่อผู้ใช้";
-    } else if (formData.username.length < 3 || formData.username.length > 50) {
+    } else if (formData.username.trim().length < 3 || formData.username.trim().length > 50) {
       newErrors.username = "ชื่อผู้ใช้ต้องมีความยาวระหว่าง 3 ถึง 50 ตัวอักษร";
     }
 
     // 2. Full Name
     if (!formData.fullName.trim()) {
       newErrors.fullName = "กรุณากรอกชื่อ-นามสกุล";
-    } else if (formData.fullName.length > 100) {
+    } else if (formData.fullName.trim().length > 100) {
       newErrors.fullName = "ชื่อ-นามสกุลต้องมีความยาวไม่เกิน 100 ตัวอักษร";
     }
 
     // 3. Email
     if (!formData.email.trim()) {
       newErrors.email = "กรุณากรอกอีเมล";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
       newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
-    } else if (formData.email.length > 100) {
+    } else if (formData.email.trim().length > 100) {
       newErrors.email = "อีเมลต้องมีความยาวไม่เกิน 100 ตัวอักษร";
     }
 
@@ -70,10 +70,12 @@ const CustomerSignup = () => {
     }
 
     // 5. Password
-    if (!formData.password) {
+    if (!formData.password.trim()) {
       newErrors.password = "กรุณากรอกรหัสผ่าน";
     } else if (formData.password.length < 6) {
       newErrors.password = "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร";
+    } else if (new TextEncoder().encode(formData.password).length > 72) {
+      newErrors.password = "รหัสผ่านต้องมีขนาดไม่เกิน 72 ไบต์ (ภาษาไทยใช้หลายไบต์ต่อตัวอักษร)";
     }
 
     // 6. Confirm Password
