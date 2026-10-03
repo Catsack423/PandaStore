@@ -171,12 +171,7 @@ export async function getSellerProducts(
     const products = await fetchBackendProducts(
       `/api/products/seller/${sellerId}`,
     );
-    return mapBackendProducts(
-      products.filter(
-        (product) => product.status === "ACTIVE" && (product.stock ?? 0) > 0,
-      ),
-      base,
-    );
+    return mapBackendProducts(products, base);
   } catch {
     return null;
   }

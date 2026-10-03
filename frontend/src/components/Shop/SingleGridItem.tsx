@@ -15,6 +15,7 @@ import ProductImage from "@/components/Common/ProductImage";
 import ProductStore from "./ProductStore";
 import { productUrl } from "@/lib/productUrl";
 import { Pencil } from "lucide-react";
+import RatingStars from "@/components/Common/RatingStars";
 
 const SingleGridItem = ({ item, readOnly = false, showImageSkeleton = false }: { item: Product; readOnly?: boolean; showImageSkeleton?: boolean }) => {
   const { addItemToCart } = useCart();
@@ -84,8 +85,13 @@ const SingleGridItem = ({ item, readOnly = false, showImageSkeleton = false }: {
   return (
     <div className="group">
       <div className="relative mb-4 overflow-hidden rounded-lg bg-white shadow-1">
+        {currentProduct.status === "INACTIVE" && (
+          <div className="absolute top-2.5 left-2.5 z-10 rounded bg-red px-2 py-0.5 text-xs font-semibold text-white shadow">
+            INACTIVE
+          </div>
+        )}
         <Link href={productUrl(currentProduct)} aria-label={`View ${currentProduct.title}`} className="block w-full">
-          <ProductImage src={currentProduct.imgs?.previews?.[0]} alt={currentProduct.title} size="fill" showSkeleton={showImageSkeleton} />
+          <ProductImage src={currentProduct.imgs?.previews?.[0]} alt={currentProduct.title} size="fill" surface="white" showSkeleton={showImageSkeleton} />
         </Link>
 
         {!readOnly && (
@@ -133,17 +139,7 @@ const SingleGridItem = ({ item, readOnly = false, showImageSkeleton = false }: {
         )}
       </div>
 
-      <div className="flex items-center gap-2.5 mb-2">
-        <div className="flex items-center gap-1">
-          <Image src="/images/icons/icon-star.svg" alt="star icon" width={15} height={15} />
-          <Image src="/images/icons/icon-star.svg" alt="star icon" width={15} height={15} />
-          <Image src="/images/icons/icon-star.svg" alt="star icon" width={15} height={15} />
-          <Image src="/images/icons/icon-star.svg" alt="star icon" width={15} height={15} />
-          <Image src="/images/icons/icon-star.svg" alt="star icon" width={15} height={15} />
-        </div>
-
-        <p className="text-custom-sm">({currentProduct.reviews ?? 0})</p>
-      </div>
+      <RatingStars rating={currentProduct.averageRating} reviews={currentProduct.reviews} className="mb-2" />
 
       <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
         <Link href={productUrl(currentProduct)}> {currentProduct.title} </Link>
@@ -152,7 +148,7 @@ const SingleGridItem = ({ item, readOnly = false, showImageSkeleton = false }: {
       <div className="flex items-center justify-between mt-1">
         <div>
           <span className="flex items-center gap-2 font-medium text-lg">
-            <span className="text-dark">${currentProduct.discountedPrice}</span>
+            <span className="text-dark">${currentProduct.price > currentProduct.discountedPrice ? currentProduct.discountedPrice : currentProduct.price}</span>
             {currentProduct.price > currentProduct.discountedPrice && (
               <span className="text-dark-4 line-through">${currentProduct.price}</span>
             )}
