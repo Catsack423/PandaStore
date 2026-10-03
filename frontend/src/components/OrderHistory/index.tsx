@@ -9,6 +9,8 @@ import { checkoutApi, methodLabel } from "@/components/Checkout/api";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import ConfirmDialog from "@/components/Common/ConfirmDialog";
+import toast from "react-hot-toast";
 
 export type CustomerOrder = {
   id: string;
@@ -68,29 +70,33 @@ async function loadOrders(signal?: AbortSignal): Promise<CustomerOrder[]> {
 function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showConfirmDelivered, setShowConfirmDelivered] = useState(false);
+  const [showCancelOrder, setShowCancelOrder] = useState(false);
   const currentStep = steps.indexOf(order.status);
 
   async function handleConfirmDelivered() {
-    if (!window.confirm("Are you sure you want to confirm delivery for this order?")) return;
     setActionLoading(true);
     try {
       const res = await fetch(`/api/sub-orders/${order.orderId}/confirm-delivered`, { method: "POST" });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.success) {
-        alert(data?.message || "Failed to confirm delivery");
+        toast.error(data?.message || "Failed to confirm delivery");
       } else {
+        toast.success("Delivery confirmed successfully!");
         onRefresh();
       }
     } catch {
-      alert("Could not connect to service. Please try again.");
+      toast.error("Could not connect to service. Please try again.");
     } finally {
       setActionLoading(false);
     }
   }
 
-  async function handleCancelOrder() {
-    const reason = window.prompt("Reason for cancellation:", "I changed my mind");
-    if (!reason || !reason.trim()) return;
+  async function handleCancelOrder(reason?: string) {
+    if (!reason || !reason.trim()) {
+      toast.error("Please enter a reason for cancellation");
+      return;
+    }
     setActionLoading(true);
     try {
       const res = await fetch(`/api/sub-orders/${order.orderId}/cancel`, {
@@ -100,12 +106,13 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.success) {
-        alert(data?.message || "Failed to cancel order");
+        toast.error(data?.message || "Failed to cancel order");
       } else {
+        toast.success("Order cancelled successfully");
         onRefresh();
       }
     } catch {
-      alert("Could not connect to service. Please try again.");
+      toast.error("Could not connect to service. Please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -137,12 +144,12 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           {order.status === "PENDING_PAYMENT" && order.paymentStatus === "PENDING" && <Link href={`/payment/${order.orderGroupId}`} aria-label={`Pay now for order group ${order.orderGroupId}`} className="inline-flex h-9 items-center justify-center rounded-lg bg-blue px-3 text-sm text-white hover:bg-blue-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">Pay now</Link>}
           {(order.status === "PENDING_PAYMENT" || order.status === "WAITING_SELLER_CONFIRM" || order.status === "PREPARING") && (
-            <Button variant="outline" size="sm" className="h-9 px-3 text-red border-red/30 hover:bg-red/10" disabled={actionLoading} onClick={() => void handleCancelOrder()}>
+            <Button variant="outline" size="sm" className="h-9 px-3 text-red border-red/30 hover:bg-red/10" disabled={actionLoading} onClick={() => setShowCancelOrder(true)}>
               Cancel
             </Button>
           )}
           {order.status === "SHIPPED" && (
-            <Button size="sm" className="h-9 px-3 bg-green-dark hover:bg-green text-white font-medium shadow-sm" disabled={actionLoading} onClick={() => void handleConfirmDelivered()}>
+            <Button size="sm" className="h-9 px-3 bg-green-dark hover:bg-green text-white font-medium shadow-sm" disabled={actionLoading} onClick={() => setShowConfirmDelivered(true)}>
               Confirm Delivery
             </Button>
           )}
@@ -162,6 +169,37 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
         </div>
         {order.shippingAddress && <p className="mt-6 border-t border-gray-3 pt-4 text-sm"><strong className="text-dark">Shipping address</strong><br />{order.shippingAddress}</p>}
       </div>}
+
+      <ConfirmDialog
+        isOpen={showConfirmDelivered}
+        onClose={() => setShowConfirmDelivered(false)}
+        onConfirm={handleConfirmDelivered}
+        title="Confirm Order Delivery"
+        description="Are you sure you have received all items in this order? This will mark the order as delivered and completed."
+        confirmText="Yes, I Received It"
+        cancelText="Not Yet"
+        variant="primary"
+        icon="check"
+        loading={actionLoading}
+      />
+
+      <ConfirmDialog
+        isOpen={showCancelOrder}
+        onClose={() => setShowCancelOrder(false)}
+        onConfirm={handleCancelOrder}
+        title="Cancel Order"
+        description="Please provide a reason for cancelling this order so the seller knows why."
+        confirmText="Confirm Cancellation"
+        cancelText="Keep Order"
+        variant="danger"
+        icon="alert"
+        showInput={true}
+        inputLabel="Reason for cancellation"
+        inputPlaceholder="e.g. Changed my mind, ordered by mistake..."
+        inputDefaultValue="I changed my mind"
+        inputRequired={true}
+        loading={actionLoading}
+      />
     </div>
   );
 }
