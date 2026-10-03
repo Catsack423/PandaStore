@@ -115,19 +115,20 @@ public class AuthController {
         String fullName = null;
         String phoneNumber = null;
         if (user.getRole() == project.project.Entity.user.UserRole.CUSTOMER && customerRepository != null) {
-            var customerOpt = customerRepository.findByUser_UserId(user.getUserId());
-            if (customerOpt.isPresent()) {
-                var customer = customerOpt.get();
-                if (request.name() != null && !request.name().isBlank()) {
-                    customer.setFullName(request.name().trim());
-                }
-                if (request.phone() != null) {
-                    customer.setPhoneNumber(request.phone().trim());
-                }
-                customerRepository.save(customer);
-                fullName = customer.getFullName();
-                phoneNumber = customer.getPhoneNumber();
+            var customer = customerRepository.findByUser_UserId(user.getUserId())
+                    .orElseGet(() -> new project.project.Entity.user.Customer(
+                            user,
+                            request.name() != null && !request.name().isBlank() ? request.name().trim() : user.getUsername(),
+                            request.phone() != null ? request.phone().trim() : null));
+            if (request.name() != null && !request.name().isBlank()) {
+                customer.setFullName(request.name().trim());
             }
+            if (request.phone() != null) {
+                customer.setPhoneNumber(request.phone().trim());
+            }
+            customerRepository.save(customer);
+            fullName = customer.getFullName();
+            phoneNumber = customer.getPhoneNumber();
         } else if (user.getRole() == project.project.Entity.user.UserRole.SELLER && sellerRepository != null) {
             var sellerOpt = sellerRepository.findByUser_UserId(user.getUserId());
             if (sellerOpt.isPresent()) {

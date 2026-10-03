@@ -30,6 +30,7 @@ interface AuthContextType {
   login: (usernameOrEmail: string, password: string) => Promise<AuthResult>;
   registerCustomer: (details: Registration) => Promise<AuthResult>;
   updateProfile: (details: { name?: string; email?: string; phone?: string }) => Promise<AuthResult>;
+  changePassword: (currentPassword: string, password: string, confirmPassword: string) => Promise<AuthResult>;
   refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -128,6 +129,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function changePassword(
+    currentPassword: string,
+    password: string,
+    confirmPassword: string,
+  ): Promise<AuthResult> {
+    try {
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, password, confirmPassword }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.success) {
+        return { success: false, error: data?.message || "Failed to update password" };
+      }
+      return { success: true };
+    } catch {
+      return { success: false, error: "Could not reach the server" };
+    }
+  }
+
   async function logout() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -141,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, registerCustomer, updateProfile, refreshUser, logout }}
+      value={{ user, isLoading, login, registerCustomer, updateProfile, changePassword, refreshUser, logout }}
     >
       {children}
     </AuthContext.Provider>

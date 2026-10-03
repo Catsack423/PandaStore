@@ -127,6 +127,30 @@ export async function POST(
     result.cookies.delete("user_role");
     return result;
   }
+  if (action === "reset-password") {
+    const token = (await cookies()).get(cookieName)?.value;
+    if (!token) return failure("Please sign in", 401);
+    const input = await request.json().catch(() => null);
+    if (!input || typeof input !== "object") return failure("Invalid request", 400);
+
+    try {
+      const { response, body } = await callBackend("/api/auth/reset-password", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
+      });
+      if (!response.ok || !body?.success) {
+        return failure(body?.message || "Failed to update password", response.status);
+      }
+      return NextResponse.json({ success: true, message: body?.message || "Password updated successfully" });
+    } catch {
+      return failure("Authentication service is unavailable", 503);
+    }
+  }
+
   if (action !== "login" && action !== "register")
     return failure("Not found", 404);
 
@@ -166,8 +190,9 @@ export async function POST(
       success: true,
       user: {
         id: String(user.userId),
-        name: user.username,
+        name: user.fullName || user.username,
         email: user.email,
+        phone: user.phoneNumber || "",
         role: user.role,
         status: user.status,
       },
