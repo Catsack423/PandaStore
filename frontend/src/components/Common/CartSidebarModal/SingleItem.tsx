@@ -12,6 +12,12 @@ const SingleItem = ({ item, removeItemFromCart, disabled }) => {
   const { updateCartItemQuantity } = useCart();
   const quantity = item.quantity;
   const quantityUnavailable = disabled || item.stock == null;
+  const stockLimitReached = item.stock != null && quantity >= item.stock;
+  const stockNotice = item.stock === 1
+    ? "Only 1 item in stock. You cannot add more."
+    : item.stock === 0
+      ? "Out of stock. You cannot add more."
+      : `Stock limit reached (${item.stock} items). You cannot add more.`;
 
   const changeQuantity = (nextQuantity: number) => {
     if (quantityUnavailable || nextQuantity < 1 || nextQuantity > item.stock) return;
@@ -39,10 +45,11 @@ const SingleItem = ({ item, removeItemFromCart, disabled }) => {
               <Minus size={16} aria-hidden="true" />
             </button>
             <span aria-live="polite" aria-atomic="true" className="min-w-[32px] px-1 text-center text-sm font-medium tabular-nums text-dark">{quantity}</span>
-            <button type="button" onClick={() => changeQuantity(quantity + 1)} disabled={quantityUnavailable || quantity >= item.stock} aria-label={`Increase quantity of ${item.title}`} className="flex h-11 w-11 shrink-0 items-center justify-center text-dark transition-colors hover:bg-blue/5 hover:text-blue focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue disabled:cursor-not-allowed disabled:text-dark-5 disabled:hover:bg-transparent">
+            <button type="button" onClick={() => changeQuantity(quantity + 1)} disabled={quantityUnavailable || stockLimitReached} aria-label={`Increase quantity of ${item.title}`} aria-describedby={stockLimitReached ? `cart-stock-limit-${item.id}` : undefined} title={stockLimitReached ? stockNotice : undefined} className="flex h-11 w-11 shrink-0 items-center justify-center text-dark transition-colors hover:bg-blue/5 hover:text-blue focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue disabled:cursor-not-allowed disabled:text-dark-5 disabled:hover:bg-transparent">
               <Plus size={16} aria-hidden="true" />
             </button>
           </div>
+          {stockLimitReached && <p id={`cart-stock-limit-${item.id}`} role="status" className="mt-2 text-xs leading-5 text-orange-dark">{stockNotice}</p>}
         </div>
       </div>
 
