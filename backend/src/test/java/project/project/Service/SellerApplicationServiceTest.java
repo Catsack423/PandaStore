@@ -215,7 +215,7 @@ public class SellerApplicationServiceTest {
         // ตรวจสอบการส่ง Notification แจ้งผลให้ผู้ใช้
         verify(notificationService, times(1)).sendNotification(
                 eq(1L),
-                contains("อนุมัติ"),
+                contains("approved"),
                 contains("สมชาย อิเล็กทรอนิกส์"),
                 eq(NotificationType.SELLER_APPROVED)
         );
@@ -249,7 +249,7 @@ public class SellerApplicationServiceTest {
             sellerApplicationService.approveApplication(501L, 99L);
         });
 
-        assertTrue(ex.getMessage().contains("เป็นผู้ขาย"));
+        assertTrue(ex.getMessage().contains("already a seller"));
         verify(sellerRepository, never()).save(any());
     }
 
@@ -263,7 +263,7 @@ public class SellerApplicationServiceTest {
             sellerApplicationService.submitApplication(1L, sampleApplication);
         });
 
-        assertTrue(ex.getMessage().contains("เป็นผู้ขาย"));
+        assertTrue(ex.getMessage().contains("already a seller"));
         verify(applicationRepository, never()).save(any());
     }
 
@@ -278,7 +278,7 @@ public class SellerApplicationServiceTest {
             sellerApplicationService.submitApplication(1L, sampleApplication);
         });
 
-        assertTrue(ex.getMessage().contains("เป็นผู้ขาย"));
+        assertTrue(ex.getMessage().contains("already a seller"));
         verify(applicationRepository, never()).save(any());
     }
 
@@ -304,7 +304,7 @@ public class SellerApplicationServiceTest {
 
         verify(notificationService, times(1)).sendNotification(
                 eq(1L),
-                contains("ถูกปฏิเสธ"),
+                contains("rejected"),
                 contains("เอกสารบัตรประชาชนไม่ชัดเจน"),
                 eq(NotificationType.SELLER_APPROVED)
         );
@@ -328,7 +328,7 @@ public class SellerApplicationServiceTest {
         verify(applicationRepository, times(1)).save(sampleApplication);
         verify(notificationService, times(1)).sendNotification(
                 eq(1L),
-                contains("ขอเอกสารเพิ่มเติม"),
+                contains("Additional documents required"),
                 contains("โปรดแนบรูปถ่ายคู่กับบัตรประชาชน"),
                 eq(NotificationType.SELLER_APPROVED)
         );
