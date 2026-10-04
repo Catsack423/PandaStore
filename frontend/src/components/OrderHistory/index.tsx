@@ -40,6 +40,24 @@ export type CustomerOrder = {
 const currency = bahtCurrency;
 const orderColumns = "lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,1.7fr)_minmax(0,0.6fr)_260px]";
 
+function ReviewAction({ reviewed, onClick }: { reviewed: boolean; onClick?: () => void }) {
+  const layout = "inline-flex h-11 min-w-[124px] shrink-0 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium";
+
+  if (reviewed) {
+    return (
+      <span className={`${layout} border border-green-light-3 bg-green-light-6 text-green-dark`} title="All selected items have been reviewed.">
+        <Check size={16} aria-hidden="true" /> Reviewed
+      </span>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onClick} className={`${layout} bg-blue text-white transition-colors hover:bg-blue-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue`}>
+      <Star size={16} aria-hidden="true" /> Review
+    </button>
+  );
+}
+
 type OrderGroup = {
   orderGroupId: number; groupNumber: string; createdAt: string; paymentStatus: string;
   subOrders: { orderId: number; subOrderNumber: string; orderStatus: CustomerOrder["status"];
@@ -199,16 +217,10 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
           )}
           {order.status === "COMPLETED" && (
             allReviewed ? (
-              <span
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-gray-3 bg-gray-2 px-3 text-xs font-semibold text-dark-5 cursor-default select-none shadow-sm"
-                title="All items in this order have been reviewed."
-              >
-                <Check className="size-4 text-green" /> Reviewed
-              </span>
+              <ReviewAction reviewed />
             ) : (
-              <Button
-                size="sm"
-                className="h-9 px-3 bg-[#FFA645] hover:bg-[#e89230] text-white font-medium shadow-sm flex items-center gap-1.5"
+              <ReviewAction
+                reviewed={false}
                 onClick={() => {
                   const unreviewed = order.items.filter(i => !isItemReviewed(i) && i.orderItemId);
                   if (unreviewed.length > 0) {
@@ -218,9 +230,7 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
                     });
                   }
                 }}
-              >
-                <Star className="size-4 fill-white" /> Review
-              </Button>
+              />
             )
           )}
           <Button variant="outline" className="h-9 px-3" aria-expanded={expanded} aria-controls={`order-${order.id}`} onClick={() => setExpanded(!expanded)}>
@@ -237,27 +247,19 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
                 <span className="font-medium text-dark">{item.name}</span>
                 <span className="ml-2 text-xs text-dark-4">× {item.quantity}</span>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex max-w-full flex-wrap items-center gap-3">
                 <span className="font-medium text-dark">{currency.format(item.price * item.quantity)}</span>
                 {order.status === "COMPLETED" && item.orderItemId && (
                   isItemReviewed(item) ? (
-                    <span
-                      className="inline-flex items-center gap-1 rounded-full border border-green-light-3 bg-green-light-6 px-3 py-1 text-xs font-semibold text-green-dark cursor-default select-none"
-                      title="This product has already been reviewed."
-                    >
-                      <Check className="size-3 stroke-[2.5]" /> Reviewed
-                    </span>
+                    <ReviewAction reviewed />
                   ) : (
-                    <Button
-                      size="sm"
-                      className="h-8 text-xs bg-[#FFA645] hover:bg-[#e89230] text-white font-medium flex items-center gap-1"
+                    <ReviewAction
+                      reviewed={false}
                       onClick={() => setReviewingBatch({
                         orderItemIds: [item.orderItemId!],
                         productNames: [item.name],
                       })}
-                    >
-                      <Star className="size-3 fill-white" /> Review
-                    </Button>
+                    />
                   )
                 )}
               </div>
