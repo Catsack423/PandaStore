@@ -63,7 +63,7 @@ export default function DeliveryAddress({ customerId, addresses, value, disabled
             <span className="mt-1 block">{address.phoneNumber}</span>
             <span className="mt-1 block">{address.addressLine}, {address.district}, {address.province} {address.postalCode}</span></span>
         </label>
-        <div className="flex items-center gap-2">
+        <div className="flex max-w-full flex-wrap items-center gap-2">
           {onSetDefault && !address.isDefault && value === address.addressId && (
             <Button
               type="button"
@@ -89,10 +89,10 @@ export default function DeliveryAddress({ customerId, addresses, value, disabled
           {onDelete && (
             address.hasOrders ? (
               <span
-                className="inline-flex items-center rounded border border-gray-3 bg-gray-2 px-2.5 py-1.5 text-xs font-medium text-dark-5 cursor-not-allowed select-none"
-                title="This address cannot be deleted because it is referenced by existing orders."
+                className="inline-flex max-w-full items-center rounded border border-gray-3 bg-gray-2 px-2.5 py-1.5 text-xs font-medium leading-5 text-dark-4"
+                title="ที่อยู่นี้ถูกใช้ในออเดอร์ จึงลบไม่ได้"
               >
-                Linked to order
+                ที่อยู่นี้ถูกใช้ในออเดอร์ จึงลบไม่ได้
               </span>
             ) : (
               <Button
