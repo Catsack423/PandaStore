@@ -10,6 +10,21 @@ export const statusLabels: Record<SellerApplicationStatus, string> = {
   PENDING: "Under review", APPROVED: "Approved", REJECTED: "Rejected", NEED_MORE_DOC: "Action needed",
 };
 
+export const statusDescriptions: Record<SellerApplicationStatus, string> = {
+  PENDING: "ส่งคำขอแล้วและกำลังรอทีมงานตรวจสอบ ยังไม่ต้องส่งคำขอซ้ำ หน้านี้ตรวจสอบสถานะให้อัตโนมัติ",
+  APPROVED: "คำขอได้รับอนุมัติแล้ว สามารถจัดการร้านค้าได้จาก Seller dashboard",
+  REJECTED: "คำขอครั้งนี้ไม่ผ่านการอนุมัติ ตรวจสอบเหตุผลด้านล่าง แล้วแก้ไขข้อมูลหรือเอกสารก่อนสมัครใหม่",
+  NEED_MORE_DOC: "ทีมงานต้องการข้อมูลหรือเอกสารเพิ่มเติม ตรวจสอบสิ่งที่ต้องแก้ไขด้านล่าง แล้วส่งคำขอที่แก้ไขแล้ว",
+};
+
+export function getReviewNote(application: SellerApplicationRecord): string {
+  if (application.adminNote?.trim()) return application.adminNote;
+  if (!["REJECTED", "NEED_MORE_DOC"].includes(application.status)) return "ไม่มีหมายเหตุเพิ่มเติม";
+  return application.status === "REJECTED"
+    ? "ยังไม่มีเหตุผลเพิ่มเติมแนบมากับคำขอนี้ กรุณาตรวจสอบข้อมูลร้านค้าและเอกสารก่อนส่งคำขอใหม่"
+    : "ยังไม่มีรายละเอียดเอกสารที่ต้องแก้ไขแนบมากับคำขอนี้ กรุณาตรวจสอบข้อมูลและภาพเอกสารให้ครบถ้วนและอ่านได้ชัดเจนก่อนส่งใหม่";
+}
+
 export const statusColors: Record<SellerApplicationStatus, string> = {
   PENDING: "bg-yellow-light-4 text-yellow-dark", APPROVED: "bg-green-light-6 text-green",
   REJECTED: "bg-red-light-6 text-red", NEED_MORE_DOC: "bg-blue/10 text-blue",
@@ -51,7 +66,7 @@ export default function ApplicationHistoryTable({ applications, emptyMessage, on
               <td className="px-6 py-5">{item.shopName}</td>
               <td className="px-6 py-5">{new Date(item.createdAt).toLocaleDateString("en-US")}</td>
               <td className="px-6 py-5"><span className={`rounded-full px-3 py-1 text-xs ${embedded ? "inline-flex whitespace-nowrap" : ""} ${statusColors[item.status]}`}>{statusLabels[item.status]}</span></td>
-              <td className="max-w-[250px] px-6 py-5">{item.adminNote || "—"}</td>
+              <td className="max-w-[250px] break-words px-6 py-5">{item.adminNote || (["REJECTED", "NEED_MORE_DOC"].includes(item.status) ? getReviewNote(item) : "—")}</td>
               {onView && <td className="px-6 py-4 text-right"><Button type="button" disabled={viewDisabled} onClick={() => onView(item)} aria-label={getViewLabel ? `${getViewLabel(item)} ${item.applicationId}` : `View application ${item.applicationId}`} className="h-9 gap-2 rounded-lg bg-blue px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-dark focus-visible:ring-blue/30"><Eye className="size-4" /> {getViewLabel ? getViewLabel(item) : "View application"}</Button></td>}
             </tr>)}
             {applications.length === 0 && emptyMessage && <tr><td colSpan={onView ? 6 : 5} className="px-6 py-10 text-center text-dark-4">{emptyMessage}</td></tr>}
