@@ -1,4 +1,5 @@
 "use client";
+import { formatBaht } from "@/lib/currency";
 import React, { Suspense, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -202,7 +203,7 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
                       cart
                     </span>
                     <p className="font-medium text-custom-sm text-dark">
-                      {cartLoading ? "…" : `$${totalPrice.toFixed(2)}`}
+                      {cartLoading ? "…" : formatBaht(totalPrice)}
                     </p>
                   </div>
                 </button>}

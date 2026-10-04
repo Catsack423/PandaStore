@@ -1,4 +1,5 @@
 "use client";
+import { formatBaht } from "@/lib/currency";
 import React, { useState } from "react";
 import { Product } from "@/types/product";
 import { useModalContext } from "@/app/context/QuickViewModalContext";
@@ -148,9 +149,9 @@ const SingleGridItem = ({ item, readOnly = false, showImageSkeleton = false }: {
       <div className="flex items-center justify-between mt-1">
         <div>
           <span className="flex items-center gap-2 font-medium text-lg">
-            <span className="text-dark">${currentProduct.price > currentProduct.discountedPrice ? currentProduct.discountedPrice : currentProduct.price}</span>
+            <span className="text-dark">{formatBaht(currentProduct.price > currentProduct.discountedPrice ? currentProduct.discountedPrice : currentProduct.price)}</span>
             {currentProduct.price > currentProduct.discountedPrice && (
-              <span className="text-dark-4 line-through">${currentProduct.price}</span>
+              <span className="text-dark-4 line-through">{formatBaht(currentProduct.price)}</span>
             )}
           </span>
           <ProductStock product={currentProduct} />
@@ -195,7 +196,7 @@ const SingleGridItem = ({ item, readOnly = false, showImageSkeleton = false }: {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-dark mb-1">Price ($)</label>
+                  <label className="block text-xs font-medium text-dark mb-1">Price (บาท)</label>
                   <input
                     type="number"
                     step="0.01"

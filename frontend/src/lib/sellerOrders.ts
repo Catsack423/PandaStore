@@ -1,3 +1,4 @@
+import { bahtCurrency } from "@/lib/currency";
 import { z } from "zod";
 
 export const sellerOrderSchema = z.object({
@@ -21,7 +22,7 @@ export const sellerActionSchemas = {
   reject: z.object({ reason: z.string().trim().min(1, "Enter a rejection reason.").max(255) }).strict(),
   ship: z.object({ courierName: z.string().trim().min(1, "Enter a courier.").max(100), trackingNumber: z.string().trim().min(1, "Enter a tracking number.").max(100) }).strict(),
 };
-export const sellerOrderCurrency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+export const sellerOrderCurrency = bahtCurrency;
 export function isSellerOrderPaid(order: SellerOrder) { return order.paymentStatus === "PAID" || order.paymentStatus === "PARTIALLY_REFUNDED"; }
 export function hasOrderStatusConflict(order: SellerOrder) {
   return (isSellerOrderPaid(order) && order.orderStatus === "PENDING_PAYMENT") ||

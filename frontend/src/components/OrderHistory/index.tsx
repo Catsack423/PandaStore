@@ -1,4 +1,5 @@
 "use client";
+import { bahtCurrency } from "@/lib/currency";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -52,7 +53,7 @@ const statusDotStyles: Record<CustomerOrder["status"], string> = {
   CANCELLED: "bg-red-dark ring-red-dark/30",
 };
 const steps: CustomerOrder["status"][] = ["PENDING_PAYMENT", "WAITING_SELLER_CONFIRM", "PREPARING", "SHIPPED", "COMPLETED"];
-const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+const currency = bahtCurrency;
 const orderColumns = "lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,1.7fr)_minmax(0,0.6fr)_260px]";
 
 type OrderGroup = {

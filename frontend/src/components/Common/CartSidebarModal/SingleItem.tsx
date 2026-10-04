@@ -1,3 +1,4 @@
+import { formatBaht } from "@/lib/currency";
 import React from "react";
 import ProductImage from "@/components/Common/ProductImage";
 
@@ -16,7 +17,7 @@ const SingleItem = ({ item, removeItemFromCart, disabled }) => {
           <h3 className="font-medium text-dark mb-1 ease-out duration-200 hover:text-blue">
             <a href="#"> {item.title} </a>
           </h3>
-          <p className="text-custom-sm">${Number(item.discountedPrice).toFixed(2)} × {item.quantity}</p><p className="mt-1 text-xs">{item.stock == null ? "Stock unavailable" : `${item.stock} in stock`}</p>
+          <p className="text-custom-sm">{formatBaht(Number(item.discountedPrice))} × {item.quantity}</p><p className="mt-1 text-xs">{item.stock == null ? "Stock unavailable" : `${item.stock} in stock`}</p>
         </div>
       </div>
 

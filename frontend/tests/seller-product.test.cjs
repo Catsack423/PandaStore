@@ -8,7 +8,7 @@ function load(file, mocks) {
   const source = readFileSync(resolve(__dirname, "../src", file), "utf8");
   const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX } }).outputText;
   const exports = {};
-  new Function("require", "exports", compiled)(name => mocks[name] ?? require(name), exports);
+  new Function("require", "exports", compiled)(name => mocks[name] ?? (name === "@/lib/currency" ? load("lib/currency.ts", {}) : require(name)), exports);
   return exports;
 }
 

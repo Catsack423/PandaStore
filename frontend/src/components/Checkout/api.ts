@@ -1,3 +1,4 @@
+import { formatBaht } from "@/lib/currency";
 export type CheckoutItem = {
   productId: number; productName: string; sellerId: number; shopName: string;
   unitPrice: number; quantity: number; imageUrl: string | null;
@@ -16,7 +17,7 @@ export type PlacedOrder = {
   totalProductsAmount: number; totalShippingFee: number;
   subOrders: { orderId: number; shippingMethod: string; shippingFee: number; totalAmount: number; orderStatus: string }[];
 };
-export const money = (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
+export const money = formatBaht;
 export const methodLabel = (method: string) => ({
   STANDARD: "Standard delivery", EMS: "EMS", FLASH: "Flash Express", KERRY: "Kerry Express",
   "J&T": "J&T Express", THAILANDPOST: "Thailand Post", CREDIT_CARD: "Credit card",

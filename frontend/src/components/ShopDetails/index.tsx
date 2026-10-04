@@ -1,4 +1,5 @@
 "use client";
+import { formatBaht } from "@/lib/currency";
 import React, { use, useEffect, useState } from "react";
 import Breadcrumb from "../Common/Breadcrumb";
 import Image from "next/image";
@@ -206,12 +207,12 @@ const ShopDetails = () => {
 
                   <h3 className="font-medium text-custom-1 mb-4.5">
                     <span className="text-sm sm:text-base text-dark">
-                      Price: ${product.price > product.discountedPrice ? product.discountedPrice : product.price}
+                      Price: {formatBaht(product.price > product.discountedPrice ? product.discountedPrice : product.price)}
                     </span>
                     {product.price > product.discountedPrice && (
                       <span className="line-through">
                         {" "}
-                        ${product.price}{" "}
+                        {formatBaht(product.price)}{" "}
                       </span>
                     )}
                   </h3>

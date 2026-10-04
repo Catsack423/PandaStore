@@ -1,4 +1,5 @@
 "use client";
+import { formatBaht } from "@/lib/currency";
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
@@ -20,8 +21,8 @@ export default function PriceDropdown() {
         <RangeSlider min={0} max={maxPrice} step="any" value={[priceStart, priceEnd]}
           onInput={([start, end]: [number, number]) => setPriceRange(Math.floor(start), Math.ceil(end))} />
         <div className="mt-4 flex justify-between text-sm text-dark">
-          <span>${priceStart.toLocaleString()}</span>
-          <span>${priceEnd.toLocaleString()}</span>
+          <span>{formatBaht(priceStart)}</span>
+          <span>{formatBaht(priceEnd)}</span>
         </div>
       </div>}
     </div>

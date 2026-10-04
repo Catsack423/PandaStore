@@ -1,4 +1,5 @@
 "use client";
+import { formatBaht } from "@/lib/currency";
 import React from "react";
 import { Product } from "@/types/product";
 import { useModalContext } from "@/app/context/QuickViewModalContext";
@@ -44,9 +45,9 @@ const SingleItem = ({ item }: { item: Product }) => {
           </h3>
 
           <span className="flex items-center justify-center gap-2 font-medium text-lg">
-            <span className="text-dark">${item.price > item.discountedPrice ? item.discountedPrice : item.price}</span>
+            <span className="text-dark">{formatBaht(item.price > item.discountedPrice ? item.discountedPrice : item.price)}</span>
             {item.price > item.discountedPrice && (
-              <span className="text-dark-4 line-through">${item.price}</span>
+              <span className="text-dark-4 line-through">{formatBaht(item.price)}</span>
             )}
           </span>
         </div>

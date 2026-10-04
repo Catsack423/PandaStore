@@ -1,4 +1,5 @@
 "use client";
+import { formatBaht } from "@/lib/currency";
 
 import { useState } from "react";
 import { ProductImageGallery } from "@/components/Common/ProductImage";
@@ -11,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import type { Product } from "@/types/product";
 import type { ProductReview } from "@/app/(site)/shop/[shopId]/prouduct/page";
 
-const money = (amount: number) => `$${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+const money = formatBaht;
 
 function Rating({ value, label }: { value: number; label: string }) {
   return <span className="inline-flex items-center gap-1" aria-label={label}>

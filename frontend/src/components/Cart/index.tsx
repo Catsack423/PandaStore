@@ -1,4 +1,5 @@
 "use client";
+import { bahtCurrency } from "@/lib/currency";
 
 import Link from "next/link";
 import { useEffect } from "react";
@@ -11,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type CartItem } from "@/redux/features/cart-slice";
 import { templateShopName } from "@/lib/templateShops";
 
-const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+const currency = bahtCurrency;
 
 type ShopGroup = {
   key: string;

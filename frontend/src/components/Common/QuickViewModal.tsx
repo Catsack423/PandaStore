@@ -1,4 +1,5 @@
 "use client";
+import { formatBaht } from "@/lib/currency";
 import React, { useEffect, useState } from "react";
 
 import { useModalContext } from "@/app/context/QuickViewModalContext";
@@ -222,11 +223,11 @@ const QuickViewModal = () => {
 
                   <span className="flex items-center gap-2">
                     <span className="font-semibold text-dark text-xl xl:text-heading-4">
-                      ${product.price > product.discountedPrice ? product.discountedPrice : product.price}
+                      {formatBaht(product.price > product.discountedPrice ? product.discountedPrice : product.price)}
                     </span>
                     {product.price > product.discountedPrice && (
                       <span className="font-medium text-dark-4 text-lg xl:text-2xl line-through">
-                        ${product.price}
+                        {formatBaht(product.price)}
                       </span>
                     )}
                   </span>
