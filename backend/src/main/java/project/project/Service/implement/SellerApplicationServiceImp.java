@@ -77,7 +77,11 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
                 .anyMatch(existing -> existing.getStatus() == SellerApplicationStatus.PENDING
                         || existing.getStatus() == SellerApplicationStatus.APPROVED);
         if (alreadyOpen) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "มีคำขอที่รอตรวจสอบหรือได้รับอนุมัติแล้ว");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A pending or approved seller application already exists");
+        }
+
+        if (user.getRole() == UserRole.SELLER || sellerRepository.findByUser_UserId(userId).isPresent()) {
+            throw new IllegalStateException("This user is already a seller");
         }
 
         SellerApplication application = new SellerApplication();
@@ -120,6 +124,10 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
+        if (user.getRole() == UserRole.SELLER || sellerRepository.findByUser_UserId(userId).isPresent()) {
+            throw new IllegalStateException("This user is already a seller");
+        }
+
         application.setUser(user);
         application.setStatus(SellerApplicationStatus.PENDING);
         if (application.getCreatedAt() == null) {
@@ -151,12 +159,16 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
             throw new IllegalStateException("Application has already been approved");
         }
 
+        User user = application.getUser();
+        if (user != null && (user.getRole() == UserRole.SELLER || sellerRepository.findByUser_UserId(user.getUserId()).isPresent())) {
+            throw new IllegalStateException("The user associated with this application is already a seller");
+        }
+
         application.setStatus(SellerApplicationStatus.APPROVED);
         application.setReviewedBy(admin);
         application.setReviewedAt(LocalDateTime.now());
         applicationRepository.save(application);
 
-        User user = application.getUser();
         user.setRole(UserRole.SELLER);
         userRepository.save(user);
 
@@ -182,8 +194,8 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
         if (notificationService != null) {
             notificationService.sendNotification(
                     user.getUserId(),
-                    "คำขอเปิดร้านค้าได้รับการอนุมัติ",
-                    "ยินดีด้วย! ร้านค้า " + application.getShopName() + " ได้รับการอนุมัติแล้ว",
+                    "Seller application approved",
+                    "Congratulations! Your shop " + application.getShopName() + " has been approved",
                     NotificationType.SELLER_APPROVED
             );
         }
@@ -210,8 +222,8 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
         if (notificationService != null && application.getUser() != null) {
             notificationService.sendNotification(
                     application.getUser().getUserId(),
-                    "คำขอเปิดร้านค้าถูกปฏิเสธ",
-                    "คำขอเปิดร้านค้าของคุณถูกปฏิเสธเนื่องจาก: " + reason,
+                    "Seller application rejected",
+                    "Your seller application was rejected for the following reason: " + reason,
                     NotificationType.SELLER_APPROVED
             );
         }
@@ -238,8 +250,8 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
         if (notificationService != null && application.getUser() != null) {
             notificationService.sendNotification(
                     application.getUser().getUserId(),
-                    "ขอเอกสารเพิ่มเติมสำหรับการสมัครร้านค้า",
-                    "โปรดส่งเอกสารเพิ่มเติม: " + message,
+                    "Additional documents required for your seller application",
+                    "Please submit additional documents: " + message,
                     NotificationType.SELLER_APPROVED
             );
         }

@@ -1,0 +1,611 @@
+{
+  "info": {
+    "_postman_id": "pandastore-6_Seller_Application.postman_collection.json",
+    "name": "6. PandaStore - Seller Application & Admin Workflow",
+    "description": "Seller application submission, validation checks (13-digit Thai national ID, bank information), Admin review queue, requesting more documents, application rejection with reason, and application approval with role upgrade.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "2",
+      "type": "string"
+    },
+    {
+      "key": "adminId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "applicationId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "6.0 (TC24B) Register New Seller User Directly",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const timestamp = Date.now();",
+              "const randomNum = Math.floor(Math.random() * 90000000000) + 10000000000;",
+              "const idCard = `3${randomNum.toString().padStart(12, '0').slice(0, 12)}`;",
+              "const username = `seller_${timestamp.toString().slice(-6)}`;",
+              "const email = `${username}@pandastore.com`;",
+              "const shopName = `Panda Official #${Math.floor(Math.random() * 9000) + 1000}`;",
+              "const phone = `08${Math.floor(Math.random() * 90000000) + 10000000}`;",
+              "const bankAccount = `${Math.floor(Math.random() * 9000000000) + 1000000000}`;",
+              "pm.collectionVariables.set(\"temp_reg_username\", username);",
+              "pm.collectionVariables.set(\"temp_reg_email\", email);",
+              "pm.collectionVariables.set(\"temp_reg_shop\", shopName);",
+              "pm.collectionVariables.set(\"temp_reg_phone\", phone);",
+              "pm.collectionVariables.set(\"temp_reg_idcard\", idCard);",
+              "pm.collectionVariables.set(\"temp_reg_bankacc\", bankAccount);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Response has success true and sellerId\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.data).to.have.property(\"sellerId\");",
+              "    pm.collectionVariables.set(\"createdSellerId\", json.data.sellerId);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register/seller",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register",
+            "seller"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{temp_reg_username}}\",\n  \"email\": \"{{temp_reg_email}}\",\n  \"password\": \"password123\",\n  \"confirmPassword\": \"password123\",\n  \"shopName\": \"{{temp_reg_shop}}\",\n  \"shopDescription\": \"ร้านค้าตัวแทนจำหน่ายอย่างเป็นทางการ PandaStore\",\n  \"shopPhone\": \"{{temp_reg_phone}}\",\n  \"shopEmail\": \"{{temp_reg_email}}\",\n  \"shopAddress\": \"99/9 ถ.มิตรภาพ ต.ในเมือง อ.เมือง จ.ขอนแก่น 40000\",\n  \"sellerFirstName\": \"สมพงษ์\",\n  \"sellerLastName\": \"เจริญรุ่งเรือง\",\n  \"idCardNumber\": \"{{temp_reg_idcard}}\",\n  \"bankName\": \"ธนาคารกสิกรไทย\",\n  \"bankAccountName\": \"นายสมพงษ์ เจริญรุ่งเรือง\",\n  \"bankAccountNumber\": \"{{temp_reg_bankacc}}\",\n  \"idCardImageUrl\": \"https://images.unsplash.com/photo-1544717305-2782549b5136\",\n  \"bankBookImageUrl\": \"https://images.unsplash.com/photo-1554224155-6726b3ff858f\",\n  \"proofImageUrl\": \"https://images.unsplash.com/photo-1554224155-6726b3ff858f\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6.1 (TC25) Submit Seller Application (Valid Submission - Status PENDING)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const randomNum = Math.floor(Math.random() * 90000000000) + 10000000000;",
+              "const idCard = `1${randomNum.toString().padStart(12, '0').slice(0, 12)}`;",
+              "const shopSuffix = Math.floor(Math.random() * 900) + 100;",
+              "const shopName = `Panda Craft Studio #${shopSuffix}`;",
+              "const phone = `08${Math.floor(Math.random() * 90000000) + 10000000}`;",
+              "const email = `craft${shopSuffix}@pandastore.com`;",
+              "pm.collectionVariables.set(\"temp_shop_name\", shopName);",
+              "pm.collectionVariables.set(\"temp_shop_phone\", phone);",
+              "pm.collectionVariables.set(\"temp_shop_email\", email);",
+              "pm.collectionVariables.set(\"temp_id_card\", idCard);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Response has success true\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.data).to.have.property(\"applicationId\");",
+              "    pm.expect(json.data.status).to.eql(\"PENDING\");",
+              "    pm.collectionVariables.set(\"applicationId\", json.data.applicationId);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/seller-applications?userId={{userId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seller-applications"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "{{userId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"shopName\": \"{{temp_shop_name}}\",\n  \"shopDescription\": \"ร้านจำหน่ายสินค้าทำมือคุณภาพสูง พร้อมส่งมอบความประทับใจ\",\n  \"shopPhone\": \"{{temp_shop_phone}}\",\n  \"shopEmail\": \"{{temp_shop_email}}\",\n  \"shopAddress\": \"123/45 ถ.มิตรภาพ ต.ในเมือง อ.เมือง จ.ขอนแก่น 40000\",\n  \"sellerFirstName\": \"สมศักดิ์\",\n  \"sellerLastName\": \"รักดี\",\n  \"idCardNumber\": \"{{temp_id_card}}\",\n  \"idCardImageUrl\": \"https://images.unsplash.com/photo-1544717305-2782549b5136\",\n  \"bankAccountName\": \"นายสมศักดิ์ รักดี\",\n  \"bankName\": \"ธนาคารกสิกรไทย\",\n  \"bankAccountNumber\": \"0123456789\",\n  \"bankBookImageUrl\": \"https://images.unsplash.com/photo-1554224155-6726b3ff858f\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6.2 (TC26) Submit Seller Application - Invalid Citizen ID (Negative Test)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Response has success false and error details\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(false);",
+              "    pm.expect(json.error).to.have.property(\"idCardNumber\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/seller-applications?userId={{userId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seller-applications"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "{{userId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"shopName\": \"Panda Faulty Shop\",\n  \"shopDescription\": \"ร้านค้าทดสอบกรณีเลขบัตรไม่ถูกต้อง\",\n  \"shopPhone\": \"0891112233\",\n  \"shopEmail\": \"faulty@pandastore.com\",\n  \"shopAddress\": \"กรุงเทพมหานคร\",\n  \"sellerFirstName\": \"สมศักดิ์\",\n  \"sellerLastName\": \"รักดี\",\n  \"idCardNumber\": \"12345\",\n  \"idCardImageUrl\": \"https://example.com/id.jpg\",\n  \"bankAccountName\": \"สมศักดิ์\",\n  \"bankName\": \"SCB\",\n  \"bankAccountNumber\": \"1234567890\",\n  \"bankBookImageUrl\": \"https://example.com/book.jpg\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6.3 (TC27) Admin Get Pending Applications Queue",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response has list of pending applications\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.data).to.be.an(\"array\");",
+              "    if (json.data.length > 0) {",
+              "        pm.expect(json.data[0].status).to.eql(\"PENDING\");",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/seller-applications/pending",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seller-applications",
+            "pending"
+          ]
+        }
+      }
+    },
+    {
+      "name": "6.4 (TC28) Get Application Details by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response matches requested application ID\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.data.applicationId).to.eql(Number(pm.collectionVariables.get(\"applicationId\")));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/seller-applications/{{applicationId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seller-applications",
+            "{{applicationId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "6.5 (TC29) Admin Request More Documents (Status NEED_MORE_DOC)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response indicates request more documents success\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.message).to.include(\"ส่งคำขอเอกสารเพิ่มเติมสำเร็จ\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/seller-applications/{{applicationId}}/request-docs?adminId={{adminId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seller-applications",
+            "{{applicationId}}",
+            "request-docs"
+          ],
+          "query": [
+            {
+              "key": "adminId",
+              "value": "{{adminId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"กรุณาแนบรูปภาพหน้าแรกสมุดบัญชีธนาคารที่มีชื่อบัญชีชัดเจนและตรงกับชื่อผู้สมัคร\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6.6 (TC30) Admin Request More Documents - Empty Message (Negative Test)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Response has success false and error message\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(false);",
+              "    pm.expect(json.error).to.have.property(\"message\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/seller-applications/{{applicationId}}/request-docs?adminId={{adminId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seller-applications",
+            "{{applicationId}}",
+            "request-docs"
+          ],
+          "query": [
+            {
+              "key": "adminId",
+              "value": "{{adminId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6.7 (TC31) Admin Reject Application with Reason (Status REJECTED)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response indicates rejection success\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.message).to.include(\"ปฏิเสธคำขอเปิดร้านค้าสำเร็จ\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/seller-applications/{{applicationId}}/reject?adminId={{adminId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seller-applications",
+            "{{applicationId}}",
+            "reject"
+          ],
+          "query": [
+            {
+              "key": "adminId",
+              "value": "{{adminId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"ข้อมูลหลักฐานการเปิดร้านค้าไม่ถูกต้อง และไม่สามารถยืนยันตัวตนได้\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6.8 (TC32) Admin Reject Application - Missing Reason (Negative Test)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Response has success false and error reason property\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(false);",
+              "    pm.expect(json.error).to.have.property(\"reason\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/seller-applications/{{applicationId}}/reject?adminId={{adminId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seller-applications",
+            "{{applicationId}}",
+            "reject"
+          ],
+          "query": [
+            {
+              "key": "adminId",
+              "value": "{{adminId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6.9 (TC33) Submit New Application for Approval Flow",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const randomNum = Math.floor(Math.random() * 90000000000) + 10000000000;",
+              "const idCard = `2${randomNum.toString().padStart(12, '0').slice(0, 12)}`;",
+              "const shopSuffix = Math.floor(Math.random() * 9000) + 1000;",
+              "const shopName = `Panda Boutique #${shopSuffix}`;",
+              "pm.collectionVariables.set(\"temp_shop_name2\", shopName);",
+              "pm.collectionVariables.set(\"temp_id_card2\", idCard);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Response has success true\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.collectionVariables.set(\"applicationId\", json.data.applicationId);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/seller-applications?userId={{userId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seller-applications"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "{{userId}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"shopName\": \"{{temp_shop_name2}}\",\n  \"shopDescription\": \"ร้านค้าแฟชั่นดีไซน์แพนด้า เอกลักษณ์เฉพาะตัว\",\n  \"shopPhone\": \"0898765432\",\n  \"shopEmail\": \"boutique@pandastore.com\",\n  \"shopAddress\": \"88/8 ถ.สุขุมวิท กรุงเทพฯ 10110\",\n  \"sellerFirstName\": \"กานดา\",\n  \"sellerLastName\": \"เจริญสุข\",\n  \"idCardNumber\": \"{{temp_id_card2}}\",\n  \"idCardImageUrl\": \"https://images.unsplash.com/photo-1544717305-2782549b5136\",\n  \"bankAccountName\": \"น.ส. กานดา เจริญสุข\",\n  \"bankName\": \"ธนาคารไทยพาณิชย์\",\n  \"bankAccountNumber\": \"9876543210\",\n  \"bankBookImageUrl\": \"https://images.unsplash.com/photo-1554224155-6726b3ff858f\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6.10 (TC34) Admin Approve Application (Status APPROVED -> Upgrade to SELLER)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response indicates approval success\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.message).to.include(\"อนุมัติคำขอเปิดร้านค้าสำเร็จ\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/seller-applications/{{applicationId}}/approve?adminId={{adminId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seller-applications",
+            "{{applicationId}}",
+            "approve"
+          ],
+          "query": [
+            {
+              "key": "adminId",
+              "value": "{{adminId}}"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

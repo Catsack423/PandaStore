@@ -1,0 +1,525 @@
+{
+  "info": {
+    "_postman_id": "pandastore-7_Payment_Processing.postman_collection.json",
+    "name": "7. PandaStore - Payment Processing & Refund Workflow",
+    "description": "Payment initiation at OrderGroup level, payment status verification, gateway callback processing, payment simulation (success/failed), partial refund upon seller order rejection (UC1-37A), and full order group refund.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "orderGroupId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "paymentId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "gatewayTxnId",
+      "value": "TXN_INIT_001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "7.1 (TC35) Initiate Payment for Order Group",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Response has success true and payment details\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.data).to.have.property(\"paymentId\");",
+              "    pm.expect(json.data.status).to.eql(\"PENDING\");",
+              "    pm.expect(json.data.paymentMethod).to.eql(\"PROMPTPAY\");",
+              "    pm.collectionVariables.set(\"paymentId\", json.data.paymentId);",
+              "    if (json.data.gatewayTransactionId) {",
+              "        pm.collectionVariables.set(\"gatewayTxnId\", json.data.gatewayTransactionId);",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/initiate",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "initiate"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderGroupId\": {{orderGroupId}},\n  \"paymentMethod\": \"PROMPTPAY\",\n  \"amount\": 700.00\n}"
+        }
+      }
+    },
+    {
+      "name": "7.2 (TC36) Initiate Payment - Invalid Zero Amount (Negative Test)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Response has success false and amount validation error\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(false);",
+              "    pm.expect(json.error).to.have.property(\"amount\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/initiate",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "initiate"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderGroupId\": {{orderGroupId}},\n  \"paymentMethod\": \"PROMPTPAY\",\n  \"amount\": 0.00\n}"
+        }
+      }
+    },
+    {
+      "name": "7.3 (TC37) Get Payment by Order Group ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Payment orderGroupId matches requested group\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.data.orderGroupId).to.eql(Number(pm.collectionVariables.get(\"orderGroupId\")));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/order-group/{{orderGroupId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "order-group",
+            "{{orderGroupId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "7.4 (TC38) Simulate Payment Failure (Callback with isSuccess=false)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Payment status is updated to FAILED\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.data.status).to.eql(\"FAILED\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/simulate",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "simulate"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderGroupId\": {{orderGroupId}},\n  \"isSuccess\": false\n}"
+        }
+      }
+    },
+    {
+      "name": "7.5 (TC39) Simulate Payment Success (Callback with isSuccess=true)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Payment status is updated to SUCCESS\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.data.status).to.eql(\"SUCCESS\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/simulate",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "simulate"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderGroupId\": {{orderGroupId}},\n  \"isSuccess\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "7.6 (TC40) Gateway Callback Webhook (Formal Callback with Txn ID)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Gateway callback processed successfully\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.data.status).to.eql(\"SUCCESS\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/callback",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "callback"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"gatewayTransactionId\": \"{{gatewayTxnId}}\",\n  \"orderGroupId\": {{orderGroupId}},\n  \"isSuccess\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "7.7 (TC41) Get Payment Details by Payment ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response matches requested payment ID\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.data.paymentId).to.eql(Number(pm.collectionVariables.get(\"paymentId\")));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/{{paymentId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "{{paymentId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "7.8 (TC42) Process Partial Refund (Seller Rejection - UC1-37A)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Partial refund processed successfully\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.message).to.include(\"ดำเนินการคืนเงินบางส่วนสำเร็จ\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/refund/partial",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "refund",
+            "partial"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderId\": {{orderId}},\n  \"refundAmount\": 350.00,\n  \"reason\": \"ร้านค้าปฏิเสธรับคำสั่งซื้อเนื่องจากวัตถุดิบขาดตลาด\"\n}"
+        }
+      }
+    },
+    {
+      "name": "7.9 (TC43) Process Partial Refund - Invalid Amount (Negative Test)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Response has success false and refundAmount error\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(false);",
+              "    pm.expect(json.error).to.have.property(\"refundAmount\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/refund/partial",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "refund",
+            "partial"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderId\": {{orderId}},\n  \"refundAmount\": 0.00,\n  \"reason\": \"ยอดเงินไม่ถูกต้อง\"\n}"
+        }
+      }
+    },
+    {
+      "name": "7.10 (TC44) Process Full Refund (Order Group Cancellation)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Full refund processed successfully\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(true);",
+              "    pm.expect(json.message).to.include(\"ดำเนินการคืนเงินเต็มจำนวนสำเร็จ\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/refund/full",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "refund",
+            "full"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderGroupId\": {{orderGroupId}},\n  \"reason\": \"ลูกค้ายกเลิกคำสั่งซื้อทุกรายการในคำสั่งซื้อรวม\"\n}"
+        }
+      }
+    },
+    {
+      "name": "7.11 (TC45) Process Full Refund - Missing Reason (Negative Test)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Response has success false and reason error\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.eql(false);",
+              "    pm.expect(json.error).to.have.property(\"reason\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/refund/full",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "refund",
+            "full"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderGroupId\": {{orderGroupId}},\n  \"reason\": \"\"\n}"
+        }
+      }
+    }
+  ]
+}
