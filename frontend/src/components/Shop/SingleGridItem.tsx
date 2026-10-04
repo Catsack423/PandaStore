@@ -90,8 +90,8 @@ const SingleGridItem = ({ item, readOnly = false, showImageSkeleton = false }: {
             INACTIVE
           </div>
         )}
-        <Link href={productUrl(currentProduct)} aria-label={`View ${currentProduct.title}`} className="block w-full">
-          <ProductImage src={currentProduct.imgs?.previews?.[0]} alt={currentProduct.title} size="fill" surface="white" showSkeleton={showImageSkeleton} />
+        <Link href={productUrl(currentProduct)} aria-label={`View ${currentProduct.title}`} className="block aspect-square w-full overflow-hidden">
+          <ProductImage src={currentProduct.imgs?.previews?.[0]} alt={currentProduct.title} size="fill" fit="contain" surface="white" imageClassName="object-center p-5 sm:p-6" showSkeleton={showImageSkeleton} />
         </Link>
 
         {!readOnly && (

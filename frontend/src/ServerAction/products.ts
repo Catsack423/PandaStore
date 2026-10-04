@@ -31,6 +31,8 @@ function imageUrl(url: string, base: string): string {
   // Demo products reuse the product artwork shipped with this storefront.
   if (/^\/images\/products\/product-[1-8]-(?:bg|sm)-[12]\.png$/.test(url))
     return url;
+  if (/^\/images\/products\/demo\/(?:bottle-portrait|monitor-landscape|headphones-square)\.svg$/.test(url))
+    return url;
   if (
     url.startsWith("http://") ||
     url.startsWith("https://") ||
