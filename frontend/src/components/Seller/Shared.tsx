@@ -1,6 +1,7 @@
 "use client";
 import { FlaskConical } from "lucide-react";
 import type { ApplicationStatus, SellerOrderStatus } from "@/app/context/SellerPreviewContext";
+import OrderStatusBadge from "@/components/Common/OrderStatusBadge";
 
 const orderLabels: Record<SellerOrderStatus, string> = {
   PENDING_PAYMENT: "Pending payment",
@@ -21,6 +22,7 @@ export function DemoNotice({ children }: { children?: React.ReactNode }) {
   return <div role="note" className="mb-7 flex gap-3 rounded-xl border border-blue/20 bg-blue/5 p-4 text-sm text-dark"><FlaskConical className="mt-0.5 size-5 shrink-0 text-blue" aria-hidden="true" /><p><strong>Demo preview.</strong> {children || "These records are examples kept only while this page stays open. No seller action is sent to the backend."}</p></div>;
 }
 export function StatusBadge({ status }: { status: SellerOrderStatus | ApplicationStatus }) {
+  if (status in orderLabels) return <OrderStatusBadge status={status as SellerOrderStatus} label={orderLabels[status as SellerOrderStatus]} />;
   const label = status in orderLabels ? orderLabels[status as SellerOrderStatus] : applicationLabels[status as ApplicationStatus];
   const color = status === "APPROVED" || status === "COMPLETED" ? "bg-green-light-6 text-green" : status === "REJECTED" || status === "CANCELLED" ? "bg-red-light-6 text-red" : status === "PENDING" || status === "WAITING_SELLER_CONFIRM" || status === "NEED_MORE_DOC" ? "bg-yellow-light-4 text-yellow-dark" : "bg-blue/10 text-blue";
   return <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${color}`}>{label}</span>;

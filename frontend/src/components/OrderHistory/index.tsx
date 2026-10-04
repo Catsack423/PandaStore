@@ -3,7 +3,7 @@ import { bahtCurrency } from "@/lib/currency";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronDown, PackageOpen, ShoppingBag, RefreshCw, X, Star, Check } from "lucide-react";
+import { ChevronDown, PackageOpen, ShoppingBag, RefreshCw, Star, Check } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/app/context/AuthContext";
 import { checkoutApi, methodLabel } from "@/components/Checkout/api";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import ConfirmDialog from "@/components/Common/ConfirmDialog";
 import ReviewModal from "@/components/Common/ReviewModal";
+import OrderStatusBadge, { orderStatusLabels as statusLabels, type OrderStatus } from "@/components/Common/OrderStatusBadge";
 import toast from "react-hot-toast";
 
 export type CustomerOrder = {
@@ -19,7 +20,7 @@ export type CustomerOrder = {
   orderId: number;
   orderGroupId: number;
   date: string;
-  status: "PENDING_PAYMENT" | "WAITING_SELLER_CONFIRM" | "PREPARING" | "SHIPPED" | "COMPLETED" | "CANCELLED";
+  status: OrderStatus;
   total: number;
   items: {
     orderItemId?: number;
@@ -36,23 +37,6 @@ export type CustomerOrder = {
   groupNumber: string;
 };
 
-const statusLabels: Record<CustomerOrder["status"], string> = {
-  PENDING_PAYMENT: "Pending payment",
-  WAITING_SELLER_CONFIRM: "Awaiting seller confirmation",
-  PREPARING: "Preparing",
-  SHIPPED: "Shipped",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
-};
-const statusDotStyles: Record<CustomerOrder["status"], string> = {
-  PENDING_PAYMENT: "bg-yellow-dark ring-yellow-dark/30",
-  WAITING_SELLER_CONFIRM: "bg-blue ring-blue/30",
-  PREPARING: "bg-orange ring-orange/30",
-  SHIPPED: "bg-teal ring-teal/30",
-  COMPLETED: "bg-green-dark ring-green-dark/30",
-  CANCELLED: "bg-red-dark ring-red-dark/30",
-};
-const steps: CustomerOrder["status"][] = ["PENDING_PAYMENT", "WAITING_SELLER_CONFIRM", "PREPARING", "SHIPPED", "COMPLETED"];
 const currency = bahtCurrency;
 const orderColumns = "lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,1.7fr)_minmax(0,0.6fr)_260px]";
 
@@ -96,7 +80,6 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
   const [showConfirmDelivered, setShowConfirmDelivered] = useState(false);
   const [showCancelOrder, setShowCancelOrder] = useState(false);
   const [reviewingBatch, setReviewingBatch] = useState<{ orderItemIds: number[]; productNames: string[] } | null>(null);
-  const currentStep = steps.indexOf(order.status);
 
   const [reviewedItemIds, setReviewedItemIds] = useState<Set<number>>(() => {
     if (typeof window !== "undefined") {
@@ -199,20 +182,7 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
         <div><span className="block text-xs text-dark-4 lg:hidden">Date</span><span className="text-dark">{order.date}</span></div>
         <div className="min-w-0">
           <span className="block text-xs text-dark-4 lg:hidden">Order status</span>
-          <div className="flex items-center gap-3">
-            <div className="flex w-[74px] shrink-0 items-center gap-1.5" aria-hidden="true">
-              {order.status === "CANCELLED" ? (
-                <span className={`flex h-3.5 w-3.5 items-center justify-center rounded-full text-white ring-2 ring-offset-2 ${statusDotStyles.CANCELLED}`}>
-                  <X className="h-2.5 w-2.5" strokeWidth={3} />
-                </span>
-              ) : steps.map((step, index) => (
-                <span key={step} className={`h-2.5 w-2.5 rounded-full ${index === currentStep
-                  ? `ring-2 ring-offset-2 ${statusDotStyles[order.status]}`
-                  : index < currentStep ? "bg-gray-5" : "bg-gray-3"}`} />
-              ))}
-            </div>
-            <span className={`min-w-0 ${order.status === "CANCELLED" ? "text-red-dark" : "text-dark"}`}>{statusLabels[order.status]}</span>
-          </div>
+          <OrderStatusBadge status={order.status} />
         </div>
         <div className="lg:text-right"><span className="block text-xs text-dark-4 lg:hidden">Total</span><span className="whitespace-nowrap font-medium text-dark">{currency.format(order.total)}</span></div>
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
