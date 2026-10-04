@@ -218,7 +218,7 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
                 onClick={() => setNavigationOpen(open => !open)}
               >
                 {navigationOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
-                <span>Menu</span>
+                <span className="hidden sm:inline">Menu</span>
               </button>
             </div>
           </div>
