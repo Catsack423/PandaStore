@@ -90,9 +90,9 @@ export default function DeliveryAddress({ customerId, addresses, value, disabled
             address.hasOrders ? (
               <span
                 className="inline-flex max-w-full items-center rounded border border-gray-3 bg-gray-2 px-2.5 py-1.5 text-xs font-medium leading-5 text-dark-4"
-                title="ที่อยู่นี้ถูกใช้ในออเดอร์ จึงลบไม่ได้"
+                title="Used in an order; cannot be deleted."
               >
-                ที่อยู่นี้ถูกใช้ในออเดอร์ จึงลบไม่ได้
+                Used in an order; cannot be deleted.
               </span>
             ) : (
               <Button

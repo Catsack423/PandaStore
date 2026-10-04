@@ -5,7 +5,7 @@ const amountFormatter = new Intl.NumberFormat("th-TH", {
 
 /** Format the existing baht amount for display; never convert stored prices. */
 export function formatBaht(amount: number): string {
-  return `${amountFormatter.format(amount)} บาท`;
+  return `${amountFormatter.format(amount)} THB`;
 }
 
 export const bahtCurrency = { format: formatBaht };

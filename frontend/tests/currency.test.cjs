@@ -16,9 +16,9 @@ function load(file) {
 const currency = load("lib/currency.ts");
 
 test("baht amounts retain their value and hide unnecessary decimal places", () => {
-  for (const [value, expected] of [[0, "0 บาท"], [0.01, "0.01 บาท"],
-    [1290, "1,290 บาท"], [35.5, "35.5 บาท"], [35.75, "35.75 บาท"], [-25, "-25 บาท"],
-    [9999999999.99, "9,999,999,999.99 บาท"]]) {
+  for (const [value, expected] of [[0, "0 THB"], [0.01, "0.01 THB"],
+    [1290, "1,290 THB"], [35.5, "35.5 THB"], [35.75, "35.75 THB"], [-25, "-25 THB"],
+    [9999999999.99, "9,999,999,999.99 THB"]]) {
     assert.equal(currency.formatBaht(value), expected);
   }
 });
@@ -26,6 +26,6 @@ test("baht amounts retain their value and hide unnecessary decimal places", () =
 test("checkout, payment and seller orders share the same currency formatter", () => {
   const checkout = load("components/Checkout/api.ts");
   const seller = load("lib/sellerOrders.ts");
-  assert.equal(checkout.money(3545), "3,545 บาท");
+  assert.equal(checkout.money(3545), "3,545 THB");
   assert.equal(seller.sellerOrderCurrency.format(3545), checkout.money(3545));
 });

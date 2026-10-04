@@ -11,18 +11,18 @@ export const statusLabels: Record<SellerApplicationStatus, string> = {
 };
 
 export const statusDescriptions: Record<SellerApplicationStatus, string> = {
-  PENDING: "ส่งคำขอแล้วและกำลังรอทีมงานตรวจสอบ ยังไม่ต้องส่งคำขอซ้ำ หน้านี้ตรวจสอบสถานะให้อัตโนมัติ",
-  APPROVED: "คำขอได้รับอนุมัติแล้ว สามารถจัดการร้านค้าได้จาก Seller dashboard",
-  REJECTED: "คำขอครั้งนี้ไม่ผ่านการอนุมัติ ตรวจสอบเหตุผลด้านล่าง แล้วแก้ไขข้อมูลหรือเอกสารก่อนสมัครใหม่",
-  NEED_MORE_DOC: "ทีมงานต้องการข้อมูลหรือเอกสารเพิ่มเติม ตรวจสอบสิ่งที่ต้องแก้ไขด้านล่าง แล้วส่งคำขอที่แก้ไขแล้ว",
+  PENDING: "Your application is under review. You do not need to apply again. This page checks for status updates automatically.",
+  APPROVED: "Your application has been approved. Manage your shop from the Seller dashboard.",
+  REJECTED: "Your application was not approved. Read the feedback below, then update your details or documents before applying again.",
+  NEED_MORE_DOC: "The review team needs more information or documents. Check the requested changes below, then submit your updated application.",
 };
 
 export function getReviewNote(application: SellerApplicationRecord): string {
   if (application.adminNote?.trim()) return application.adminNote;
-  if (!["REJECTED", "NEED_MORE_DOC"].includes(application.status)) return "ไม่มีหมายเหตุเพิ่มเติม";
+  if (!["REJECTED", "NEED_MORE_DOC"].includes(application.status)) return "No additional review notes.";
   return application.status === "REJECTED"
-    ? "ยังไม่มีเหตุผลเพิ่มเติมแนบมากับคำขอนี้ กรุณาตรวจสอบข้อมูลร้านค้าและเอกสารก่อนส่งคำขอใหม่"
-    : "ยังไม่มีรายละเอียดเอกสารที่ต้องแก้ไขแนบมากับคำขอนี้ กรุณาตรวจสอบข้อมูลและภาพเอกสารให้ครบถ้วนและอ่านได้ชัดเจนก่อนส่งใหม่";
+    ? "No rejection reason was provided. Check your shop details and documents before applying again."
+    : "No specific document changes were provided. Check that your details are complete and document images are readable before resubmitting.";
 }
 
 export const statusColors: Record<SellerApplicationStatus, string> = {

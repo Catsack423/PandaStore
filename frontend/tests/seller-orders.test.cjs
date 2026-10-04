@@ -201,7 +201,7 @@ test("real detail renders amounts/address/tracking and no sample data; stale sta
   for (const [file, names] of [["card", ["Card", "CardContent", "CardHeader", "CardTitle"]], ["input", ["Input"]], ["label", ["Label"]], ["button", ["Button"]], ["skeleton", ["Skeleton"]]]) mocks[`@/components/ui/${file}`] = Object.fromEntries(names.map(name => [name, ({ children, variant: _variant, ...props }) => React.createElement(file === "button" ? "button" : file === "input" ? "input" : "div", props, children)]));
   const component = load("components/Seller/SellerOrder.tsx", mocks).default;
   const html = renderToStaticMarkup(React.createElement(component, { orderId: "4" }));
-  assert.match(html, /Receiver/); assert.match(html, /REAL-TRACK/); assert.match(html, /22 บาท/); assert.match(html, /<fieldset disabled/); assert.ok(!html.includes("demo"));
+  assert.match(html, /Receiver/); assert.match(html, /REAL-TRACK/); assert.match(html, /22 THB/); assert.match(html, /<fieldset disabled/); assert.ok(!html.includes("demo"));
   state.error = ""; state.data.orders = [order({ customerName: null, shippingAddress: null, orderStatus: "PENDING_PAYMENT" })];
   const legacy = renderToStaticMarkup(React.createElement(component, { orderId: "4" }));
   assert.match(legacy, /Shipping address unavailable/); assert.match(legacy, /inconsistent/); assert.ok(!legacy.includes("Accept and confirm"));
