@@ -1,8 +1,12 @@
 import { formatBaht } from "@/lib/currency";
 import React from "react";
 import ProductImage from "@/components/Common/ProductImage";
+import Link from "next/link";
+import { productUrl } from "@/lib/productUrl";
+import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 
 const SingleItem = ({ item, removeItemFromCart, disabled }) => {
+  const { closeCartModal } = useCartModalContext();
 
   const handleRemoveFromCart = () => {
     removeItemFromCart(item.id);
@@ -11,11 +15,13 @@ const SingleItem = ({ item, removeItemFromCart, disabled }) => {
   return (
     <div className="flex items-center justify-between gap-5">
       <div className="min-w-0 flex flex-1 items-center gap-5">
-        <ProductImage src={item.imgs?.thumbnails?.[0]} alt={item.title} size="sm" surface="gray3" className="rounded-[10px]" />
+        <Link href={productUrl(item)} onNavigate={closeCartModal} aria-label={`View ${item.title}`} className="shrink-0 rounded-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">
+          <ProductImage src={item.imgs?.thumbnails?.[0]} alt={item.title} size="sm" surface="gray3" className="rounded-[10px]" />
+        </Link>
 
         <div className="min-w-0">
           <h3 className="font-medium text-dark mb-1 ease-out duration-200 hover:text-blue">
-            <a href="#"> {item.title} </a>
+            <Link href={productUrl(item)} onNavigate={closeCartModal} className="break-words rounded-sm hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">{item.title}</Link>
           </h3>
           <p className="text-custom-sm">{formatBaht(Number(item.discountedPrice))} × {item.quantity}</p><p className="mt-1 text-xs">{item.stock == null ? "Stock unavailable" : `${item.stock} in stock`}</p>
         </div>
