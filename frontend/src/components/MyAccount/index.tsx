@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ClipboardList, KeyRound, LogOut, MapPin, Package, Phone, UserRound } from "lucide-react";
+import { ClipboardList, KeyRound, LogOut, Mail, MapPin, Package, Phone, UserRound } from "lucide-react";
 import toast from "react-hot-toast";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import { useAuth } from "@/app/context/AuthContext";
@@ -112,20 +112,23 @@ export default function MyAccount() {
             </div>
           )}
 
-          <div className="grid gap-7 lg:grid-cols-[260px_1fr]">
-            <aside className="space-y-4">
+          <div className="grid grid-cols-1 gap-7 lg:grid-cols-[260px_minmax(0,1fr)]">
+            <aside className="min-w-0 space-y-4">
               <Card>
-                <CardContent className="flex items-center gap-3 p-5">
-                  <div className="flex size-11 items-center justify-center rounded-full bg-blue/10 text-blue">
-                    <UserRound className="size-5" />
+                <CardContent className="flex items-start gap-3 p-5">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue/10 text-blue">
+                    <UserRound size={22} aria-hidden="true" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-dark">{user?.name || "Guest customer"}</p>
-                    <p className="truncate text-xs text-dark-4">{user?.email || "Account preview"}</p>
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <p className="truncate font-semibold text-dark" title={user?.name}>{user?.name || "Guest customer"}</p>
+                    <p className="flex min-w-0 items-center gap-1.5 text-sm text-dark-3">
+                      <Mail size={14} className="shrink-0 text-blue" aria-hidden="true" />
+                      <span className="min-w-0 break-all" title={user?.email}>{user?.email || "Account preview"}</span>
+                    </p>
                     {user?.phone ? (
-                      <p className="truncate text-xs text-blue mt-0.5 flex items-center gap-1">
-                        <Phone className="size-3" />
-                        {user.phone}
+                      <p className="flex min-w-0 items-center gap-1.5 text-sm text-dark-3">
+                        <Phone size={14} className="shrink-0 text-blue" aria-hidden="true" />
+                        <span className="min-w-0 break-all">{user.phone}</span>
                       </p>
                     ) : null}
                   </div>
