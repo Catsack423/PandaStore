@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import { formatBaht } from "@/lib/currency";
+import React, { useEffect } from "react";
 
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import { useCart } from "@/app/context/CartContext";
@@ -12,6 +13,20 @@ const CartSidebarModal = () => {
   const { items: cartItems, totalPrice, removeItemFromCart, isLoading, isPending, error, refreshCart } = useCart();
 
   useEffect(() => { if (isCartModalOpen) void refreshCart(); }, [isCartModalOpen, refreshCart]);
+
+  useEffect(() => {
+    if (!isCartModalOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const previousPadding = document.body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const bodyPadding = parseFloat(window.getComputedStyle(document.body).paddingRight) || 0;
+    document.body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${bodyPadding + scrollbarWidth}px`;
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPadding;
+    };
+  }, [isCartModalOpen]);
 
   useEffect(() => {
     // closing modal while clicking outside
@@ -32,20 +47,23 @@ const CartSidebarModal = () => {
 
   return (
     <div
-      className={`fixed top-0 left-0 z-99999 overflow-y-auto no-scrollbar w-full h-screen bg-dark/70 ease-linear duration-300 ${
-        isCartModalOpen ? "translate-x-0" : "translate-x-full"
+      aria-hidden={!isCartModalOpen}
+      inert={!isCartModalOpen}
+      className={`fixed top-0 left-0 z-99999 overflow-hidden w-full h-[100dvh] ${
+        isCartModalOpen ? "pointer-events-auto" : "pointer-events-none"
       }`}
     >
-      <div className="flex items-center justify-end">
-        <div className="w-full max-w-[500px] shadow-1 bg-white px-4 sm:px-7.5 lg:px-11 relative modal-content">
-          <div className="sticky top-0 bg-white flex items-center justify-between pb-7 pt-4 sm:pt-7.5 lg:pt-11 border-b border-gray-3 mb-7.5">
+      <div aria-hidden="true" className={`absolute inset-0 bg-dark/70 transition-opacity duration-300 ease-out motion-reduce:transition-none ${isCartModalOpen ? "opacity-100" : "opacity-0"}`} />
+      <div className="relative flex max-h-[100dvh] items-start justify-end">
+        <div className={`relative flex h-[100dvh] w-full max-w-[440px] flex-col bg-white shadow-1 transition-transform duration-300 ease-out motion-reduce:transition-none modal-content ${isCartModalOpen ? "translate-x-0" : "translate-x-full"}`}>
+          <div className="flex shrink-0 items-center justify-between border-b border-gray-3 bg-white px-4 py-4 sm:px-5">
             <h2 className="font-medium text-dark text-lg sm:text-2xl">
               Cart View
             </h2>
             <button
               onClick={() => closeCartModal()}
               aria-label="button for close modal"
-              className="flex items-center justify-center ease-in duration-150 bg-meta text-dark-5 hover:text-dark"
+              className="flex h-11 w-11 items-center justify-center rounded-lg ease-in duration-150 bg-meta text-dark-5 hover:bg-gray-2 hover:text-dark"
             >
               <svg
                 className="fill-current"
@@ -69,8 +87,8 @@ const CartSidebarModal = () => {
             </button>
           </div>
 
-          <div className="h-[66vh] overflow-y-auto no-scrollbar">
-            <div className="flex flex-col gap-6">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
+            <div className="flex flex-col gap-4">
               {/* <!-- cart item --> */}
               {isLoading ? <p role="status">Loading your cart…</p> : error && cartItems.length === 0 ? <p role="alert">{error}</p> : cartItems.length > 0 ? (
                 cartItems.map((item, key) => (
@@ -86,25 +104,25 @@ const CartSidebarModal = () => {
             </div>
           </div>
 
-          <div className="border-t border-gray-3 bg-white pt-5 pb-4 sm:pb-7.5 lg:pb-11 mt-7.5 sticky bottom-0">
-            <div className="flex items-center justify-between gap-5 mb-6">
+          <div className="shrink-0 border-t border-gray-3 bg-white px-4 py-4 sm:px-5">
+            <div className="flex items-center justify-between gap-5 mb-4">
               <p className="font-medium text-xl text-dark">Subtotal:</p>
 
-              <p className="font-medium text-xl text-dark">${totalPrice}</p>
+              <p className="font-medium text-xl text-dark">{formatBaht(totalPrice)}</p>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <Link
                 onClick={() => closeCartModal()}
                 href="/cart"
-                className="w-full flex justify-center font-medium text-white bg-blue py-[13px] px-6 rounded-md ease-out duration-200 hover:bg-blue-dark"
+                className="w-full flex justify-center font-medium text-white bg-blue py-[13px] px-3 rounded-md ease-out duration-200 hover:bg-blue-dark"
               >
                 View Cart
               </Link>
 
               <Link
                 href="/checkout" aria-disabled={isPending} onClick={event => { if (isPending) event.preventDefault(); else closeCartModal(); }}
-                className="w-full flex justify-center font-medium text-white bg-dark py-[13px] px-6 rounded-md ease-out duration-200 hover:bg-opacity-95"
+                className="w-full flex justify-center font-medium text-white bg-dark py-[13px] px-3 rounded-md ease-out duration-200 hover:bg-opacity-95"
               >
                 Checkout
               </Link>

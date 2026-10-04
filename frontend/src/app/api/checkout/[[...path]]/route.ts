@@ -7,7 +7,8 @@ type Context = { params: Promise<{ path?: string[] }> };
 async function forward(request: NextRequest, context: Context) {
   const path = (await context.params).path?.join("/") || "";
   if (!(request.method === "GET" && (path === "" || path === "orders" || /^orders\/[1-9]\d*$/.test(path))) &&
-      !(request.method === "POST" && ["cart", "quote", "addresses", "orders"].includes(path))) {
+      !(request.method === "POST" && ["cart", "quote", "addresses", "orders"].includes(path)) &&
+      !(request.method === "PUT" && /^addresses\/[1-9]\d*$/.test(path))) {
     return NextResponse.json({ success: false, message: "Not found" }, { status: 404 });
   }
   const token = (await cookies()).get("auth_token")?.value;
@@ -16,7 +17,7 @@ async function forward(request: NextRequest, context: Context) {
     const response = await fetch(`${backend}/api/checkout${path ? `/${path}` : ""}`, {
       method: request.method, cache: "no-store", signal: AbortSignal.timeout(20000),
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      ...(request.method === "POST" ? { body: await request.text() } : {}),
+      ...(request.method === "POST" || request.method === "PUT" ? { body: await request.text() } : {}),
     });
     const body = await response.json().catch(() => ({ success: false, message: "Invalid checkout response" }));
     return NextResponse.json(body, { status: response.status, headers: { "Cache-Control": "no-store" } });
@@ -26,3 +27,4 @@ async function forward(request: NextRequest, context: Context) {
 }
 export const GET = forward;
 export const POST = forward;
+export const PUT = forward;

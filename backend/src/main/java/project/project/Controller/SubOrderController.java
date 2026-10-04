@@ -81,21 +81,23 @@ public class SubOrderController {
     @PostMapping("/{orderId}/confirm-delivered")
     public ResponseEntity<ApiResponse<Void>> confirmOrderDelivered(
             @PathVariable Long orderId,
-            @RequestParam Long customerId) {
+            @RequestParam(required = false) Long customerId) {
 
-        access.requireCustomerOrder(customerId, orderId);
-        subOrderService.confirmOrderDelivered(customerId, orderId);
+        Long effectiveCustomerId = customerId != null ? customerId : access.resolveCustomerId(null);
+        access.requireCustomerOrder(effectiveCustomerId, orderId);
+        subOrderService.confirmOrderDelivered(effectiveCustomerId, orderId);
         return ResponseEntity.ok(ApiResponse.success("ยืนยันการรับสินค้าสำเร็จ", null));
     }
 
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<ApiResponse<Void>> customerCancelOrder(
             @PathVariable Long orderId,
-            @RequestParam Long customerId,
+            @RequestParam(required = false) Long customerId,
             @Valid @RequestBody CancelOrderRequest request) {
 
-        access.requireCustomerOrder(customerId, orderId);
-        subOrderService.customerCancelOrder(customerId, orderId, request.getReason());
+        Long effectiveCustomerId = customerId != null ? customerId : access.resolveCustomerId(null);
+        access.requireCustomerOrder(effectiveCustomerId, orderId);
+        subOrderService.customerCancelOrder(effectiveCustomerId, orderId, request.getReason());
         return ResponseEntity.ok(ApiResponse.success("ยกเลิกคำสั่งซื้อสำเร็จ", null));
     }
 }

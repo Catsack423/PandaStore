@@ -207,7 +207,10 @@ public class SubOrderServiceImp implements SubOrderService {
                     "คำสั่งซื้อนี้ไม่ใช่ของลูกค้า customerId: " + customerId);
         }
 
-        // ตรวจสถานะ — ต้อง SHIPPED
+        // ตรวจสถานะ — ต้อง SHIPPED หรือถ้า COMPLETED อยู่แล้ว (idempotent)
+        if (order.getOrderStatus() == OrderStatus.COMPLETED) {
+            return;
+        }
         if (order.getOrderStatus() != OrderStatus.SHIPPED) {
             throw new IllegalStateException(
                     "ไม่สามารถยืนยันรับสินค้าได้ สถานะปัจจุบัน: " + order.getOrderStatus()
@@ -264,23 +267,41 @@ public class SubOrderServiceImp implements SubOrderService {
             throw new IllegalStateException("คำสั่งซื้อนี้ไม่ใช่ของลูกค้า customerId: " + customerId);
         }
 
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new IllegalArgumentException("กรุณาระบุเหตุผลในการยกเลิกคำสั่งซื้อ");
+        }
+
+        if (order.getOrderStatus() == OrderStatus.CANCELLED) {
+            return;
+        }
         if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM &&
-            order.getOrderStatus() != OrderStatus.PREPARING) {
+            order.getOrderStatus() != OrderStatus.PREPARING &&
+            order.getOrderStatus() != OrderStatus.PENDING_PAYMENT) {
             throw new IllegalStateException(
                     "ไม่สามารถยกเลิกคำสั่งซื้อได้เนื่องจากอยู่ในสถานะ: " + order.getOrderStatus()
                             + " (สามารถยกเลิกได้เฉพาะ WAITING_SELLER_CONFIRM หรือ PREPARING เท่านั้น)");
         }
 
-        order.setRejectionReason(reason);
+        order.setRejectionReason(reason.trim());
         order.setOrderStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
 
         restoreStock(order);
 
-        paymentService.processPartialRefund(orderId, order.getTotalAmount(), "ลูกค้ายกเลิกคำสั่งซื้อ: " + reason);
-        order.setRejectionReason(reason.trim());
+        boolean wasPaid = order.getOrderGroup() != null &&
+                (order.getOrderGroup().getPaymentStatus() == OrderGroupPaymentStatus.PAID ||
+                 order.getOrderGroup().getPaymentStatus() == OrderGroupPaymentStatus.PARTIALLY_REFUNDED);
 
-        updateOrderGroupPaymentStatus(order.getOrderGroup());
+        if (wasPaid) {
+            paymentService.processPartialRefund(orderId, order.getTotalAmount(), "ลูกค้ายกเลิกคำสั่งซื้อ: " + reason.trim());
+            updateOrderGroupPaymentStatus(order.getOrderGroup());
+        } else if (order.getOrderGroup() != null) {
+            List<Order> allSubOrders = orderRepository.findByOrderGroup_OrderGroupId(order.getOrderGroup().getOrderGroupId());
+            boolean allCancelled = allSubOrders.stream().allMatch(o -> o.getOrderStatus() == OrderStatus.CANCELLED);
+            if (allCancelled) {
+                order.getOrderGroup().setPaymentStatus(OrderGroupPaymentStatus.FAILED);
+            }
+        }
 
         try {
             notificationService.sendNotification(

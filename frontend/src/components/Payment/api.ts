@@ -20,3 +20,9 @@ export async function confirmPayment(orderGroupId: number): Promise<PaymentOrder
   if (!response.ok || !result?.success) throw new Error(result?.message || "Could not confirm payment. Please try again.");
   return result.data as PaymentOrder;
 }
+
+export async function cancelPaymentOrder(orderGroupId: number): Promise<void> {
+  const response = await fetch(`/api/payment/${orderGroupId}`, { method: "DELETE", cache: "no-store" });
+  const result = await response.json().catch(() => null);
+  if (!response.ok || !result?.success) throw new Error(result?.message || "Could not cancel order. Please try again.");
+}

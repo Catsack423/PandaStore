@@ -1,3 +1,4 @@
+import { formatBaht } from "@/lib/currency";
 import React from "react";
 import { AppDispatch } from "@/redux/store";
 import { useDispatch } from "react-redux";
@@ -67,7 +68,7 @@ const SingleItem = ({ item }) => {
       </div>
 
       <div className="min-w-[205px]">
-        <p className="text-dark">${item.discountedPrice}</p>
+        <p className="text-dark">{formatBaht(item.discountedPrice)}</p>
       </div>
 
       <div className="min-w-[265px]">

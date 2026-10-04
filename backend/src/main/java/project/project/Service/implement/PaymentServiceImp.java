@@ -13,6 +13,7 @@ import project.project.Service.api.PaymentService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -92,11 +93,12 @@ public class PaymentServiceImp implements PaymentService {
             payment.setGatewayTransactionId("GW-TXN-" + UUID.randomUUID().toString());
         }
 
-        orderGroup.setPayment(payment);
+        Payment savedPayment = paymentRepository.save(payment);
+        orderGroup.setPayment(savedPayment);
         orderGroup.setPaymentStatus(OrderGroupPaymentStatus.PENDING);
         orderGroupRepository.save(orderGroup);
 
-        return paymentRepository.save(payment);
+        return savedPayment;
     }
 
     @Override
@@ -132,9 +134,17 @@ public class PaymentServiceImp implements PaymentService {
 
             if (orderGroup != null) {
                 orderGroup.setPaymentStatus(OrderGroupPaymentStatus.PAID);
+                List<Order> subOrders = orderRepository.findByOrderGroup_OrderGroupId(orderGroup.getOrderGroupId());
+                if (subOrders != null && !subOrders.isEmpty()) {
+                    for (Order subOrder : subOrders) {
+                        if (subOrder.getOrderStatus() == null || subOrder.getOrderStatus() == OrderStatus.PENDING_PAYMENT || subOrder.getOrderStatus() == OrderStatus.WAITING_SELLER_CONFIRM) {
+                            subOrder.setOrderStatus(OrderStatus.WAITING_SELLER_CONFIRM);
+                            orderRepository.save(subOrder);
+                        }
+                    }
+                }
                 if (orderGroup.getSubOrders() != null) {
                     for (Order subOrder : orderGroup.getSubOrders()) {
-                        stateLock.lock(subOrder);
                         if (subOrder.getOrderStatus() == null || subOrder.getOrderStatus() == OrderStatus.PENDING_PAYMENT || subOrder.getOrderStatus() == OrderStatus.WAITING_SELLER_CONFIRM) {
                             subOrder.setOrderStatus(OrderStatus.WAITING_SELLER_CONFIRM);
                         }
@@ -146,8 +156,9 @@ public class PaymentServiceImp implements PaymentService {
                     if (orderGroup.getCustomer() != null && orderGroup.getCustomer().getCustomerId() != null) {
                         notificationService.notifyCustomerOrderPaid(orderGroup.getCustomer().getCustomerId(), orderGroup.getOrderGroupId());
                     }
-                    if (orderGroup.getSubOrders() != null) {
-                        for (Order subOrder : orderGroup.getSubOrders()) {
+                    List<Order> notifyOrders = (subOrders != null && !subOrders.isEmpty()) ? subOrders : orderGroup.getSubOrders();
+                    if (notifyOrders != null) {
+                        for (Order subOrder : notifyOrders) {
                             if (subOrder.getSeller() != null && subOrder.getSeller().getSellerId() != null) {
                                 notificationService.notifySellerNewOrder(subOrder.getSeller().getSellerId(), subOrder.getOrderId());
                             }
@@ -219,7 +230,13 @@ public class PaymentServiceImp implements PaymentService {
         }
 
         order.setOrderStatus(OrderStatus.CANCELLED);
-        order.setRejectionReason(reason.trim());
+        if (order.getRejectionReason() == null || order.getRejectionReason().isBlank()) {
+            String sanitizedReason = reason != null ? reason.trim() : "";
+            if (sanitizedReason.length() > 255) {
+                sanitizedReason = sanitizedReason.substring(0, 255);
+            }
+            order.setRejectionReason(sanitizedReason);
+        }
 
         orderRepository.save(order);
         orderGroupRepository.save(orderGroup);

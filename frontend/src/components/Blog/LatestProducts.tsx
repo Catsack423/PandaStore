@@ -1,3 +1,4 @@
+import { formatBaht } from "@/lib/currency";
 import React from "react";
 import ProductImage from "@/components/Common/ProductImage";
 import Link from "next/link";
@@ -21,7 +22,7 @@ const LatestProducts = ({ products }) => {
                 <h3 className="font-medium text-dark mb-1 ease-out duration-200 hover:text-blue">
                   <Link href={productUrl(product)}> {product.title} </Link>
                 </h3>
-                <p className="text-custom-sm">Price: ${product.price}</p>
+                <p className="text-custom-sm">Price: {formatBaht(product.price)}</p>
               </div>
             </div>
           ))}

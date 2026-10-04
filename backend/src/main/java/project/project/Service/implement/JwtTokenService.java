@@ -17,6 +17,9 @@ public class JwtTokenService {
     private final JwtParser parser;
 
     public JwtTokenService(@Value("${JWT_SECRET:}") String hexSecret) {
+        if (hexSecret != null) {
+            hexSecret = hexSecret.trim();
+        }
         if (hexSecret == null || !hexSecret.matches("[0-9a-fA-F]{64}")) {
             throw new IllegalStateException("JWT_SECRET must contain exactly 64 hexadecimal characters (32 random bytes)");
         }

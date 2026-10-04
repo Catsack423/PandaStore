@@ -7,10 +7,11 @@ const ts = require("typescript");
 function load(file, mocks = {}) {
   const compiled = ts.transpileModule(readFileSync(resolve(__dirname, "../src", file), "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX } }).outputText;
   const exports = {};
-  new Function("require", "exports", compiled)(name => mocks[name] ?? require(name), exports);
+  new Function("require", "exports", compiled)(name => mocks[name] ?? (name === "@/lib/currency" ? load("lib/currency.ts") : require(name)), exports);
   return exports;
 }
 const model = load("lib/sellerOrders.ts");
+const requestOrigin = load("lib/requestOrigin.ts");
 const shop = { sellerId: 12, shopName: "Shop" };
 const order = (changes = {}) => ({ orderId: 4, subOrderNumber: "ORDER-4", orderGroupId: 9, sellerId: 12, shopName: "Shop", subtotal: 20, shippingFee: 3, sellerDiscount: 1, totalAmount: 22, shippingMethod: "STANDARD", orderStatus: "WAITING_SELLER_CONFIRM", paymentStatus: "PAID", customerName: "Customer", createdAt: "2026-09-30T12:00:00", rejectionReason: null, shippingAddress: { receiverName: "Receiver", phoneNumber: "123", addressLine: "Road", district: "District", province: "Province", postalCode: "10000" }, items: [{ orderItemId: 1, productName: "Item", quantity: 2, unitPrice: 10, totalPrice: 20 }], shipment: null, ...changes });
 const response = (data, status = 200, message = "Error") => ({ ok: status >= 200 && status < 300, status, json: async () => ({ success: status >= 200 && status < 300, data, message }) });
@@ -33,6 +34,7 @@ function api({ token = "secret", role = "SELLER", status = "ACTIVE", shopStatus 
     "next/headers": { cookies: async () => ({ get: () => token ? { value: token } : undefined }) },
     "next/server": { NextResponse: { json: (body, options) => ({ body, ...options }) } },
     "@/lib/sellerOrders": model,
+    "@/lib/requestOrigin": requestOrigin,
   });
   const fetch = async (url, options) => {
     calls.push({ url, options });
@@ -77,6 +79,28 @@ test("BFF validates identifiers, origin, sellerId and trimmed field lengths; ups
     assert.ok(mock.calls.every(c => c.options.method !== "POST"));
   });
   for (const config of [{ failure: true }, { result: {} }]) { const broken = api(config); await usingFetch(broken.fetch, async () => assert.ok([502, 503].includes((await broken.request()).status))); }
+});
+
+test("BFF accepts configured ngrok origin behind an internal URL and blocks untrusted origins before backend calls", async () => {
+  const previous = process.env.ALLOWED_REQUEST_ORIGINS;
+  const publicOrigin = "https://kim-untakeable-shirlee.ngrok-free.dev";
+  process.env.ALLOWED_REQUEST_ORIGINS = `http://localhost:3000,${publicOrigin}`;
+  try {
+    const mock = api();
+    await usingFetch(mock.fetch, async () => {
+      const accepted = await mock.request(["4", "accept"], "POST", {}, "", publicOrigin);
+      assert.equal(accepted.status, 200);
+      assert.ok(mock.calls.at(-1).url.endsWith("sub-orders/4/accept?sellerId=12"));
+      for (const origin of ["https://another.ngrok-free.dev", `${publicOrigin}.evil.test`, null, "null"]) {
+        mock.calls.length = 0;
+        assert.equal((await mock.request(["4", "accept"], "POST", {}, "", origin)).status, 403);
+        assert.equal(mock.calls.length, 0);
+      }
+    });
+  } finally {
+    if (previous === undefined) delete process.env.ALLOWED_REQUEST_ORIGINS;
+    else process.env.ALLOWED_REQUEST_ORIGINS = previous;
+  }
 });
 
 function hookHarness(fetch, id = "4") {
@@ -177,7 +201,7 @@ test("real detail renders amounts/address/tracking and no sample data; stale sta
   for (const [file, names] of [["card", ["Card", "CardContent", "CardHeader", "CardTitle"]], ["input", ["Input"]], ["label", ["Label"]], ["button", ["Button"]], ["skeleton", ["Skeleton"]]]) mocks[`@/components/ui/${file}`] = Object.fromEntries(names.map(name => [name, ({ children, variant: _variant, ...props }) => React.createElement(file === "button" ? "button" : file === "input" ? "input" : "div", props, children)]));
   const component = load("components/Seller/SellerOrder.tsx", mocks).default;
   const html = renderToStaticMarkup(React.createElement(component, { orderId: "4" }));
-  assert.match(html, /Receiver/); assert.match(html, /REAL-TRACK/); assert.match(html, /\$22\.00/); assert.match(html, /<fieldset disabled/); assert.ok(!html.includes("demo"));
+  assert.match(html, /Receiver/); assert.match(html, /REAL-TRACK/); assert.match(html, /22 THB/); assert.match(html, /<fieldset disabled/); assert.ok(!html.includes("demo"));
   state.error = ""; state.data.orders = [order({ customerName: null, shippingAddress: null, orderStatus: "PENDING_PAYMENT" })];
   const legacy = renderToStaticMarkup(React.createElement(component, { orderId: "4" }));
   assert.match(legacy, /Shipping address unavailable/); assert.match(legacy, /inconsistent/); assert.ok(!legacy.includes("Accept and confirm"));

@@ -1,5 +1,6 @@
 "use client";
-import React, { Suspense, useState, useEffect } from "react";
+import { formatBaht } from "@/lib/currency";
+import React, { Suspense, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import HeaderSearch from "./HeaderSearch";
@@ -8,7 +9,7 @@ import { useCart } from "@/app/context/CartContext";
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import HeaderLogo from "./HeaderLogo";
 import { useAuth } from "@/app/context/AuthContext";
-import { Store, PackagePlus, type LucideIcon } from "lucide-react";
+import { Store, PackagePlus, Home, ShoppingBag, History, Menu, X, type LucideIcon } from "lucide-react";
 import HeaderIdentity from "./HeaderIdentity";
 
 type NavItem = { id: number; title: string; path: string; icon?: LucideIcon };
@@ -19,6 +20,8 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
 }) => {
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
+  const navigationRef = useRef<HTMLDivElement>(null);
+  const navigationToggleRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
   const { openCartModal } = useCartModalContext();
   const { user, isLoading: authLoading } = useAuth();
@@ -32,7 +35,6 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
   const canViewStorefront = !isAdminLayout && !authLoading && isSeller && user.status === "ACTIVE";
   const [sellerShop, setSellerShop] = useState<{ userId: string; sellerId: number } | null>(null);
   const storefrontHref = canViewStorefront && sellerShop?.userId === sellerUserId ? `/shop/${sellerShop.sellerId}` : null;
-  const isStorefrontActive = storefrontHref && (pathname === storefrontHref || pathname.startsWith(`${storefrontHref}/`));
 
   const { count, totalPrice, isLoading: cartLoading } = useCart();
 
@@ -73,10 +75,56 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    setNavigationOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!navigationOpen) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (event.target instanceof Node &&
+          !navigationRef.current?.contains(event.target) &&
+          !navigationToggleRef.current?.contains(event.target)) {
+        setNavigationOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setNavigationOpen(false);
+        navigationToggleRef.current?.focus();
+      }
+    };
+    const desktop = window.matchMedia("(min-width: 1280px)");
+    const closeOnDesktop = () => { if (desktop.matches) setNavigationOpen(false); };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+      desktop.removeEventListener("change", closeOnDesktop);
+    };
+  }, [navigationOpen]);
+
   const mainNavItems: NavItem[] = isAdminLayout ? adminNavItems : isSeller ? [
     ...(user.status === "ACTIVE" ? [{ id: 2, title: "Shop dashboard", path: "/seller-dashboard", icon: Store }] : []),
     ...(canViewStorefront && storefrontHref ? [{ id: 3, title: "Add Product", path: "/seller/products/add", icon: PackagePlus }] : []),
-  ] : showShopping ? menuData.map((item) => ({ ...item, path: item.path || "/" })) : [];
+  ] : showShopping ? menuData.map((item) => ({ ...item, path: item.path || "/", icon: item.path === "/" ? Home : ShoppingBag })) : [];
+
+  const navigationItems: NavItem[] = [
+    ...mainNavItems,
+    ...(user?.role === "CUSTOMER" ? [
+      { id: 10, title: "Order History", path: "/order-history", icon: History },
+      { id: 11, title: "Seller Applications", path: "/seller-application", icon: Store },
+    ] : []),
+    ...(storefrontHref ? [{ id: 12, title: "View storefront", path: storefrontHref, icon: Store }] : []),
+  ];
+  const isNavigationActive = (path: string) => {
+    if (path === "/" || path === "/admin") return pathname === path;
+    if (path === "/shop-with-sidebar") return /^\/shop-(?:with|without)-sidebar(?:\/|$)/.test(pathname) || pathname.startsWith("/shop-details");
+    if (path === "/seller-dashboard" && /^\/seller\/\d+$/.test(pathname)) return true;
+    return pathname === path || pathname.startsWith(`${path}/`);
+  };
 
   return (
     <header
@@ -155,53 +203,24 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
                       cart
                     </span>
                     <p className="font-medium text-custom-sm text-dark">
-                      {cartLoading ? "…" : `$${totalPrice.toFixed(2)}`}
+                      {cartLoading ? "…" : formatBaht(totalPrice)}
                     </p>
                   </div>
                 </button>}
               </div>
 
-              {/* <!-- Hamburger Toggle BTN --> */}
               <button
-                id="Toggle"
-                aria-label="Toggler"
-                className="xl:hidden block"
-                onClick={() => setNavigationOpen(!navigationOpen)}
+                ref={navigationToggleRef}
+                type="button"
+                aria-label={navigationOpen ? "Close navigation menu" : "Open navigation menu"}
+                aria-expanded={navigationOpen}
+                aria-controls="primary-navigation"
+                className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg border border-gray-3 px-3 text-custom-sm font-medium text-dark transition-colors hover:bg-gray-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 xl:hidden"
+                onClick={() => setNavigationOpen(open => !open)}
               >
-                <span className="block relative cursor-pointer w-5.5 h-5.5">
-                  <span className="du-block absolute right-0 w-full h-full">
-                    <span
-                      className={`block relative top-0 left-0 bg-dark rounded-sm w-0 h-0.5 my-1 ease-in-out duration-200 delay-[0] ${
-                        !navigationOpen && "!w-full delay-300"
-                      }`}
-                    ></span>
-                    <span
-                      className={`block relative top-0 left-0 bg-dark rounded-sm w-0 h-0.5 my-1 ease-in-out duration-200 delay-150 ${
-                        !navigationOpen && "!w-full delay-400"
-                      }`}
-                    ></span>
-                    <span
-                      className={`block relative top-0 left-0 bg-dark rounded-sm w-0 h-0.5 my-1 ease-in-out duration-200 delay-200 ${
-                        !navigationOpen && "!w-full delay-500"
-                      }`}
-                    ></span>
-                  </span>
-
-                  <span className="block absolute right-0 w-full h-full rotate-45">
-                    <span
-                      className={`block bg-dark rounded-sm ease-in-out duration-200 delay-300 absolute left-2.5 top-0 w-0.5 h-full ${
-                        !navigationOpen && "!h-0 delay-[0] "
-                      }`}
-                    ></span>
-                    <span
-                      className={`block bg-dark rounded-sm ease-in-out duration-200 delay-400 absolute left-0 top-2.5 w-full h-0.5 ${
-                        !navigationOpen && "!h-0 dealy-200"
-                      }`}
-                    ></span>
-                  </span>
-                </span>
+                {navigationOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+                <span className="hidden sm:inline">Menu</span>
               </button>
-              {/* //   <!-- Hamburger Toggle BTN --> */}
             </div>
           </div>
         </div>
@@ -209,98 +228,31 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
       </div>
 
       <div className="border-y border-gray-3">
-        <div className="max-w-[1170px] mx-auto px-4 sm:px-7.5 xl:px-0">
-          <div className="flex items-center justify-between">
-            {/* <!--=== Main Nav Start ===--> */}
-            <div
-              className={`w-[288px] absolute right-4 top-full xl:static xl:w-auto h-0 xl:h-auto invisible xl:visible xl:flex items-center justify-between ${
-                navigationOpen &&
-                `!visible bg-white shadow-lg border border-gray-3 !h-auto max-h-[400px] overflow-y-scroll rounded-md p-5`
-              }`}
-            >
-              {/* <!-- Main Nav Start --> */}
-              <nav>
-                <ul className="flex xl:items-center flex-col xl:flex-row gap-5 xl:gap-6">
-                  {mainNavItems.map((menuItem) => {
-                    const Icon = menuItem.icon;
-                    const isActive = isSeller && (pathname === menuItem.path ||
-                      (menuItem.path === "/seller-dashboard" && /^\/seller\/\d+$/.test(pathname)));
-                    return (
-                      <li
-                        key={menuItem.id}
-                        className="group relative before:w-0 before:h-[3px] before:bg-blue before:absolute before:left-0 before:top-0 before:rounded-b-[3px] before:ease-out before:duration-200 hover:before:w-full "
-                      >
-                        <Link
-                          href={menuItem.path}
-                          aria-current={isActive ? "page" : undefined}
-                          onClick={() => setNavigationOpen(false)}
-                          className={`hover:text-blue text-custom-sm font-medium flex items-center gap-2 ${isActive ? "text-blue" : "text-dark"} ${
-                            stickyMenu ? "xl:py-4" : "xl:py-6"
-                          }`}
-                        >
-                          {Icon && <Icon size={16} aria-hidden="true" />}
-                          {menuItem.title}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                  {user?.role === "CUSTOMER" && <>
-                    <li className="xl:hidden"><Link href="/order-history" onClick={() => setNavigationOpen(false)} className="flex py-2 font-medium text-custom-sm text-dark hover:text-blue">Order history</Link></li>
-                    <li className="xl:hidden"><Link href="/seller-application" onClick={() => setNavigationOpen(false)} className="flex py-2 font-medium text-custom-sm text-dark hover:text-blue">Seller applications</Link></li>
-                  </>}
-                  {storefrontHref && <li className="xl:hidden"><Link href={storefrontHref} aria-current={isStorefrontActive ? "page" : undefined} onClick={() => setNavigationOpen(false)} className={`flex items-center gap-2 py-2 text-custom-sm font-medium hover:text-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 ${isStorefrontActive ? "text-blue" : "text-dark"}`}><Store size={16} aria-hidden="true" />View storefront</Link></li>}
-                </ul>
-              </nav>
-              {/* //   <!-- Main Nav End --> */}
-            </div>
-            {/* // <!--=== Main Nav End ===--> */}
-
-            {/* // <!--=== Nav Right Start ===--> */}
-            <div className="hidden xl:block">
-              <ul className="flex items-center gap-5.5">
-                {storefrontHref && <li className="group relative before:w-0 before:h-[3px] before:bg-blue before:absolute before:left-0 before:top-0 before:rounded-b-[3px] before:ease-out before:duration-200 hover:before:w-full">
-                  <Link href={storefrontHref} aria-current={isStorefrontActive ? "page" : undefined} className={`flex items-center gap-2 text-custom-sm font-medium hover:text-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 ${isStorefrontActive ? "text-blue" : "text-dark"} ${stickyMenu ? "xl:py-4" : "xl:py-6"}`}>
-                    <Store size={16} aria-hidden="true" />View storefront
-                  </Link>
-                </li>}
-                {user?.role === "CUSTOMER" && <li className="py-4">
-                  <a
-                    href="/order-history"
-                    className="flex items-center gap-1.5 font-medium text-custom-sm text-dark hover:text-blue"
-                  >
-                    <svg
-                      className="fill-current"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
+        <div className="mx-auto max-w-[1170px] px-4 sm:px-7.5 xl:px-0">
+          <div
+            ref={navigationRef}
+            id="primary-navigation"
+            className={`absolute left-4 right-4 top-full max-h-[calc(100dvh-260px)] overflow-y-auto rounded-xl border border-gray-3 bg-white p-2 shadow-lg xl:static xl:max-h-none xl:overflow-visible xl:rounded-none xl:border-0 xl:bg-transparent xl:py-2 xl:px-0 xl:shadow-none ${navigationOpen ? "block" : "hidden xl:block"}`}
+          >
+            <nav aria-label={isAdminLayout ? "Admin navigation" : "Main navigation"}>
+              <ul className="flex flex-col gap-1 xl:flex-row xl:items-center xl:gap-2">
+                {navigationItems.map(menuItem => {
+                  const Icon = menuItem.icon;
+                  const isActive = isNavigationActive(menuItem.path);
+                  return <li key={menuItem.id}>
+                    <Link
+                      href={menuItem.path}
+                      aria-current={isActive ? "page" : undefined}
+                      onClick={() => setNavigationOpen(false)}
+                      className={`flex min-h-[44px] items-center gap-2.5 rounded-lg px-4 py-2.5 text-custom-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 ${isActive ? "bg-blue/10 text-blue" : "text-dark hover:bg-gray-1 hover:text-blue"}`}
                     >
-                      <path
-                        d="M2.45313 7.55556H1.70313V7.55556L2.45313 7.55556ZM2.45313 8.66667L1.92488 9.19908C2.21729 9.4892 2.68896 9.4892 2.98137 9.19908L2.45313 8.66667ZM4.10124 8.08797C4.39528 7.79623 4.39715 7.32135 4.10541 7.02731C3.81367 6.73327 3.3388 6.73141 3.04476 7.02315L4.10124 8.08797ZM1.86149 7.02315C1.56745 6.73141 1.09258 6.73327 0.800843 7.02731C0.509102 7.32135 0.510968 7.79623 0.805009 8.08797L1.86149 7.02315ZM12.1973 5.05946C12.4143 5.41232 12.8762 5.52252 13.229 5.30558C13.5819 5.08865 13.6921 4.62674 13.4752 4.27388L12.1973 5.05946ZM8.0525 1.25C4.5514 1.25 1.70313 4.06755 1.70313 7.55556H3.20313C3.20313 4.90706 5.3687 2.75 8.0525 2.75V1.25ZM1.70313 7.55556L1.70313 8.66667L3.20313 8.66667L3.20313 7.55556L1.70313 7.55556ZM2.98137 9.19908L4.10124 8.08797L3.04476 7.02315L1.92488 8.13426L2.98137 9.19908ZM2.98137 8.13426L1.86149 7.02315L0.805009 8.08797L1.92488 9.19908L2.98137 8.13426ZM13.4752 4.27388C12.3603 2.46049 10.3479 1.25 8.0525 1.25V2.75C9.80904 2.75 11.346 3.67466 12.1973 5.05946L13.4752 4.27388Z"
-                        fill=""
-                      />
-                      <path
-                        d="M13.5427 7.33337L14.0699 6.79996C13.7777 6.51118 13.3076 6.51118 13.0155 6.79996L13.5427 7.33337ZM11.8913 7.91107C11.5967 8.20225 11.5939 8.67711 11.8851 8.97171C12.1763 9.26631 12.6512 9.26908 12.9458 8.9779L11.8913 7.91107ZM14.1396 8.9779C14.4342 9.26908 14.9091 9.26631 15.2003 8.97171C15.4914 8.67711 15.4887 8.20225 15.1941 7.91107L14.1396 8.9779ZM3.75812 10.9395C3.54059 10.587 3.07849 10.4776 2.72599 10.6951C2.3735 10.9127 2.26409 11.3748 2.48163 11.7273L3.75812 10.9395ZM7.9219 14.75C11.4321 14.75 14.2927 11.9352 14.2927 8.44449H12.7927C12.7927 11.0903 10.6202 13.25 7.9219 13.25V14.75ZM14.2927 8.44449V7.33337H12.7927V8.44449H14.2927ZM13.0155 6.79996L11.8913 7.91107L12.9458 8.9779L14.0699 7.86679L13.0155 6.79996ZM13.0155 7.86679L14.1396 8.9779L15.1941 7.91107L14.0699 6.79996L13.0155 7.86679ZM2.48163 11.7273C3.60082 13.5408 5.62007 14.75 7.9219 14.75V13.25C6.15627 13.25 4.61261 12.3241 3.75812 10.9395L2.48163 11.7273Z"
-                        fill=""
-                      />
-                    </svg>
-                    Order History
-                  </a>
-                </li>}
-
-                {user?.role === "CUSTOMER" && <li className="py-4">
-                  <Link
-                    href="/seller-application"
-                    className="flex items-center gap-1.5 font-medium text-custom-sm text-dark hover:text-blue"
-                  >
-                    <Store size={16} aria-hidden="true" />
-                    Seller Applications
-                  </Link>
-                </li>}
+                      {Icon && <Icon size={18} aria-hidden="true" />}
+                      {menuItem.title}
+                    </Link>
+                  </li>;
+                })}
               </ul>
-            </div>
-            {/* <!--=== Nav Right End ===--> */}
+            </nav>
           </div>
         </div>
       </div>

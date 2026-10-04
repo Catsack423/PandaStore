@@ -8,8 +8,10 @@ import { CheckCircle2, Loader2, QrCode } from "lucide-react";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import ConfirmDialog from "@/components/Common/ConfirmDialog";
+import toast from "react-hot-toast";
 import { money } from "@/components/Checkout/api";
-import { confirmPayment, isPendingPayment, paymentStatusLabel, type PaymentOrder } from "./api";
+import { confirmPayment, cancelPaymentOrder, isPendingPayment, paymentStatusLabel, type PaymentOrder } from "./api";
 
 const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue";
 const primary = `h-11 rounded-lg bg-blue px-5 text-white hover:bg-blue-dark ${focus}`;
@@ -28,7 +30,9 @@ export default function Payment({ initialOrder, qrSource, loadError = false }: {
   const [confirmed, setConfirmed] = useState(false);
   const [qrFailed, setQrFailed] = useState(false);
   const pending = order && isPendingPayment(order);
-  const busy = processing || refreshing;
+  const [cancelling, setCancelling] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const busy = processing || refreshing || cancelling;
 
   async function submit() {
     if (!order || !pending || inFlight.current) return;
@@ -39,11 +43,30 @@ export default function Payment({ initialOrder, qrSource, loadError = false }: {
       const result = await confirmPayment(order.orderGroupId);
       setOrder(result);
       setConfirmed(true);
+      toast.success("Payment confirmed successfully!");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not update your order. Please try again.");
+      const msg = cause instanceof Error ? cause.message : "Could not update your order. Please try again.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       inFlight.current = false;
       setProcessing(false);
+    }
+  }
+
+  async function handleConfirmCancel() {
+    if (!order || busy) return;
+    setCancelling(true);
+    setError("");
+    try {
+      await cancelPaymentOrder(order.orderGroupId);
+      toast.success("Order cancelled successfully");
+      router.push("/order-history");
+    } catch (cause) {
+      const msg = cause instanceof Error ? cause.message : "Could not cancel your order. Please try again.";
+      setError(msg);
+      toast.error(msg);
+      setCancelling(false);
     }
   }
 
@@ -79,14 +102,14 @@ export default function Payment({ initialOrder, qrSource, loadError = false }: {
                 <p>{error}</p><Button variant="outline" className={`mt-3 ${outline}`} disabled={busy} onClick={() => startRefresh(() => router.refresh())}>Refresh order status</Button>
               </div>}
               <div className="mt-7 flex flex-col gap-3 sm:flex-row" aria-busy={busy}>
-                <Button variant="outline" className={`w-full sm:flex-1 ${outline}`} disabled aria-label="Cancel order" aria-describedby="payment-cancellation-note">
-                  Cancel order
+                <Button variant="outline" className={`w-full sm:flex-1 ${outline}`} disabled={busy} aria-label="Cancel order" onClick={() => setShowCancelDialog(true)}>
+                  {cancelling && <Loader2 aria-hidden="true" className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" />}Cancel order
                 </Button>
                 <Button className={`w-full sm:flex-1 ${primary}`} disabled={busy} aria-label="Confirm payment" onClick={() => void submit()}>
                   {processing && <Loader2 aria-hidden="true" className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" />}Confirm payment
                 </Button>
               </div>
-              <p id="payment-cancellation-note" className="mt-3 text-center text-xs text-dark-4">Cancellation is not available while payment is pending.</p>
+              {cancelling && <p role="status" className="mt-3 text-center text-sm text-dark-4">Cancelling order…</p>}
               {processing && <p role="status" className="mt-3 text-center text-sm text-dark-4">Confirming payment…</p>}
             </> : <div role="status" className="mt-6 text-center">
               <p className="text-sm text-dark-4">{confirmed ? "Your payment is recorded. The seller can now confirm your order." : "This order is no longer pending payment."}</p>
@@ -95,6 +118,19 @@ export default function Payment({ initialOrder, qrSource, loadError = false }: {
           </>}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        isOpen={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        onConfirm={handleConfirmCancel}
+        title="Cancel Order"
+        description="Are you sure you want to cancel this order? This will discard your pending payment and cancel the order group."
+        confirmText="Yes, Cancel Order"
+        cancelText="Keep Order"
+        variant="danger"
+        icon="alert"
+        loading={cancelling}
+      />
     </section>
   </main>;
 }

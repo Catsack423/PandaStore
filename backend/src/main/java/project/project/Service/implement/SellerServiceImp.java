@@ -84,14 +84,27 @@ public class SellerServiceImp implements SellerService {
         Seller savedSeller;
         try {
             savedSeller = sellerRepository.save(seller);
-            return savedSeller;
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateUserException("ชื่อร้านค้า '" + request.getShopName() + "' ถูกใช้ไปแล้ว");
         } catch (DataAccessException e) {
             throw new UserCreationException("บันทึกข้อมูล Seller ไม่สำเร็จ", e);
         }
 
-        
+        try {
+            sellerApplicationService.submitApplication(savedUser.getUserId(), request.toSellerApplicationRequest());
+
+            SellerBankAccount bankAccount = new SellerBankAccount();
+            bankAccount.setSeller(savedSeller);
+            bankAccount.setBankName(request.getBankName());
+            bankAccount.setAccountNumber(request.getBankAccountNumber());
+            bankAccount.setAccountName(request.getBankAccountName());
+            bankAccount.setProofImageUrl(request.getProofImageUrl() != null ? request.getProofImageUrl() : "");
+            sellerBankAccountRepository.save(bankAccount);
+
+            return savedSeller;
+        } catch (DataAccessException e) {
+            throw new UserCreationException("บันทึกข้อมูลใบสมัครหรือบัญชีธนาคารร้านค้าไม่สำเร็จ", e);
+        }
     }
 
     @Override

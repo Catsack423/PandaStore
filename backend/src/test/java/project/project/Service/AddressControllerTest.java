@@ -174,6 +174,33 @@ class AddressControllerTest {
                 .andExpect(jsonPath("$.success").value(false));
     }
 
+    @Test
+    void updateAddressShouldSucceed() throws Exception {
+        when(userResolver.requireUserId(principal)).thenReturn(100L);
+        Address updated = new Address();
+        updated.setAddressId(10L);
+        updated.setReceiverName("Updated Name");
+        updated.setPhoneNumber("0812345678");
+        updated.setAddressLine("123 Main Road");
+        updated.setDistrict("Chatuchak");
+        updated.setProvince("Bangkok");
+        updated.setPostalCode("10900");
+        updated.setIsDefault(true);
+
+        when(addressService.updateAddress(eq(1L), eq(10L), any(CreateAddressRequest.class)))
+                .thenReturn(updated);
+
+        mvc.perform(put("/api/customers/1/addresses/10")
+                .principal(principal)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validRequest()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.receiverName").value("Updated Name"));
+
+        verify(ownershipService).requireCustomerOwner(100L, 1L);
+    }
+
     private String validRequest() {
         return """
                 {

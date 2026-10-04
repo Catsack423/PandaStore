@@ -1,3 +1,4 @@
+import { formatBaht } from "@/lib/currency";
 import React, { useState } from "react";
 import { useCart } from "@/app/context/CartContext";
 
@@ -41,7 +42,7 @@ const SingleItem = ({ item }) => {
       </div>
 
       <div className="min-w-[180px]">
-        <p className="text-dark">${item.discountedPrice}</p>
+        <p className="text-dark">{formatBaht(item.discountedPrice)}</p>
       </div>
 
       <div className="min-w-[275px]">
@@ -97,7 +98,7 @@ const SingleItem = ({ item }) => {
       </div>
 
       <div className="min-w-[200px]">
-        <p className="text-dark">${item.discountedPrice * quantity}</p>
+        <p className="text-dark">{formatBaht(item.discountedPrice * quantity)}</p>
       </div>
 
       <div className="min-w-[50px] flex justify-end">

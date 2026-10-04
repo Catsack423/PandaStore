@@ -18,7 +18,7 @@ public interface AuthService {
    
 
     Seller registerSeller(RegisterSeller request);
-
+    
     String login(String usernameOrEmail, String password);
 
     LoginResponse loginWithUser(String usernameOrEmail, String password);

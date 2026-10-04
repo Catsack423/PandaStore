@@ -66,7 +66,7 @@ public class CustomerCheckoutService {
                 }).toList()).orElse(List.of());
         return new Context(customerId, items,
                 addresses.getAllAddressesByCustomerId(customerId).stream()
-                        .map(AddressResponse::fromEntity).toList(),
+                        .map(a -> AddressResponse.fromEntity(a, orderGroups.existsByShippingAddress_AddressId(a.getAddressId()))).toList(),
                 methods.getAvailableMethods(), List.of(PaymentMethod.values()));
     }
 
@@ -113,6 +113,13 @@ public class CustomerCheckoutService {
         var ownedRequest = new CreateAddressRequest(customerId, request.receiverName(), request.phoneNumber(),
                 request.addressLine(), request.district(), request.province(), request.postalCode(), request.isDefault());
         return AddressResponse.fromEntity(addresses.addAddressToCustomerByCustomerId(customerId, ownedRequest));
+    }
+
+    @Transactional
+    public AddressResponse updateAddress(Long customerId, Long addressId, CreateAddressRequest request) {
+        var ownedRequest = new CreateAddressRequest(customerId, request.receiverName(), request.phoneNumber(),
+                request.addressLine(), request.district(), request.province(), request.postalCode(), request.isDefault());
+        return AddressResponse.fromEntity(addresses.updateAddress(customerId, addressId, ownedRequest));
     }
 
     @Transactional

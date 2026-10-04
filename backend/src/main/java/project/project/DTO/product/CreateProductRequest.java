@@ -1,5 +1,7 @@
 package project.project.DTO.product;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -9,6 +11,7 @@ import jakarta.validation.constraints.Digits;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -32,9 +35,13 @@ public class CreateProductRequest {
     @Size(max = 255, message = "ข้อมูลการจัดส่งต้องมีความยาวไม่เกิน 255 ตัวอักษร")
     private String shippingInfo;
 
-    private Set<Long> categoryIds;
+    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+    @JsonAlias({"category_id", "categoryId", "categories"})
+    private Set<Long> categoryIds = new HashSet<>();
 
     @Size(max = 5, message = "Choose no more than 5 product images")
+    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+    @JsonAlias({"image_urls", "imageUrl", "image_url"})
     private List<@Size(max = 255, message = "Image URL must not exceed 255 characters") String> imageUrls = new ArrayList<>();
 
     public CreateProductRequest() {

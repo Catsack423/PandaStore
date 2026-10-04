@@ -14,6 +14,10 @@ import project.project.DTO.auth.AuthRequests;
 import project.project.DTO.auth.CurrentUserResponse;
 import project.project.DTO.auth.LoginResponse;
 import org.springframework.http.CacheControl;
+import org.springframework.beans.factory.annotation.Autowired;
+import project.project.Repository.CustomerRepository;
+import project.project.Repository.SellerRepository;
+import project.project.Repository.UserRepository;
 import project.project.DTO.customer.CustomerResponse;
 import project.project.Service.api.AuthService;
 import project.project.Service.implement.PasswordService;
@@ -25,10 +29,27 @@ public class AuthController {
     private final CurrentUser currentUser;
     private final PasswordService passwords;
 
+    private CustomerRepository customerRepository;
+    private SellerRepository sellerRepository;
+    private UserRepository userRepository;
+
     public AuthController(AuthService auth, CurrentUser currentUser, PasswordService passwords) {
         this.auth = auth;
         this.currentUser = currentUser;
         this.passwords = passwords;
+    }
+
+    @Autowired
+    public AuthController(AuthService auth, CurrentUser currentUser, PasswordService passwords,
+            @Autowired(required = false) CustomerRepository customerRepository,
+            @Autowired(required = false) SellerRepository sellerRepository,
+            @Autowired(required = false) UserRepository userRepository) {
+        this.auth = auth;
+        this.currentUser = currentUser;
+        this.passwords = passwords;
+        this.customerRepository = customerRepository;
+        this.sellerRepository = sellerRepository;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/register/customer")
@@ -60,9 +81,78 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<CurrentUserResponse>> me() {
+        var user = currentUser.requireUser();
+        String fullName = null;
+        String phoneNumber = null;
+        if (user.getRole() == project.project.Entity.user.UserRole.CUSTOMER && customerRepository != null) {
+            var customerOpt = customerRepository.findByUser_UserId(user.getUserId());
+            if (customerOpt.isPresent()) {
+                fullName = customerOpt.get().getFullName();
+                phoneNumber = customerOpt.get().getPhoneNumber();
+            }
+        } else if (user.getRole() == project.project.Entity.user.UserRole.SELLER && sellerRepository != null) {
+            var sellerOpt = sellerRepository.findByUser_UserId(user.getUserId());
+            if (sellerOpt.isPresent()) {
+                fullName = sellerOpt.get().getShopName();
+                phoneNumber = sellerOpt.get().getShopPhone();
+            }
+        } else {
+            fullName = user.getUsername();
+        }
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
                 .body(ApiResponse.success("ดึงข้อมูลผู้ใช้ปัจจุบันสำเร็จ",
-                        CurrentUserResponse.from(currentUser.requireUser())));
+                        CurrentUserResponse.from(user, fullName, phoneNumber)));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<ApiResponse<CurrentUserResponse>> updateProfile(
+            @RequestBody AuthRequests.UpdateProfile request) {
+        var user = currentUser.requireUser();
+        if (request.email() != null && !request.email().isBlank() && userRepository != null) {
+            user.setEmail(request.email().trim());
+            userRepository.save(user);
+        }
+        String fullName = null;
+        String phoneNumber = null;
+        if (user.getRole() == project.project.Entity.user.UserRole.CUSTOMER && customerRepository != null) {
+            var customer = customerRepository.findByUser_UserId(user.getUserId())
+                    .orElseGet(() -> new project.project.Entity.user.Customer(
+                            user,
+                            request.name() != null && !request.name().isBlank() ? request.name().trim() : user.getUsername(),
+                            request.phone() != null ? request.phone().trim() : null));
+            if (request.name() != null && !request.name().isBlank()) {
+                customer.setFullName(request.name().trim());
+            }
+            if (request.phone() != null) {
+                customer.setPhoneNumber(request.phone().trim());
+            }
+            customerRepository.save(customer);
+            fullName = customer.getFullName();
+            phoneNumber = customer.getPhoneNumber();
+        } else if (user.getRole() == project.project.Entity.user.UserRole.SELLER && sellerRepository != null) {
+            var sellerOpt = sellerRepository.findByUser_UserId(user.getUserId());
+            if (sellerOpt.isPresent()) {
+                var seller = sellerOpt.get();
+                if (request.name() != null && !request.name().isBlank()) {
+                    seller.setShopName(request.name().trim());
+                }
+                if (request.phone() != null) {
+                    seller.setShopPhone(request.phone().trim());
+                }
+                sellerRepository.save(seller);
+                fullName = seller.getShopName();
+                phoneNumber = seller.getShopPhone();
+            }
+        } else {
+            if (request.name() != null && !request.name().isBlank() && userRepository != null) {
+                user.setUsername(request.name().trim());
+                userRepository.save(user);
+            }
+            fullName = user.getUsername();
+        }
+        return ResponseEntity.ok()
+                .body(ApiResponse.success("อัปเดตข้อมูลผู้ใช้สำเร็จ",
+                        CurrentUserResponse.from(user, fullName, phoneNumber)));
     }
 
     @GetMapping("/token")
@@ -85,7 +175,7 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ApiResponse<Map<String, Boolean>> resetPassword(
+    public ApiResponse<Map<String, Object>> resetPassword(
             @Valid @RequestBody AuthRequests.ResetPassword request) {
         var user = currentUser.requireUser();
         if (!passwords.matches(request.currentPassword(), user.getPasswordHash())) {
@@ -94,7 +184,12 @@ public class AuthController {
         if (!auth.resetPassword(user.getUserId(), request.password(), request.confirmPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "รหัสผ่านใหม่ไม่ถูกต้องหรือไม่ตรงกัน");
         }
-        return ApiResponse.success("เปลี่ยนรหัสผ่านสำเร็จ", Map.of("success", true));
+        var newSession = auth.loginWithUser(user.getUsername(), request.password());
+        return ApiResponse.success("เปลี่ยนรหัสผ่านสำเร็จ", Map.of(
+                "success", true,
+                "token", newSession.token(),
+                "user", newSession.user()
+        ));
     }
 
 }

@@ -47,6 +47,21 @@ public class AddressController {
                 .body(ApiResponse.success("เพิ่มที่อยู่สำเร็จ", AddressResponse.fromEntity(address)));
     }
 
+    @PutMapping("/{addressId}")
+    public ResponseEntity<ApiResponse<AddressResponse>> updateAddress(
+            @PathVariable("customerId") Long customerId,
+            @PathVariable("addressId") Long addressId,
+            @Valid @RequestBody CreateAddressRequest request,
+            Principal principal) {
+
+        requireOwner(principal, customerId);
+
+        var address = addressService.updateAddress(customerId, addressId, request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("แก้ไขที่อยู่สำเร็จ", AddressResponse.fromEntity(address)));
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<List<AddressResponse>>> getAddresses(
             @PathVariable("customerId") Long customerId,

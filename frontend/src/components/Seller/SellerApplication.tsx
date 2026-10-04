@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ClipboardList, Store } from "lucide-react";
+import { ClipboardList, FileCheck2, Store } from "lucide-react";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import { useAuth, type User } from "@/app/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import ApplicationHistoryTable, { statusColors, statusLabels } from "./ApplicationHistoryTable";
+import ApplicationHistoryTable, { getReviewNote, statusColors, statusDescriptions, statusLabels } from "./ApplicationHistoryTable";
 import type { SellerApplicationRecord } from "@/types/sellerApplication";
 
 export default function SellerApplication() {
@@ -113,7 +113,7 @@ export default function SellerApplication() {
                   </span>
                   <div>
                     <h2 className="text-2xl font-semibold leading-tight text-dark">Waiting for review</h2>
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-dark-3">Your seller application has been submitted. This page checks for updates automatically and opens your shop dashboard after approval.</p>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-dark-3">{statusDescriptions.PENDING}</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-yellow/30 px-6 py-4 text-sm sm:px-8">
@@ -123,12 +123,17 @@ export default function SellerApplication() {
               </CardContent>
             </Card>
             : <Card><CardHeader><CardTitle>Latest application · #{latest.applicationId}</CardTitle></CardHeader><CardContent className="space-y-4"><div className="flex flex-wrap items-center gap-3"><h2 className="text-xl font-semibold text-dark">{latest.shopName}</h2><span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[latest.status]}`}>{statusLabels[latest.status]}</span></div>
-              <p className="text-sm">{latest.status === "APPROVED" ? "Your shop has been approved." : latest.status === "NEED_MORE_DOC" ? "The review team needs updated documents. Use the form to submit a revised application." : "Review the decision and submit a corrected application."}</p>
-              {latest.adminNote && <div className="rounded-lg border border-yellow/30 bg-yellow-light-4 p-4 text-sm"><strong className="text-dark">Review note</strong><p className="mt-1">{latest.adminNote}</p></div>}
-              {canApply && <Link href="/seller-application/apply" className="inline-flex h-10 items-center rounded-lg bg-blue px-5 text-sm font-medium text-white hover:bg-blue-dark">{applyLabel}</Link>}
+              <p className="text-sm leading-6">{statusDescriptions[latest.status]}</p>
+              {(latest.adminNote || canApply) && <div className="rounded-lg border border-yellow/30 bg-yellow-light-4 p-4 text-sm"><strong className="text-dark">{latest.status === "REJECTED" ? "Reason for rejection" : latest.status === "NEED_MORE_DOC" ? "Requested changes" : "Review note"}</strong><p className="mt-2 whitespace-pre-line break-words leading-6">{getReviewNote(latest)}</p></div>}
+              {canApply && <div><Link href="/seller-application/apply" className="inline-flex min-h-[44px] items-center rounded-lg bg-blue px-5 py-2 text-sm font-medium text-white hover:bg-blue-dark">{applyLabel}</Link><p className="mt-2 text-xs leading-5 text-dark-4">The form uses details from your latest application. Update the relevant information or documents, then submit for review again.</p></div>}
               {latest.status === "APPROVED" && user?.role === "SELLER" && <Link href="/seller-dashboard" className="inline-flex h-10 items-center rounded-lg bg-blue px-5 text-sm font-medium text-white hover:bg-blue-dark">Open dashboard</Link>}
             </CardContent></Card>)}
           {!latest && <Card><CardContent className="flex flex-col items-center py-14 text-center"><ClipboardList className="mb-4 size-10 text-blue" /><h2 className="text-xl font-semibold text-dark">No applications yet</h2><p className="mt-2 text-sm">Your customer account is ready. Complete the shop application to get started.</p><Link href="/seller-application/apply" className="mt-6 rounded-lg bg-blue px-5 py-3 text-sm font-medium text-white">Apply to sell</Link></CardContent></Card>}
+          {canApply && <Card><CardHeader><CardTitle>Before you apply</CardTitle><p className="text-sm leading-6 text-dark-4">Complete the two-step form, then submit it for review.</p></CardHeader><CardContent className="grid gap-5 sm:grid-cols-3">
+            <div className="min-w-0"><Store size={24} className="mb-3 text-blue" aria-hidden="true" /><h3 className="font-medium text-dark">1. Shop details</h3><p className="mt-2 text-sm leading-6">Your shop name, description, phone number, email and address.</p></div>
+            <div className="min-w-0"><FileCheck2 size={24} className="mb-3 text-blue" aria-hidden="true" /><h3 className="font-medium text-dark">2. Identity and bank account</h3><p className="mt-2 text-sm leading-6">Your legal name, ID card number and bank details, plus images of your ID card and bank book.</p></div>
+            <div className="min-w-0"><ClipboardList size={24} className="mb-3 text-blue" aria-hidden="true" /><h3 className="font-medium text-dark">Submit and track your application</h3><p className="mt-2 text-sm leading-6">Check your details before submitting. Return to this page to view your status and feedback from the review team.</p></div>
+          </CardContent></Card>}
           <ApplicationHistoryTable applications={applications} />
         </div>}
     </div></section>

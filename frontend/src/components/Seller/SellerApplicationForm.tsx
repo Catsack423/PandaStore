@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { SellerApplicationRecord } from "@/types/sellerApplication";
-import { uploadSingleImage } from "@/lib/uploadImage";
+import { MAX_IMAGE_SIZE, uploadSingleImage } from "@/lib/uploadImage";
+import { getReviewNote } from "./ApplicationHistoryTable";
 
 type ApplicationInput = Pick<SellerApplicationRecord,
   "shopName" | "shopDescription" | "shopPhone" | "shopEmail" | "shopAddress" |
@@ -64,7 +65,7 @@ export default function SellerApplicationForm() {
 
   function update(field: keyof ApplicationInput, value: string) { setForm((current) => ({ ...current, [field]: value })); }
   function field(name: keyof ApplicationInput, label: string, options: { type?: string; pattern?: string; maxLength?: number; hint?: string } = {}) {
-    return <div className="space-y-2"><Label htmlFor={name}>{label}</Label><Input id={name} required value={form[name]} onChange={(event) => update(name, event.target.value)} type={options.type || "text"} pattern={options.pattern} maxLength={options.maxLength} placeholder={options.hint} className="bg-white" /></div>;
+    return <div className="space-y-2"><Label htmlFor={name}>{label}</Label><Input id={name} required value={form[name]} onChange={(event) => update(name, event.target.value)} type={options.type || "text"} pattern={options.pattern} maxLength={options.maxLength} placeholder={options.hint} aria-describedby={options.hint ? `${name}-hint` : undefined} className="bg-white" />{options.hint && <p id={`${name}-hint`} className="text-xs leading-5 text-dark-4">{options.hint}</p>}</div>;
   }
   async function uploadDocument(name: DocumentField, event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -88,9 +89,10 @@ export default function SellerApplicationForm() {
   function documentField(name: DocumentField, label: string) {
     return <div className="min-w-0 space-y-2">
       <Label htmlFor={name}>{label}</Label>
+      <p className="text-xs leading-5 text-dark-4">{name === "idCardImageUrl" ? "An ID card image with your name and ID number clearly visible" : "A bank book page with the account holder name and account number clearly visible"} · JPG, PNG or WebP, up to {MAX_IMAGE_SIZE / 1024 / 1024} MB per file</p>
       <input id={name} ref={(node) => { fileInputs.current[name] = node; }} type="file" accept="image/jpeg,image/png,image/webp" tabIndex={-1} disabled={uploading[name] || pending} onChange={(event) => void uploadDocument(name, event)} className="sr-only" />
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" disabled={uploading[name] || pending} onClick={() => fileInputs.current[name]?.click()} aria-label={`Upload ${label.toLowerCase()}`} className="h-10 gap-2 bg-blue px-4 text-white hover:bg-blue-dark"><Upload className="size-4" />Upload File</Button>
+        <Button type="button" disabled={uploading[name] || pending} onClick={() => fileInputs.current[name]?.click()} aria-label={`Upload ${label.toLowerCase()}`} className="h-11 gap-2 bg-blue px-4 text-white hover:bg-blue-dark"><Upload size={16} aria-hidden="true" />{form[name] ? "Replace file" : "Upload file"}</Button>
         <span aria-live="polite" className={`text-xs font-medium ${form[name] && !uploading[name] ? "text-green-dark" : "text-dark-4"}`}>{uploading[name] ? "Uploading..." : form[name] ? "File uploaded" : "No file yet"}</span>
       </div>
       {form[name] && <a href={form[name]} target="_blank" rel="noopener noreferrer" className="inline-block text-xs font-medium text-blue underline underline-offset-2">View document</a>}
@@ -138,7 +140,8 @@ export default function SellerApplicationForm() {
         : error && !latest && Object.values(form).every((value) => !value) ? <Card><CardContent className="py-16 text-center"><p role="alert" className="text-red">{error}</p><Button type="button" onClick={() => window.location.reload()} className="mt-4">Try again</Button></CardContent></Card>
         : <>
           <div className="mb-7"><p className="text-sm font-medium text-blue">Customer account · {user.name}</p><h1 className="mt-1 text-3xl font-semibold text-dark">{latest ? "Revise your seller application" : "Open your shop"}</h1><p className="mt-2 text-sm text-dark-4">Your existing account stays the same. The review team will assess your shop and identity details.</p></div>
-          {latest?.adminNote && <div className="mb-6 rounded-xl border border-yellow/30 bg-yellow-light-4 p-5 text-sm"><strong className="text-dark">Review note</strong><p className="mt-1">{latest.adminNote}</p></div>}
+          <p className="mb-6 rounded-lg border border-blue/20 bg-blue/5 p-4 text-sm leading-6 text-dark">All fields are required. Enter your shop details in step 1, then your identity and bank details in step 2. Upload both document images before selecting Submit for review.</p>
+          {latest && <div className="mb-6 rounded-xl border border-yellow/30 bg-yellow-light-4 p-5 text-sm"><strong className="text-dark">{latest.status === "REJECTED" ? "Reason for rejection" : "Requested changes"}</strong><p className="mt-2 whitespace-pre-line break-words leading-6">{getReviewNote(latest)}</p></div>}
           <nav aria-label="Application steps" className="mb-6 grid grid-cols-2 gap-3 text-sm">
             <button type="button" aria-current={step === 1 ? "step" : undefined} onClick={() => { setStep(1); setError(""); }} className={`w-full rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue/40 ${step === 1 ? "border-blue bg-blue/5 text-blue" : "border-gray-3 bg-white hover:border-blue/40 hover:bg-blue/5"}`}><Store className="mb-2 size-5" /><strong className="block">1. Shop details</strong></button>
             <button type="button" aria-current={step === 2 ? "step" : undefined} onClick={() => { if (step === 1) shopDetailsForm.current?.requestSubmit(); }} className={`w-full rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue/40 ${step === 2 ? "border-blue bg-blue/5 text-blue" : "border-gray-3 bg-white hover:border-blue/40 hover:bg-blue/5"}`}><FileCheck2 className="mb-2 size-5" /><strong className="block">2. Identity & payment</strong></button>
@@ -149,7 +152,7 @@ export default function SellerApplicationForm() {
               <div className="space-y-2"><Label htmlFor="shopDescription">Shop description</Label><Textarea id="shopDescription" required value={form.shopDescription} onChange={(event) => update("shopDescription", event.target.value)} rows={4} /></div>
               <div className="grid gap-5 sm:grid-cols-2">{field("shopPhone", "Shop phone", { type: "tel", pattern: "[0-9]{9,15}", hint: "9–15 digits" })}{field("shopEmail", "Shop email", { type: "email", maxLength: 100 })}</div>
               <div className="space-y-2"><Label htmlFor="shopAddress">Shop address</Label><Textarea id="shopAddress" required maxLength={255} value={form.shopAddress} onChange={(event) => update("shopAddress", event.target.value)} rows={3} /></div>
-              <div className="flex justify-end border-t border-gray-3 pt-5"><Button type="submit" className="h-11 gap-2 bg-blue px-6 text-white hover:bg-blue-dark">Continue <ArrowRight className="size-4" /></Button></div>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-3 pt-5"><p className="text-xs text-dark-4">Step 1 of 2 · Your application has not been submitted yet</p><Button type="submit" className="h-11 gap-2 bg-blue px-6 text-white hover:bg-blue-dark">Continue <ArrowRight className="size-4" /></Button></div>
             </form> : <form onSubmit={submit} className="space-y-7">
               <div className="grid gap-x-5 gap-y-5 sm:grid-cols-2">
                 {field("sellerFirstName", "Legal first name", { maxLength: 100 })}
@@ -171,7 +174,8 @@ export default function SellerApplicationForm() {
                 </div>
               </div>
               {error && <p role="alert" className="rounded-lg border border-red/20 bg-red-light-6 p-4 text-sm text-red">{error}</p>}
-              <div className="flex justify-between gap-3 border-t border-gray-3 pt-5"><Button type="button" variant="outline" onClick={() => setStep(1)} className="h-11">Back</Button><Button type="submit" disabled={pending || uploading.idCardImageUrl || uploading.bankBookImageUrl} className="h-11 bg-blue px-6 text-white hover:bg-blue-dark">{pending ? "Submitting..." : uploading.idCardImageUrl || uploading.bankBookImageUrl ? "Uploading..." : "Submit for review"}</Button></div>
+              <p className="text-xs leading-5 text-dark-4">Step 2 of 2 · Check your details and both document images before submitting</p>
+              <div className="flex flex-wrap justify-between gap-3 border-t border-gray-3 pt-5"><Button type="button" variant="outline" onClick={() => setStep(1)} className="h-11">Back</Button><Button type="submit" disabled={pending || uploading.idCardImageUrl || uploading.bankBookImageUrl} className="h-11 bg-blue px-6 text-white hover:bg-blue-dark">{pending ? "Submitting..." : uploading.idCardImageUrl || uploading.bankBookImageUrl ? "Uploading..." : "Submit for review"}</Button></div>
             </form>}
           </CardContent></Card>
         </>}

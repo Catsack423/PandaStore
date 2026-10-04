@@ -50,12 +50,13 @@ export default function Signin() {
             </p>
           </CardHeader>
           <CardContent>
-            <form onSubmit={submit} className="space-y-5">
+            <form method="post" onSubmit={submit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="usernameOrEmail">Username or email</Label>
                 <Input
                   id="usernameOrEmail"
                   autoComplete="username"
+                  maxLength={100}
                   required
                   value={usernameOrEmail}
                   onChange={(event) => setUsernameOrEmail(event.target.value)}
@@ -67,6 +68,7 @@ export default function Signin() {
                   id="signin-password"
                   type="password"
                   autoComplete="current-password"
+                  maxLength={72}
                   required
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}

@@ -134,7 +134,7 @@ class AuthServiceTest {
         assertEquals(UserRole.SELLER, user.getRole());
         assertTrue(passwords.matches("password123", user.getPasswordHash()));
 
-        project.project.Entity.seller.SellerApplication app = applications.findByUser_UserId(user.getUserId()).getFirst();
+        project.project.Entity.seller.SellerApplication app = applications.findByUser_UserId(user.getUserId()).get(0);
         assertEquals("My Shop", app.getShopName());
         assertEquals("Somchai", app.getSellerFirstName());
         assertEquals("1234567890123", app.getIdCardNumber());

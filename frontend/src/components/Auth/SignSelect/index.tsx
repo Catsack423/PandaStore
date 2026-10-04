@@ -54,7 +54,7 @@ function SignSelection() {
               title="ลูกค้าทั่วไป"
               roleSubtitle="Customer"
               description="เหมาะสำหรับผู้ที่ต้องการเลือกซื้อสินค้าจากร้านค้าคุณภาพมากมาย"
-              href="/signup/customer"
+              href="/signup"
               buttonText="สมัครเป็นลูกค้า ➔"
               isPopular={true}
               icon={iconArrow}
@@ -66,7 +66,7 @@ function SignSelection() {
               title="ผู้ขาย / ร้านค้า"
               roleSubtitle="Seller"
               description="เหมาะสำหรับเจ้าของธุรกิจหรือร้านค้าที่ต้องการขายสินค้าออนไลน์"
-              href="/signup/seller"
+              href="/seller-application"
               buttonText="สมัครเปิดร้านค้า ➔"
               isPopular={false}
               icon={iconArrow}

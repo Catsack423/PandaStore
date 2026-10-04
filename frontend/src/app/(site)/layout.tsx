@@ -20,6 +20,7 @@ import { ProductContextProvider } from "../context/ProductContext";
 import { AuthProvider } from "../context/AuthContext";
 import { CartProvider, CartQueryProvider } from "../context/CartContext";
 import { SellerPreviewProvider } from "../context/SellerPreviewContext";
+import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({
   children,
@@ -60,6 +61,7 @@ export default function RootLayout({
             </SellerPreviewProvider>
             <Footer />
             </AuthProvider></CartQueryProvider>
+            <Toaster position="top-right" />
             <ScrollToTop />
           </>
         )}

@@ -58,3 +58,35 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ o
     return NextResponse.json({ success: false, message: "The payment service is unavailable. Refresh order status before trying again." }, { status: 503 });
   }
 }
+
+export async function DELETE(_request: NextRequest, context: { params: Promise<{ orderGroupId: string }> }) {
+  const { orderGroupId } = await context.params;
+  if (!/^[1-9]\d*$/.test(orderGroupId) || !Number.isSafeInteger(Number(orderGroupId))) {
+    return NextResponse.json({ success: false, message: "Order not found" }, { status: 404 });
+  }
+  const token = (await cookies()).get("auth_token")?.value;
+  if (!token) return NextResponse.json({ success: false, message: "Please sign in first" }, { status: 401 });
+
+  try {
+    const response = await fetch(`${backend}/api/checkout/orders/${orderGroupId}`, {
+      cache: "no-store", headers: { Authorization: `Bearer ${token}` },
+    });
+    const orderResult = await response.json();
+    if (!orderResult.success || !orderResult.data) {
+      return NextResponse.json({ success: false, message: "Order not found" }, { status: 404 });
+    }
+    const order = orderResult.data as PaymentOrder;
+    for (const sub of order.subOrders || []) {
+      if (sub.orderStatus === "PENDING_PAYMENT" || sub.orderStatus === "WAITING_SELLER_CONFIRM") {
+        await fetch(`${backend}/api/sub-orders/${sub.orderId}/cancel`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ reason: "Customer cancelled before payment" }),
+        });
+      }
+    }
+    return NextResponse.json({ success: true, message: "Order cancelled successfully" });
+  } catch {
+    return NextResponse.json({ success: false, message: "Could not cancel order" }, { status: 503 });
+  }
+}
