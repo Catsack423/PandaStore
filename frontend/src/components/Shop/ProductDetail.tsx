@@ -2,6 +2,7 @@
 import { formatBaht } from "@/lib/currency";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ProductImageGallery } from "@/components/Common/ProductImage";
 import { MessageSquareText, Minus, Plus, ShoppingCart, Star, Store } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
@@ -38,6 +39,7 @@ export default function ProductDetail({ product, categoryNames, reviews, sample 
   const price = product.discountedPrice ?? product.price;
   const rating = product.averageRating ?? (reviews?.length ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length : 0);
   const reviewCount = reviews?.length ?? (sample ? 0 : product.reviews);
+  const shopLabel = <><Store size={20} className="shrink-0" aria-hidden="true" /><span className="min-w-0 break-words">{product.sellerShopName}</span></>;
 
   return <main>
     <Breadcrumb title="Product Details" pages={["Product Details"]} />
@@ -47,7 +49,9 @@ export default function ProductDetail({ product, categoryNames, reviews, sample 
           <ProductImageGallery images={images} activeImageId={activeImageId} onActiveImageChange={setActiveImageId} alt={product.title} />
 
           <div className="flex min-w-0 flex-col justify-center py-2">
-            {product.sellerShopName && <div className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-blue"><Store className="size-4" aria-hidden="true" />{product.sellerShopName}</div>}
+            {product.sellerShopName && (product.sellerId != null && product.sellerId > 0
+              ? <Link href={`/shop/${product.sellerId}`} className="mb-4 inline-flex min-h-[44px] max-w-full self-start items-center gap-2 rounded-lg py-2 text-sm font-medium text-blue hover:text-blue-dark hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">{shopLabel}</Link>
+              : <div className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-blue">{shopLabel}</div>)}
             <h1 id="product-title" className="text-2xl font-semibold leading-tight text-dark sm:text-3xl lg:text-[34px]">{product.title}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-2.5 text-sm text-dark-4">
               {rating > 0 && <><Rating value={rating} label={`${rating.toFixed(1)} out of 5 stars`} /><span className="font-medium text-dark">{rating.toFixed(1)}</span><span aria-hidden="true">·</span></>}
