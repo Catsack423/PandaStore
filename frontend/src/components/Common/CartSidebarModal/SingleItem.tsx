@@ -4,17 +4,27 @@ import ProductImage from "@/components/Common/ProductImage";
 import Link from "next/link";
 import { productUrl } from "@/lib/productUrl";
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
+import { useCart } from "@/app/context/CartContext";
+import { Minus, Plus } from "lucide-react";
 
 const SingleItem = ({ item, removeItemFromCart, disabled }) => {
   const { closeCartModal } = useCartModalContext();
+  const { updateCartItemQuantity } = useCart();
+  const quantity = item.quantity;
+  const quantityUnavailable = disabled || item.stock == null;
+
+  const changeQuantity = (nextQuantity: number) => {
+    if (quantityUnavailable || nextQuantity < 1 || nextQuantity > item.stock) return;
+    updateCartItemQuantity({ id: item.id, quantity: nextQuantity });
+  };
 
   const handleRemoveFromCart = () => {
     removeItemFromCart(item.id);
   };
 
   return (
-    <div className="flex items-center justify-between gap-5">
-      <div className="min-w-0 flex flex-1 items-center gap-5">
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0 flex flex-1 items-center gap-3">
         <Link href={productUrl(item)} onNavigate={closeCartModal} aria-label={`View ${item.title}`} className="shrink-0 rounded-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">
           <ProductImage src={item.imgs?.thumbnails?.[0]} alt={item.title} size="sm" surface="gray3" className="rounded-[10px]" />
         </Link>
@@ -24,6 +34,15 @@ const SingleItem = ({ item, removeItemFromCart, disabled }) => {
             <Link href={productUrl(item)} onNavigate={closeCartModal} className="break-words rounded-sm hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">{item.title}</Link>
           </h3>
           <p className="text-custom-sm">{formatBaht(Number(item.discountedPrice))} × {item.quantity}</p><p className="mt-1 text-xs">{item.stock == null ? "Stock unavailable" : `${item.stock} in stock`}</p>
+          <div role="group" aria-label={`Quantity for ${item.title}`} className="mt-3 inline-flex items-center overflow-hidden rounded-lg border border-gray-3">
+            <button type="button" onClick={() => changeQuantity(quantity - 1)} disabled={quantityUnavailable || quantity <= 1} aria-label={`Decrease quantity of ${item.title}`} className="flex h-11 w-11 shrink-0 items-center justify-center text-dark transition-colors hover:bg-blue/5 hover:text-blue focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue disabled:cursor-not-allowed disabled:text-dark-5 disabled:hover:bg-transparent">
+              <Minus size={16} aria-hidden="true" />
+            </button>
+            <span aria-live="polite" aria-atomic="true" className="min-w-[32px] px-1 text-center text-sm font-medium tabular-nums text-dark">{quantity}</span>
+            <button type="button" onClick={() => changeQuantity(quantity + 1)} disabled={quantityUnavailable || quantity >= item.stock} aria-label={`Increase quantity of ${item.title}`} className="flex h-11 w-11 shrink-0 items-center justify-center text-dark transition-colors hover:bg-blue/5 hover:text-blue focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue disabled:cursor-not-allowed disabled:text-dark-5 disabled:hover:bg-transparent">
+              <Plus size={16} aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </div>
 
