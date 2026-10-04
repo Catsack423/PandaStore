@@ -133,7 +133,11 @@ export default function Checkout() {
           </div>
           <div className="min-w-0 space-y-6 lg:sticky lg:top-28"><Card><CardHeader className="border-b border-gray-3"><CardTitle>Order summary</CardTitle></CardHeader><CardContent className="pt-6 text-sm">
             <div className="flex justify-between"><span>Products ({data.items.reduce((sum, item) => sum + item.quantity, 0)})</span><span className="font-medium text-dark">{money(subtotal)}</span></div>
-            <div className="mt-5 space-y-3">{shops.map(([id, items]) => <div key={id} className="flex justify-between gap-3"><span className="min-w-0"><Truck className="mr-2 inline size-4 text-blue" />{items[0].shopName || `Shop #${id}`}</span><span className="shrink-0 text-dark">{quoting ? "…" : fees[id]?.[methods[id]] === undefined ? "—" : money(fees[id][methods[id]])}</span></div>)}</div>
+            <div className="mt-5 border-t border-gray-3 pt-4">
+              <div className="flex items-center justify-between gap-3 font-medium text-dark"><span className="inline-flex min-w-0 items-center gap-2"><Truck size={16} className="shrink-0 text-blue" aria-hidden="true" />ค่าจัดส่งรวม</span><span className="shrink-0" aria-live="polite">{quoting ? "…" : quotesReady ? money(shipping) : "—"}</span></div>
+              <p className="mt-1 text-xs leading-5 text-dark-4">{quoting ? "กำลังคำนวณค่าจัดส่ง…" : "ค่าจัดส่งแยกตามร้านค้าและวิธีจัดส่งที่เลือก"}</p>
+              <div className="mt-3 space-y-3">{shops.map(([id, items]) => <div key={id} className="flex justify-between gap-3"><span className="min-w-0 break-words"><span className="block text-dark">{items[0].shopName || `Shop #${id}`}</span><span className="mt-1 block text-xs text-dark-4">{methodLabel(methods[id] || "")}</span></span><span className="shrink-0 text-dark">{quoting ? "…" : fees[id]?.[methods[id]] === undefined ? "—" : money(fees[id][methods[id]])}</span></div>)}</div>
+            </div>
             <div className="mt-5 flex justify-between border-t border-gray-3 pt-5 text-lg font-semibold text-dark"><span>Total</span><span>{quotesReady ? money(subtotal + shipping) : "—"}</span></div>
             <p className="mt-3 text-xs">Includes every item in your cart. Final totals are confirmed when your order is created.</p>
           </CardContent></Card>

@@ -9,7 +9,7 @@ type Props = {
 export default function ShippingMethod({ sellerId, methods, value, fees, loading, disabled, onChange }: Props) {
   return <fieldset disabled={disabled} className="mt-5 border-t border-gray-3 pt-5">
     <legend className="sr-only">Shipping method for shop {sellerId}</legend>
-    <p className="mb-3 text-sm font-semibold text-dark">Shipping method</p>
+    <p className="mb-3 text-sm font-semibold text-dark">วิธีจัดส่งและค่าจัดส่ง</p>
     <div className="grid gap-2 sm:grid-cols-2">
       {methods.map(method => <label key={method} className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm ${value === method ? "border-blue bg-blue/5" : "border-gray-3"} ${disabled ? "cursor-not-allowed opacity-60" : ""}`}>
         <input type="radio" name={`shipping-${sellerId}`} value={method} checked={value === method}
