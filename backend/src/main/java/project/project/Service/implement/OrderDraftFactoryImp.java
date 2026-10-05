@@ -155,4 +155,22 @@ public class OrderDraftFactoryImp implements OrderDraftFactory {
 
                 return order;
         }
+<<<<<<< HEAD
 }
+=======
+
+        Order order = new Order();
+        order.setSubOrderNumber(UUID.randomUUID().toString());
+        order.setOrderGroup(group);
+        order.setSeller(product.getSeller());
+        order.setOrderStatus(OrderStatus.PENDING_PAYMENT);
+        order.setSubtotal(BigDecimal.ZERO);
+        order.setShippingFee(shippingFee);
+        order.setShippingMethod(shippingMethod.trim().toUpperCase(java.util.Locale.ROOT));
+        order.setSellerDiscount(BigDecimal.ZERO);
+        order.setTotalAmount(BigDecimal.ZERO);
+
+        return order;
+    }
+}
+>>>>>>> develop

@@ -20,17 +20,17 @@ const iconArrow = (
 );
 
 const customerFeature = [
-  "ค้นหาและเลือกซื้อสินค้าหลากหลาย",
-  "บันทึกที่อยู่จัดส่งได้หลายแห่ง",
-  "ติดตามสถานะคำสั่งซื้อแบบเรียลไทม์",
-  "รับโปรโมชั่นและส่วนลดพิเศษ",
+  "Browse and shop a wide range of products",
+  "Save multiple shipping addresses",
+  "Track order status in real time",
+  "Receive special offers and discounts",
 ];
 
 const sellerFeature = [
-  "เปิดร้านค้าออนไลน์ได้ทันที",
-  "ระบบจัดการสินค้าและสต็อก",
-  "ติดตามออเดอร์และการจัดส่งพัสดุ",
-  "ระบบจัดการการเงินและยอดขาย",
+  "Open your online shop",
+  "Manage products and inventory",
+  "Track orders and shipments",
+  "Manage finances and sales",
 ];
 
 function SignSelection() {
@@ -41,21 +41,21 @@ function SignSelection() {
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
           <div className="text-center max-w-[600px] mx-auto mb-12">
             <h2 className="font-bold text-2xl sm:text-3xl xl:text-heading-4 text-dark mb-3">
-              เลือกประเภทบัญชีที่คุณต้องการสมัคร
+              Choose your account type
             </h2>
             <p className="text-body text-base">
-              เริ่มต้นใช้งาน PandaStore โดยเลือกประเภทบัญชีที่เหมาะกับคุณ
+              Get started with PandaStore by choosing the account that suits you
             </p>
           </div>
 
           <div className="flex flex-col justify-center md:flex-row gap-8  items-center max-w-[860px] mx-auto">
             {/* Customer Role Card */}
             <SignInCard
-              title="ลูกค้าทั่วไป"
+              title="Customer"
               roleSubtitle="Customer"
-              description="เหมาะสำหรับผู้ที่ต้องการเลือกซื้อสินค้าจากร้านค้าคุณภาพมากมาย"
-              href="/signup/customer"
-              buttonText="สมัครเป็นลูกค้า ➔"
+              description="For shoppers looking for products from trusted shops"
+              href="/signup"
+              buttonText="Sign up as a customer ➔"
               isPopular={true}
               icon={iconArrow}
               features={customerFeature}
@@ -63,11 +63,11 @@ function SignSelection() {
 
             {/* Seller Role Card */}
             <SignInCard
-              title="ผู้ขาย / ร้านค้า"
+              title="Seller / Shop"
               roleSubtitle="Seller"
-              description="เหมาะสำหรับเจ้าของธุรกิจหรือร้านค้าที่ต้องการขายสินค้าออนไลน์"
-              href="/signup/seller"
-              buttonText="สมัครเปิดร้านค้า ➔"
+              description="For businesses and shop owners who want to sell online"
+              href="/seller-application"
+              buttonText="Register your shop ➔"
               isPopular={false}
               icon={iconArrow}
               features={sellerFeature}
@@ -76,12 +76,12 @@ function SignSelection() {
           </div>
 
           <p className="text-center mt-10 text-body ">
-            มีบัญชีอยู่แล้ว?
+            Already have an account?
             <Link
               href="/signin"
               className="text-dark font-medium ease-out duration-200 hover:text-blue pl-2 underline underline-offset-4"
             >
-              เข้าสู่ระบบที่นี่
+              Log in here
             </Link>
           </p>
         </div>

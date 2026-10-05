@@ -72,6 +72,33 @@ public class AddressServiceImp implements AddressService {
     }
 
     @Override
+    @Transactional
+    public Address updateAddress(Long customerId, Long addressId, CreateAddressRequest request) {
+        requirePositiveId(customerId, "customerId");
+        requirePositiveId(addressId, "addressId");
+        lockCustomer(customerId);
+
+        Address address = addressRepository.findOwnedAddressForUpdate(customerId, addressId)
+                .orElseThrow(() -> new EntityNotFoundException("Address not found"));
+
+        address.setReceiverName(request.receiverName());
+        address.setPhoneNumber(request.phoneNumber());
+        address.setAddressLine(request.addressLine());
+        address.setDistrict(request.district());
+        address.setProvince(request.province());
+        address.setPostalCode(request.postalCode());
+
+        if (Boolean.TRUE.equals(request.isDefault())) {
+            var addresses = addressRepository.findByCustomer_CustomerIdOrderByIsDefaultDescAddressIdAsc(customerId);
+            addresses.forEach(a -> a.setIsDefault(false));
+            addressRepository.flush();
+            address.setIsDefault(true);
+        }
+
+        return addressRepository.save(address);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<Address> getAllAddressesByCustomerId(Long customerId) {
         requirePositiveId(customerId, "customerId");
@@ -103,7 +130,7 @@ public class AddressServiceImp implements AddressService {
 
         if (orderGroupRepository
                 .existsByShippingAddress_AddressId(addressId)) {
-            throw new IllegalStateException("ไม่สามารถลบที่อยู่ที่มีคำสั่งซื้ออ้างอิงอยู่ได้");
+            throw new IllegalStateException("An address referenced by an order cannot be deleted");
         }
 
         boolean wasDefault = Boolean.TRUE.equals(address.getIsDefault());
@@ -124,6 +151,20 @@ public class AddressServiceImp implements AddressService {
         }
 
         return true;
+    }
+
+    @Override
+    public Address setDefaultAddress(Long customerId, Long addressId) {
+        requirePositiveId(customerId, "customerId");
+        requirePositiveId(addressId, "addressId");
+        lockCustomer(customerId);
+        Address selected = addressRepository.findOwnedAddressForUpdate(customerId, addressId)
+                .orElseThrow(() -> new EntityNotFoundException("Address not found"));
+        var addresses = addressRepository.findByCustomer_CustomerIdOrderByIsDefaultDescAddressIdAsc(customerId);
+        addresses.forEach(address -> address.setIsDefault(false));
+        addressRepository.flush();
+        selected.setIsDefault(true);
+        return addressRepository.save(selected);
     }
 
     private Customer lockCustomer(Long customerId) {

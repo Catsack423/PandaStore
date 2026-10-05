@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 public class UpdateShippingStatusRequest {
 
-    @NotBlank(message = "กรุณาระบุสถานะการจัดส่ง (status เช่น PENDING, SHIPPED, DELIVERED)")
+    @NotBlank(message = "Please specify the shipping status (status, e.g. PENDING, SHIPPED, DELIVERED)")
     private String status;
 
     public UpdateShippingStatusRequest() {

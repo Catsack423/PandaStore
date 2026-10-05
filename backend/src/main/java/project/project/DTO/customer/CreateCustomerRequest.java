@@ -10,25 +10,25 @@ import lombok.Setter;
 
 public class CreateCustomerRequest {
 
-    @NotBlank(message = "Username ห้ามว่าง")
-    @Size(min = 3, max = 50, message = "Username ต้องมีความยาวระหว่าง 3 ถึง 50 ตัวอักษร")
+    @NotBlank(message = "Username is required")
+    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     private String username;
 
-    @NotBlank(message = "Email ห้ามว่าง")
-    @Email(message = "รูปแบบ Email ไม่ถูกต้อง")
-    @Size(max = 100, message = "Email ต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    @Size(max = 100, message = "Email must not exceed 100 characters")
     private String email;
 
-    @NotBlank(message = "Password ห้ามว่าง")
-    @Size(min = 6, message = "Password ต้องมีความยาวอย่างน้อย 6 ตัวอักษร")
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must contain at least 6 characters")
     private String password;
 
-    @NotBlank(message = "Full Name ห้ามว่าง")
-    @Size(max = 100, message = "Full Name ต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+    @NotBlank(message = "Full name is required")
+    @Size(max = 100, message = "Full name must not exceed 100 characters")
     private String fullName;
 
-    @NotBlank(message = "Phone Number ห้ามว่าง")
-    @Pattern(regexp = "^[0-9]{9,15}$", message = "เบอร์โทรศัพท์ต้องเป็นตัวเลขความยาว 9-15 หลัก")
+    @NotBlank(message = "Phone number is required")
+    @Pattern(regexp = "^[0-9]{9,15}$", message = "Phone number must contain 9-15 digits")
     private String phoneNumber;
 
     public CreateCustomerRequest() {

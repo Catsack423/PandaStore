@@ -21,7 +21,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   onSubmit,
 }) => {
   return (
-    <form onSubmit={onSubmit} className="space-y-4.5 w-full">
+    <form method="post" onSubmit={onSubmit} className="space-y-4.5 w-full">
       {errors.general && (
         <div className="p-3.5 rounded-lg bg-red-light-6 border border-red-light-3 text-red text-sm flex items-center gap-2">
           <svg
@@ -44,12 +44,14 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       {/* Username */}
       <div className="space-y-1.5">
         <Label htmlFor="username" className="text-dark font-medium">
-          ชื่อผู้ใช้ (Username) <span className="text-red">*</span>
+          Username <span className="text-red">*</span>
         </Label>
         <Input
           id="username"
           name="username"
-          placeholder="เช่น panda_shopper (3-50 ตัวอักษร)"
+          autoComplete="username"
+          maxLength={50}
+          placeholder="e.g. panda_shopper (3-50 characters)"
           value={formData.username}
           onChange={onChange}
           className={errors.username ? "border-red focus:ring-red/20" : ""}
@@ -62,12 +64,14 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       {/* Full Name */}
       <div className="space-y-1.5">
         <Label htmlFor="fullName" className="text-dark font-medium">
-          ชื่อ-นามสกุลจริง (Full Name) <span className="text-red">*</span>
+          Full name <span className="text-red">*</span>
         </Label>
         <Input
           id="fullName"
           name="fullName"
-          placeholder="เช่น สมชาย ใจดี"
+          autoComplete="name"
+          maxLength={100}
+          placeholder="e.g. John Smith"
           value={formData.fullName}
           onChange={onChange}
           className={errors.fullName ? "border-red focus:ring-red/20" : ""}
@@ -80,12 +84,14 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       {/* Email */}
       <div className="space-y-1.5">
         <Label htmlFor="email" className="text-dark font-medium">
-          อีเมล (Email) <span className="text-red">*</span>
+          Email <span className="text-red">*</span>
         </Label>
         <Input
           id="email"
           name="email"
           type="email"
+          autoComplete="email"
+          maxLength={100}
           placeholder="example@mail.com"
           value={formData.email}
           onChange={onChange}
@@ -99,15 +105,21 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       {/* Phone Number */}
       <div className="space-y-1.5">
         <Label htmlFor="phoneNumber" className="text-dark font-medium">
-          เบอร์โทรศัพท์ (Phone Number) <span className="text-red">*</span>
+          Phone number <span className="text-red">*</span>
         </Label>
         <Input
           id="phoneNumber"
           name="phoneNumber"
           type="tel"
-          placeholder="เช่น 0812345678 (9-15 หลัก)"
+          autoComplete="tel"
+          inputMode="numeric"
+          maxLength={10}
+          placeholder="e.g. 0812345678 (10 digits)"
           value={formData.phoneNumber}
-          onChange={onChange}
+          onChange={(e) => {
+            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+            onChange({ target: { name: "phoneNumber", value: digits } } as React.ChangeEvent<HTMLInputElement>);
+          }}
           className={errors.phoneNumber ? "border-red focus:ring-red/20" : ""}
         />
         {errors.phoneNumber && (
@@ -119,13 +131,15 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       <div className="grid grid-cols-1 sm:grid-rows-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="password" className="text-dark font-medium">
-            รหัสผ่าน <span className="text-red">*</span>
+            Password <span className="text-red">*</span>
           </Label>
           <Input
             id="password"
             name="password"
             type="password"
-            placeholder="อย่างน้อย 6 ตัวอักษร"
+            autoComplete="new-password"
+            maxLength={72}
+            placeholder="At least 6 characters"
             value={formData.password}
             onChange={onChange}
             className={errors.password ? "border-red focus:ring-red/20" : ""}
@@ -137,13 +151,15 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
 
         <div className="space-y-1.5">
           <Label htmlFor="confirmPassword" className="text-dark font-medium">
-            ยืนยันรหัสผ่าน <span className="text-red">*</span>
+            Confirm password <span className="text-red">*</span>
           </Label>
           <Input
             id="confirmPassword"
             name="confirmPassword"
             type="password"
-            placeholder="กรอกรหัสผ่านอีกครั้ง"
+            autoComplete="new-password"
+            maxLength={72}
+            placeholder="Enter your password again"
             value={formData.confirmPassword}
             onChange={onChange}
             className={
@@ -164,10 +180,10 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         {loading ? (
           <>
             
-            <Spinner data-icon="inline-start" className="size-3" /> กำลังนำสมัคสามาชิก
+            <Spinner data-icon="inline-start" className="size-3" /> Creating your account
           </>
         ) : (
-          "สมัครสมาชิก"
+          "Sign up"
         )}
       </Button>
     </form>

@@ -215,7 +215,7 @@ public class SellerApplicationServiceTest {
         // ตรวจสอบการส่ง Notification แจ้งผลให้ผู้ใช้
         verify(notificationService, times(1)).sendNotification(
                 eq(1L),
-                contains("อนุมัติ"),
+                contains("approved"),
                 contains("สมชาย อิเล็กทรอนิกส์"),
                 eq(NotificationType.SELLER_APPROVED)
         );
@@ -233,6 +233,53 @@ public class SellerApplicationServiceTest {
         });
 
         verify(sellerRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("UC3: แอดมินอนุมัติใบสมัครของผู้ที่เป็น SELLER อยู่แล้ว ต้องโยน IllegalStateException")
+    void testApproveApplication_UserAlreadySeller_ThrowsException() {
+        sampleUser.setRole(UserRole.SELLER);
+        sampleApplication.setUser(sampleUser);
+        sampleApplication.setStatus(SellerApplicationStatus.PENDING);
+
+        when(applicationRepository.findById(501L)).thenReturn(Optional.of(sampleApplication));
+        when(userRepository.findById(99L)).thenReturn(Optional.of(adminUser));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+            sellerApplicationService.approveApplication(501L, 99L);
+        });
+
+        assertTrue(ex.getMessage().contains("already a seller"));
+        verify(sellerRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("UC3: ผู้ใช้ที่เป็น SELLER อยู่แล้วยื่นคำขอ ต้องโยน IllegalStateException")
+    void testSubmitApplication_UserAlreadySeller_ThrowsException() {
+        sampleUser.setRole(UserRole.SELLER);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+            sellerApplicationService.submitApplication(1L, sampleApplication);
+        });
+
+        assertTrue(ex.getMessage().contains("already a seller"));
+        verify(applicationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("UC3: ผู้ใช้ที่มีประวัติร้านค้า (Seller) อยู่แล้วยื่นคำขอ ต้องโยน IllegalStateException")
+    void testSubmitApplication_UserAlreadyHasSellerRecord_ThrowsException() {
+        sampleUser.setRole(UserRole.CUSTOMER);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+        when(sellerRepository.findByUser_UserId(1L)).thenReturn(Optional.of(new Seller()));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+            sellerApplicationService.submitApplication(1L, sampleApplication);
+        });
+
+        assertTrue(ex.getMessage().contains("already a seller"));
+        verify(applicationRepository, never()).save(any());
     }
 
     @Test
@@ -257,7 +304,7 @@ public class SellerApplicationServiceTest {
 
         verify(notificationService, times(1)).sendNotification(
                 eq(1L),
-                contains("ถูกปฏิเสธ"),
+                contains("rejected"),
                 contains("เอกสารบัตรประชาชนไม่ชัดเจน"),
                 eq(NotificationType.SELLER_APPROVED)
         );
@@ -281,7 +328,7 @@ public class SellerApplicationServiceTest {
         verify(applicationRepository, times(1)).save(sampleApplication);
         verify(notificationService, times(1)).sendNotification(
                 eq(1L),
-                contains("ขอเอกสารเพิ่มเติม"),
+                contains("Additional documents required"),
                 contains("โปรดแนบรูปถ่ายคู่กับบัตรประชาชน"),
                 eq(NotificationType.SELLER_APPROVED)
         );
@@ -417,5 +464,26 @@ public class SellerApplicationServiceTest {
         assertEquals(1, responses.size());
         assertEquals(501L, responses.get(0).getApplicationId());
         assertEquals("สมชาย อิเล็กทรอนิกส์", responses.get(0).getShopName());
+    }
+
+    @Test
+    @DisplayName("Admin history includes reviewed applications, newest first")
+    void testGetAllApplicationResponses_IncludesReviewedStatuses() {
+        sampleApplication.setApplicationId(501L);
+        sampleApplication.setStatus(SellerApplicationStatus.PENDING);
+        SellerApplication reviewed = new SellerApplication();
+        reviewed.setApplicationId(502L);
+        reviewed.setShopName("Reviewed shop");
+        reviewed.setStatus(SellerApplicationStatus.NEED_MORE_DOC);
+        reviewed.setAdminNote("Upload a clearer document");
+        when(applicationRepository.findAll()).thenReturn(List.of(sampleApplication, reviewed));
+
+        List<SellerApplicationResponse> responses = sellerApplicationService.getAllApplicationResponses();
+
+        assertEquals(2, responses.size());
+        assertEquals(502L, responses.get(0).getApplicationId());
+        assertEquals(SellerApplicationStatus.NEED_MORE_DOC, responses.get(0).getStatus());
+        assertEquals("Upload a clearer document", responses.get(0).getAdminNote());
+        assertEquals(501L, responses.get(1).getApplicationId());
     }
 }

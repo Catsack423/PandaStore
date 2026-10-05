@@ -20,21 +20,24 @@ import java.util.List;
 
 @Service
 public class SubOrderServiceImp implements SubOrderService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SubOrderServiceImp.class);
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final PaymentService paymentService;
     private final NotificationService notificationService;
+    private final OrderStateLock stateLock;
 
     // Constructor Injection (SOLID - Dependency Inversion Principle)
     public SubOrderServiceImp(OrderRepository orderRepository,
             ProductRepository productRepository,
             PaymentService paymentService,
-            NotificationService notificationService) {
+            NotificationService notificationService, OrderStateLock stateLock) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.paymentService = paymentService;
         this.notificationService = notificationService;
+        this.stateLock = stateLock;
     }
 
     /**
@@ -48,8 +51,8 @@ public class SubOrderServiceImp implements SubOrderService {
     @Override
     public Order getSubOrderById(Long orderId) {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException(
-                        "ไม่พบคำสั่งซื้อ orderId: " + orderId));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
+                        "Order not found for orderId: " + orderId));
     }
 
     /**
@@ -90,12 +93,13 @@ public class SubOrderServiceImp implements SubOrderService {
     @Transactional
     public void sellerAcceptOrder(Long sellerId, Long orderId) {
         Order order = findAndValidateSellerOrder(sellerId, orderId);
+        requirePaid(order);
 
         // ตรวจสถานะ — ต้อง WAITING_SELLER_CONFIRM
         if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM) {
-            throw new RuntimeException(
-                    "ไม่สามารถยืนยันคำสั่งซื้อได้ สถานะปัจจุบัน: " + order.getOrderStatus()
-                            + " (ต้องเป็น WAITING_SELLER_CONFIRM)");
+            throw new IllegalStateException(
+                    "Cannot accept the order with current status: " + order.getOrderStatus()
+                            + " (must be WAITING_SELLER_CONFIRM)");
         }
 
         // เปลี่ยนสถานะเป็น PREPARING
@@ -107,11 +111,12 @@ public class SubOrderServiceImp implements SubOrderService {
             Long customerId = order.getOrderGroup().getCustomer().getCustomerId();
             notificationService.sendNotification(
                     order.getOrderGroup().getCustomer().getUser().getUserId(),
-                    "ร้านค้ายืนยันคำสั่งซื้อ",
-                    "คำสั่งซื้อ " + order.getSubOrderNumber() + " ได้รับการยืนยันจากร้านค้า กำลังเตรียมสินค้า",
+                    "Shop accepted your order",
+                    "Order " + order.getSubOrderNumber() + " has been accepted by the shop and is being prepared",
                     project.project.Entity.notification.NotificationType.NEW_ORDER_FOR_SELLER);
         } catch (Exception e) {
             // ไม่ให้ Notification error กระทบ business logic หลัก
+            log.warn("Order notification could not be delivered", e);
         }
     }
 
@@ -139,12 +144,14 @@ public class SubOrderServiceImp implements SubOrderService {
     @Transactional
     public void sellerRejectOrder(Long sellerId, Long orderId, String reason) {
         Order order = findAndValidateSellerOrder(sellerId, orderId);
+        requirePaid(order);
+        if (reason == null || reason.isBlank() || reason.trim().length() > 255) throw new IllegalArgumentException("Enter a rejection reason up to 255 characters");
 
         // ตรวจสถานะ
         if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM) {
-            throw new RuntimeException(
-                    "ไม่สามารถปฏิเสธคำสั่งซื้อได้ สถานะปัจจุบัน: " + order.getOrderStatus()
-                            + " (ต้องเป็น WAITING_SELLER_CONFIRM)");
+            throw new IllegalStateException(
+                    "Cannot reject the order with current status: " + order.getOrderStatus()
+                            + " (must be WAITING_SELLER_CONFIRM)");
         }
 
         // 1. บันทึกเหตุผลการปฏิเสธ
@@ -158,13 +165,8 @@ public class SubOrderServiceImp implements SubOrderService {
         restoreStock(order);
 
         // 4. Partial Refund — คืนเงินเฉพาะยอดของร้านนี้ให้ลูกค้า
-        try {
-            paymentService.processPartialRefund(
-                    orderId, order.getTotalAmount(),
-                    "ร้านค้าปฏิเสธคำสั่งซื้อ: " + reason);
-        } catch (Exception e) {
-            // Log error — ในระบบจริงต้องมี retry mechanism
-        }
+        paymentService.processPartialRefund(orderId, order.getTotalAmount(), "Order rejected by shop: " + reason.trim());
+        order.setRejectionReason(reason.trim());
 
         // 5. อัปเดตสถานะ OrderGroup
         updateOrderGroupPaymentStatus(order.getOrderGroup());
@@ -173,13 +175,14 @@ public class SubOrderServiceImp implements SubOrderService {
         try {
             notificationService.sendNotification(
                     order.getOrderGroup().getCustomer().getUser().getUserId(),
-                    "ร้านค้าปฏิเสธคำสั่งซื้อ",
-                    "คำสั่งซื้อ " + order.getSubOrderNumber()
-                            + " ถูกปฏิเสธโดยร้านค้า เหตุผล: " + reason
-                            + " ยอดเงิน " + order.getTotalAmount() + " บาท จะถูกคืนให้คุณ",
+                    "Shop rejected your order",
+                    "Order " + order.getSubOrderNumber()
+                            + " was rejected by the shop. Reason: " + reason
+                            + " Refund amount: " + order.getTotalAmount() + " THB will be refunded to you",
                     project.project.Entity.notification.NotificationType.PAYMENT_SUCCESS);
         } catch (Exception e) {
             // ไม่ให้ Notification error กระทบ business logic หลัก
+            log.warn("Order notification could not be delivered", e);
         }
     }
 
@@ -196,21 +199,25 @@ public class SubOrderServiceImp implements SubOrderService {
     @Transactional
     public void confirmOrderDelivered(Long customerId, Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException(
-                        "ไม่พบคำสั่งซื้อ orderId: " + orderId));
+                .orElseThrow(() -> new IllegalStateException(
+                        "Order not found for orderId: " + orderId));
 
+        stateLock.lock(order);
         // ตรวจว่า Order เป็นของลูกค้าจริง
         Long orderCustomerId = order.getOrderGroup().getCustomer().getCustomerId();
         if (!orderCustomerId.equals(customerId)) {
-            throw new RuntimeException(
-                    "คำสั่งซื้อนี้ไม่ใช่ของลูกค้า customerId: " + customerId);
+            throw new IllegalStateException(
+                    "This order does not belong to customerId: " + customerId);
         }
 
-        // ตรวจสถานะ — ต้อง SHIPPED
+        // ตรวจสถานะ — ต้อง SHIPPED หรือถ้า COMPLETED อยู่แล้ว (idempotent)
+        if (order.getOrderStatus() == OrderStatus.COMPLETED) {
+            return;
+        }
         if (order.getOrderStatus() != OrderStatus.SHIPPED) {
-            throw new RuntimeException(
-                    "ไม่สามารถยืนยันรับสินค้าได้ สถานะปัจจุบัน: " + order.getOrderStatus()
-                            + " (ต้องเป็น SHIPPED)");
+            throw new IllegalStateException(
+                    "Cannot confirm delivery receipt with current status: " + order.getOrderStatus()
+                            + " (must be SHIPPED)");
         }
 
         // เปลี่ยนสถานะเป็น COMPLETED
@@ -227,9 +234,10 @@ public class SubOrderServiceImp implements SubOrderService {
     @Transactional
     public void autoConfirmDelivered(Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException(
-                        "ไม่พบคำสั่งซื้อ orderId: " + orderId));
+                .orElseThrow(() -> new IllegalStateException(
+                        "Order not found for orderId: " + orderId));
 
+        stateLock.lock(order);
         // ตรวจสถานะ — ต้อง SHIPPED
         if (order.getOrderStatus() != OrderStatus.SHIPPED) {
             return; // สถานะไม่ตรง ข้ามไป (อาจถูก manual confirm ไปแล้ว)
@@ -254,44 +262,59 @@ public class SubOrderServiceImp implements SubOrderService {
     @Transactional
     public void customerCancelOrder(Long customerId, Long orderId, String reason) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("ไม่พบคำสั่งซื้อ orderId: " + orderId));
+                .orElseThrow(() -> new IllegalStateException("Order not found for orderId: " + orderId));
 
+        stateLock.lock(order);
         Long orderCustomerId = order.getOrderGroup().getCustomer().getCustomerId();
         if (!orderCustomerId.equals(customerId)) {
-            throw new RuntimeException("คำสั่งซื้อนี้ไม่ใช่ของลูกค้า customerId: " + customerId);
+            throw new IllegalStateException("This order does not belong to customerId: " + customerId);
         }
 
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new IllegalArgumentException("Please provide a reason for cancelling the order");
+        }
+
+        if (order.getOrderStatus() == OrderStatus.CANCELLED) {
+            return;
+        }
         if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM &&
-            order.getOrderStatus() != OrderStatus.PREPARING) {
-            throw new RuntimeException(
-                    "ไม่สามารถยกเลิกคำสั่งซื้อได้เนื่องจากอยู่ในสถานะ: " + order.getOrderStatus()
-                            + " (สามารถยกเลิกได้เฉพาะ WAITING_SELLER_CONFIRM หรือ PREPARING เท่านั้น)");
+            order.getOrderStatus() != OrderStatus.PREPARING &&
+            order.getOrderStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new IllegalStateException(
+                    "Cannot cancel the order with status: " + order.getOrderStatus()
+                            + " (only WAITING_SELLER_CONFIRM or PREPARING orders can be cancelled)");
         }
 
-        order.setRejectionReason(reason);
+        order.setRejectionReason(reason.trim());
         order.setOrderStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
 
         restoreStock(order);
 
-        try {
-            paymentService.processPartialRefund(
-                    orderId, order.getTotalAmount(),
-                    "ลูกค้ายกเลิกคำสั่งซื้อ: " + reason);
-        } catch (Exception e) {
-            // Log error
-        }
+        boolean wasPaid = order.getOrderGroup() != null &&
+                (order.getOrderGroup().getPaymentStatus() == OrderGroupPaymentStatus.PAID ||
+                 order.getOrderGroup().getPaymentStatus() == OrderGroupPaymentStatus.PARTIALLY_REFUNDED);
 
-        updateOrderGroupPaymentStatus(order.getOrderGroup());
+        if (wasPaid) {
+            paymentService.processPartialRefund(orderId, order.getTotalAmount(), "Order cancelled by customer: " + reason.trim());
+            updateOrderGroupPaymentStatus(order.getOrderGroup());
+        } else if (order.getOrderGroup() != null) {
+            List<Order> allSubOrders = orderRepository.findByOrderGroup_OrderGroupId(order.getOrderGroup().getOrderGroupId());
+            boolean allCancelled = allSubOrders.stream().allMatch(o -> o.getOrderStatus() == OrderStatus.CANCELLED);
+            if (allCancelled) {
+                order.getOrderGroup().setPaymentStatus(OrderGroupPaymentStatus.FAILED);
+            }
+        }
 
         try {
             notificationService.sendNotification(
                     order.getSeller().getUser().getUserId(),
-                    "คำสั่งซื้อถูกยกเลิกโดยลูกค้า",
-                    "คำสั่งซื้อ " + order.getSubOrderNumber() + " ถูกยกเลิกโดยลูกค้า เหตุผล: " + reason,
+                    "Order cancelled by customer",
+                    "Order " + order.getSubOrderNumber() + " was cancelled by the customer. Reason: " + reason,
                     project.project.Entity.notification.NotificationType.NEW_ORDER_FOR_SELLER);
         } catch (Exception e) {
             // Notification error does not block transaction
+            log.warn("Order notification could not be delivered", e);
         }
     }
 
@@ -302,15 +325,22 @@ public class SubOrderServiceImp implements SubOrderService {
      */
     private Order findAndValidateSellerOrder(Long sellerId, Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException(
-                        "ไม่พบคำสั่งซื้อ orderId: " + orderId));
+                .orElseThrow(() -> new IllegalStateException(
+                        "Order not found for orderId: " + orderId));
 
+        stateLock.lock(order);
         if (!order.getSeller().getSellerId().equals(sellerId)) {
-            throw new RuntimeException(
-                    "คำสั่งซื้อ " + orderId + " ไม่ใช่ของร้านค้า sellerId: " + sellerId);
+            throw new IllegalStateException(
+                    "Order " + orderId + " does not belong to sellerId: " + sellerId);
         }
 
         return order;
+    }
+
+    private void requirePaid(Order order) {
+        var status = order.getOrderGroup() == null ? null : order.getOrderGroup().getPaymentStatus();
+        if (status != OrderGroupPaymentStatus.PAID && status != OrderGroupPaymentStatus.PARTIALLY_REFUNDED)
+            throw new IllegalStateException("This order has not been paid");
     }
 
     /**
@@ -333,9 +363,12 @@ public class SubOrderServiceImp implements SubOrderService {
             return;
         }
 
-        for (OrderItem item : items) {
+        for (OrderItem item : items.stream().filter(i -> i.getProduct() != null).sorted(java.util.Comparator.comparing(i -> i.getProduct().getProductId())).toList()) {
             Product product = item.getProduct();
             if (product != null) {
+                product = productRepository.findByIdForUpdate(product.getProductId())
+                        .orElseThrow(() -> new IllegalStateException("Order product is missing"));
+                stateLock.refreshLockedProduct(product);
                 product.setStock(product.getStock() + item.getQuantity());
                 productRepository.save(product);
             }

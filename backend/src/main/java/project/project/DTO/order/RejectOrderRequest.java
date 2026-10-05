@@ -9,8 +9,8 @@ import lombok.Setter;
 @Setter
 public class RejectOrderRequest {
 
-    @NotBlank(message = "กรุณาระบุเหตุผลในการปฏิเสธคำสั่งซื้อ")
-    @Size(max = 255, message = "เหตุผลต้องไม่เกิน 255 ตัวอักษร")
+    @NotBlank(message = "Please provide a reason for rejecting the order")
+    @Size(max = 255, message = "Reason must not exceed 255 characters")
     private String reason;
 
     public RejectOrderRequest() {

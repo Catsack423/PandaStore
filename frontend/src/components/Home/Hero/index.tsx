@@ -1,3 +1,4 @@
+import { formatBaht } from "@/lib/currency";
 import React from "react";
 import HeroCarousel from "./HeroCarousel";
 import HeroFeature from "./HeroFeature";
@@ -29,7 +30,7 @@ const Hero = () => {
                 <div className="flex items-center gap-14">
                   <div>
                     <h2 className="max-w-[153px] font-semibold text-dark text-xl mb-20">
-                      <a href="#"> iPhone 14 Plus & 14 Pro Max </a>
+                      <a href="#"> iPhone 14 Plus &amp; 14 Pro Max </a>
                     </h2>
 
                     <div>
@@ -38,10 +39,10 @@ const Hero = () => {
                       </p>
                       <span className="flex items-center gap-3">
                         <span className="font-medium text-heading-5 text-red">
-                          $699
+                          {formatBaht(699)}
                         </span>
                         <span className="font-medium text-2xl text-dark-4 line-through">
-                          $999
+                          {formatBaht(999)}
                         </span>
                       </span>
                     </div>
@@ -70,10 +71,10 @@ const Hero = () => {
                       </p>
                       <span className="flex items-center gap-3">
                         <span className="font-medium text-heading-5 text-red">
-                          $699
+                          {formatBaht(699)}
                         </span>
                         <span className="font-medium text-2xl text-dark-4 line-through">
-                          $999
+                          {formatBaht(999)}
                         </span>
                       </span>
                     </div>

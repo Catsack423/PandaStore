@@ -1,46 +1,122 @@
-﻿// src/middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { hasAllowedRequestOrigin } from "./lib/requestOrigin";
 
-// à¸à¸³à¸«à¸™à¸”à¸ªà¸´à¸—à¸˜à¸´à¹Œà¸‚à¸­à¸‡à¹à¸•à¹ˆà¸¥à¸° Path
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   "/admin": ["ADMIN"],
-  "/seller": ["SELLER", "ADMIN"],
+  "/seller/products": ["SELLER"],
+  "/seller": ["SELLER"],
+  "/seller-dashboard": ["SELLER"],
   "/account": ["CUSTOMER", "SELLER", "ADMIN"],
 };
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  
-  // 1. à¸”à¸¶à¸‡ Token à¹à¸¥à¸° Role à¸ˆà¸²à¸ Cookie
-  const token = request.cookies.get("auth_token")?.value;
-  const userRole = request.cookies.get("user_role")?.value;
+const ACCOUNT_PAGES: Record<string, string[]> = {
+  "/seller-application/apply": ["CUSTOMER"],
+  "/seller-application": ["CUSTOMER", "SELLER"],
+  "/order-history": ["CUSTOMER"],
+  "/payment": ["CUSTOMER"],
+  "/my-account": ["CUSTOMER", "SELLER", "ADMIN"],
+};
 
-  // 2. à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸§à¹ˆà¸²à¸«à¸™à¹‰à¸²à¸™à¸µà¹‰à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸ªà¸´à¸—à¸˜à¸´à¹Œà¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆ
-  const matchedPath = Object.keys(ROLE_PERMISSIONS).find((route) =>
-    pathname.startsWith(route)
-  );
+const CUSTOMER_PAGES = [
+  "/", "/cart", "/checkout", "/shop-with-sidebar", "/shop-without-sidebar",
+  "/shop-details", "/order-history", "/wishlist",
+];
+const backend = process.env.BACKEND_API_URL || "http://localhost:8080";
 
-  if (matchedPath) {
-    // 2.1 à¸–à¹‰à¸²à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¸¥à¹‡à¸­à¸à¸­à¸´à¸™ à¹ƒà¸«à¹‰à¹€à¸•à¸°à¸à¸¥à¸±à¸šà¹„à¸›à¸«à¸™à¹‰à¸² Login à¸—à¸±à¸™à¸—à¸µ
-    if (!token) {
-      const loginUrl = new URL("/signin", request.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-
-    // 2.2 à¸–à¹‰à¸²à¸¥à¹‡à¸­à¸à¸­à¸´à¸™à¹à¸¥à¹‰à¸§ à¹à¸•à¹ˆ Role à¹„à¸¡à¹ˆà¸•à¸£à¸‡à¸à¸±à¸šà¸ªà¸´à¸—à¸˜à¸´à¹Œà¸—à¸µà¹ˆà¸­à¸™à¸¸à¸à¸²à¸•
-    const allowedRoles = ROLE_PERMISSIONS[matchedPath];
-    if (userRole && !allowedRoles.includes(userRole)) {
-      // à¹„à¸¡à¹ˆà¸¡à¸µà¸ªà¸´à¸—à¸˜à¸´à¹Œ -> à¸ªà¹ˆà¸‡à¹„à¸›à¸«à¸™à¹‰à¸² 403 Forbidden à¸«à¸£à¸·à¸­à¸«à¸™à¹‰à¸²à¹à¸£à¸
-      return NextResponse.redirect(new URL("/", request.url));
-    }
+async function getIdentity(token: string): Promise<{ role: string; userId: number } | null> {
+  try {
+    const response = await fetch(`${backend}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) return null;
+    const body = await response.json();
+    if (!body?.success || !["CUSTOMER", "SELLER", "ADMIN"].includes(body.data?.role)) return null;
+    return body.data;
+  } catch {
+    return null;
   }
-
-  return NextResponse.next();
 }
 
-// à¸à¸³à¸«à¸™à¸” Path à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¹ƒà¸«à¹‰ Middleware à¸—à¸³à¸‡à¸²à¸™
+function signInRedirect(request: NextRequest, pathname: string) {
+  const loginUrl = new URL("/signin", request.url);
+  loginUrl.searchParams.set("callbackUrl", pathname);
+  return NextResponse.redirect(loginUrl);
+}
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  if (pathname.startsWith("/api/")) {
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(request.method)
+        && pathname !== "/api/uploadthing" && !hasAllowedRequestOrigin(request)) {
+      return NextResponse.json({ success: false, message: "Origin not allowed" }, { status: 403 });
+    }
+    return NextResponse.next();
+  }
+  const token = request.cookies.get("auth_token")?.value;
+  const accountPath = Object.keys(ACCOUNT_PAGES).find((route) =>
+    pathname === route || pathname.startsWith(route + "/")
+  );
+  if (accountPath) {
+    if (!token) return signInRedirect(request, pathname);
+    const identity = await getIdentity(token);
+    if (!identity) return signInRedirect(request, pathname);
+    if (!ACCOUNT_PAGES[accountPath].includes(identity.role)) {
+      const destination = identity.role === "SELLER" ? "/seller-dashboard" : identity.role === "ADMIN" ? "/admin" : "/";
+      return NextResponse.redirect(new URL(destination, request.url));
+    }
+    return NextResponse.next();
+  }
+  const matchedPath = Object.keys(ROLE_PERMISSIONS).find((route) =>
+    pathname === route || pathname.startsWith(route + "/")
+  );
+  if (matchedPath) {
+    if (!token) return signInRedirect(request, pathname);
+    const identity = await getIdentity(token);
+    if (!identity) return signInRedirect(request, pathname);
+    if (!ROLE_PERMISSIONS[matchedPath].includes(identity.role)) {
+      const destination = identity.role === "ADMIN" ? "/admin" : identity.role === "SELLER" ? "/seller-dashboard" : matchedPath === "/seller-dashboard" ? "/seller-application" : "/";
+      return NextResponse.redirect(new URL(destination, request.url));
+    }
+    return NextResponse.next();
+  }
+
+  const isCustomerPage = CUSTOMER_PAGES.some((path) => pathname === path || pathname.startsWith(path + "/"));
+  const shopMatch = /^\/shop\/([^/]+)(?:\/.*)?$/.exec(pathname);
+  if (!token || (!isCustomerPage && !shopMatch)) return NextResponse.next();
+
+  const identity = await getIdentity(token);
+  if (!identity) return NextResponse.next();
+  if (identity.role === "ADMIN") return NextResponse.redirect(new URL("/admin", request.url));
+  if (identity.role !== "SELLER") return NextResponse.next();
+
+  try {
+    if (shopMatch) {
+      const shopResponse = await fetch(`${backend}/api/seller/shops/user/${identity.userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(5000),
+      });
+      if (shopResponse.ok) {
+        const shop = await shopResponse.json();
+        if (shop?.success && String(shop.data?.sellerId) === shopMatch[1]) return NextResponse.next();
+      }
+    }
+    return NextResponse.redirect(new URL("/seller-dashboard", request.url));
+  } catch {
+    // A verified seller cannot enter a shop without confirming ownership.
+    return NextResponse.redirect(new URL("/seller-dashboard", request.url));
+  }
+}
+
 export const config = {
-  matcher: ["/admin/:path*", "/seller/:path*", "/account/:path*"],
+  matcher: [
+    "/api/:path*",
+    "/", "/admin/:path*", "/seller/:path*", "/seller-dashboard/:path*", "/account/:path*",
+    "/cart/:path*", "/checkout/:path*", "/shop-with-sidebar/:path*",
+    "/shop-without-sidebar/:path*", "/shop-details/:path*", "/shop/:path*",
+    "/order-history/:path*", "/payment/:path*", "/my-account/:path*", "/seller-application/:path*", "/wishlist/:path*",
+  ],
 };

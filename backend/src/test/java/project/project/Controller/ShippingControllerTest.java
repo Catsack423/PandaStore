@@ -30,6 +30,8 @@ public class ShippingControllerTest {
 
     @Mock
     private ShippingService shippingService;
+    @Mock
+    private project.project.Security.OrderAccess access;
 
     @InjectMocks
     private ShippingController shippingController;
@@ -58,7 +60,7 @@ public class ShippingControllerTest {
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("คำนวณค่าจัดส่งสำเร็จ"))
+                .andExpect(jsonPath("$.message").value("Shipping fee calculated successfully"))
                 .andExpect(jsonPath("$.data.shippingMethod").value("KERRY"))
                 .andExpect(jsonPath("$.data.shippingFee").value(50.00));
     }
@@ -105,7 +107,7 @@ public class ShippingControllerTest {
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("บันทึกหมายเลข Tracking สำเร็จ"))
+                .andExpect(jsonPath("$.message").value("Tracking number saved successfully"))
                 .andExpect(jsonPath("$.data.trackingNumber").value("KRY12345"));
     }
 
@@ -142,6 +144,6 @@ public class ShippingControllerTest {
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("อัปเดตสถานะการจัดส่งสำเร็จ"));
+                .andExpect(jsonPath("$.message").value("Shipping status updated successfully"));
     }
 }

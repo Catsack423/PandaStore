@@ -7,12 +7,12 @@ import jakarta.validation.constraints.Size;
 
 public class UpdateReviewRequest {
 
-    @NotNull(message = "คะแนนรีวิวห้ามว่าง")
-    @Min(value = 1, message = "คะแนนรีวิวต้องอยู่ระหว่าง 1 ถึง 5 ดาว")
-    @Max(value = 5, message = "คะแนนรีวิวต้องอยู่ระหว่าง 1 ถึง 5 ดาว")
+    @NotNull(message = "Review rating is required")
+    @Min(value = 1, message = "Review rating must be between 1 and 5 stars")
+    @Max(value = 5, message = "Review rating must be between 1 and 5 stars")
     private Integer rating;
 
-    @Size(max = 2000, message = "ข้อความรีวิวต้องมีความยาวไม่เกิน 2000 ตัวอักษร")
+    @Size(max = 2000, message = "Review comment must not exceed 2000 characters")
     private String comment;
 
     public UpdateReviewRequest() {
