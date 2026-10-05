@@ -33,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 public class SellerApplicationControllerTest {
+    @Mock private project.project.Security.CurrentUser currentUser;
 
     private MockMvc mockMvc;
 
@@ -44,6 +45,9 @@ public class SellerApplicationControllerTest {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient().when(currentUser.getCurrentUserId()).thenReturn(1L);
+        org.mockito.Mockito.lenient().when(currentUser.requireIdentity()).thenReturn(
+                new project.project.Security.AuthenticatedUser(1L, UserRole.ADMIN));
         mockMvc = MockMvcBuilders.standaloneSetup(sellerApplicationController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -53,6 +57,7 @@ public class SellerApplicationControllerTest {
     @DisplayName("POST /api/seller-applications - ยื่นคำขอเปิดร้านค้าสำเร็จ")
     void submitApplication_Success() throws Exception {
         Long userId = 2L;
+        when(currentUser.getCurrentUserId()).thenReturn(userId);
         String requestJson = """
                 {
                     "shopName": "Panda Craft Shop",
@@ -209,7 +214,7 @@ public class SellerApplicationControllerTest {
                         .param("adminId", String.valueOf(adminId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("อนุมัติคำขอเปิดร้านค้าสำเร็จ"));
+                .andExpect(jsonPath("$.message").value("Seller application approved successfully"));
     }
 
     @Test
@@ -232,7 +237,7 @@ public class SellerApplicationControllerTest {
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("ปฏิเสธคำขอเปิดร้านค้าสำเร็จ"));
+                .andExpect(jsonPath("$.message").value("Seller application rejected successfully"));
     }
 
     @Test
@@ -275,7 +280,7 @@ public class SellerApplicationControllerTest {
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("ส่งคำขอเอกสารเพิ่มเติมสำเร็จ"));
+                .andExpect(jsonPath("$.message").value("Additional documents requested successfully"));
     }
 
     @Test

@@ -36,6 +36,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class SellerServiceTest {
+    @org.mockito.Spy
+    private project.project.Service.implement.PasswordService passwords = new project.project.Service.implement.PasswordService();
 
     @InjectMocks
     private SellerServiceImp sellerService;

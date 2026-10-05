@@ -192,7 +192,7 @@ public class ShippingServiceTest {
             shippingService.assignTrackingNumber(sellerId, orderId, "Kerry", "KRY123");
         });
 
-        assertTrue(ex.getMessage().contains("คำสั่งซื้อนี้ไม่ใช่ของร้านค้า"));
+        assertTrue(ex.getMessage().contains("This order does not belong to sellerId"));
         verify(shipmentRepository, never()).save(any());
     }
 
@@ -216,7 +216,7 @@ public class ShippingServiceTest {
             shippingService.assignTrackingNumber(sellerId, orderId, "Kerry", "KRY123");
         });
 
-        assertTrue(ex.getMessage().contains("ต้องเป็น PREPARING"));
+        assertTrue(ex.getMessage().contains("must be PREPARING"));
     }
 
     @Test

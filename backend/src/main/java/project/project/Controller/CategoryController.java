@@ -37,12 +37,12 @@ public class CategoryController {
     public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(
             @Valid @RequestBody CreateCategoryRequest request) {
         if (currentUser.requireIdentity().role() != UserRole.ADMIN) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "เฉพาะผู้ดูแลระบบเท่านั้น");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Administrator access required");
         }
 
         var category = categories.createCategory(request.categoryName(), request.description());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("เพิ่มหมวดหมู่สำเร็จ", CategoryResponse.fromEntity(category)));
+                .body(ApiResponse.success("Category added successfully", CategoryResponse.fromEntity(category)));
     }
 
     @GetMapping
@@ -50,7 +50,7 @@ public class CategoryController {
         List<CategoryResponse> result = categories.getAllCategories().stream()
                 .map(CategoryResponse::fromEntity)
                 .toList();
-        return ResponseEntity.ok(ApiResponse.success("ดึงหมวดหมู่ทั้งหมดสำเร็จ", result));
+        return ResponseEntity.ok(ApiResponse.success("Categories retrieved successfully", result));
     }
 
     @GetMapping("/{categoryId}/products")
@@ -59,16 +59,16 @@ public class CategoryController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         var result = categories.getProductsByCategory(categoryId, page, size);
-        return ResponseEntity.ok(ApiResponse.success("ดึงสินค้าตามหมวดหมู่สำเร็จ", PageResponse.from(result)));
+        return ResponseEntity.ok(ApiResponse.success("Products retrieved by category successfully", PageResponse.from(result)));
     }
 
     @DeleteMapping("/{categoryId}")
     public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long categoryId) {
         if (currentUser.requireIdentity().role() != UserRole.ADMIN) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "เฉพาะผู้ดูแลระบบเท่านั้น");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Administrator access required");
         }
 
         categories.deleteCategory(categoryId);
-        return ResponseEntity.ok(ApiResponse.success("ลบหมวดหมู่สำเร็จ", null));
+        return ResponseEntity.ok(ApiResponse.success("Category deleted successfully", null));
     }
 }

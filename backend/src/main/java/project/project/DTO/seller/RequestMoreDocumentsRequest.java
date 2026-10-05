@@ -5,8 +5,8 @@ import jakarta.validation.constraints.Size;
 
 public class RequestMoreDocumentsRequest {
 
-    @NotBlank(message = "ข้อความขอเอกสารเพิ่มเติมห้ามว่าง")
-    @Size(max = 1000, message = "ข้อความขอเอกสารเพิ่มเติมต้องมีความยาวไม่เกิน 1000 ตัวอักษร")
+    @NotBlank(message = "Additional document request message is required")
+    @Size(max = 1000, message = "Additional document request message must not exceed 1000 characters")
     private String message;
 
     public RequestMoreDocumentsRequest() {

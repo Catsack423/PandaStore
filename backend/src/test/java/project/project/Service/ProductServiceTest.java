@@ -185,7 +185,7 @@ public class ProductServiceTest {
             productService.createProduct(1L, sampleProduct, images, Set.of(999L));
         });
 
-        assertTrue(ex.getMessage().contains("Category") && ex.getMessage().contains("ไม่มีในระบบ"));
+        assertTrue(ex.getMessage().contains("Category") && ex.getMessage().contains("not found"));
         verify(productRepository, never()).save(any());
     }
 

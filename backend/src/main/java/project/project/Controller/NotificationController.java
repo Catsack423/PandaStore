@@ -39,7 +39,7 @@ public class NotificationController {
         if (!Objects.equals(currentUserId, userId)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "ไม่สามารถดูการแจ้งเตือนของผู้ใช้อื่นได้");
+                    "You cannot view another user's notifications");
         }
 
         var notifications = notificationService
@@ -50,7 +50,7 @@ public class NotificationController {
 
         return ResponseEntity.ok(
                 ApiResponse.success(
-                        "ดึงข้อมูลการแจ้งเตือนสำเร็จ",
+                        "Notifications retrieved successfully",
                         notifications));
     }
 
@@ -64,6 +64,6 @@ public class NotificationController {
         notificationService.markAsRead(notificationId);
 
         return ResponseEntity.ok(
-                ApiResponse.success("อ่านการแจ้งเตือนแล้ว", null));
+                ApiResponse.success("Notification marked as read", null));
     }
 }

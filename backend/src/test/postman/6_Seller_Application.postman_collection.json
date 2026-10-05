@@ -306,7 +306,7 @@
               "pm.test(\"Response indicates request more documents success\", function () {",
               "    const json = pm.response.json();",
               "    pm.expect(json.success).to.eql(true);",
-              "    pm.expect(json.message).to.include(\"ส่งคำขอเอกสารเพิ่มเติมสำเร็จ\");",
+              "    pm.expect(json.message).to.include(\"Additional documents requested successfully\");",
               "});"
             ]
           }
@@ -410,7 +410,7 @@
               "pm.test(\"Response indicates rejection success\", function () {",
               "    const json = pm.response.json();",
               "    pm.expect(json.success).to.eql(true);",
-              "    pm.expect(json.message).to.include(\"ปฏิเสธคำขอเปิดร้านค้าสำเร็จ\");",
+              "    pm.expect(json.message).to.include(\"Seller application rejected successfully\");",
               "});"
             ]
           }
@@ -578,7 +578,7 @@
               "pm.test(\"Response indicates approval success\", function () {",
               "    const json = pm.response.json();",
               "    pm.expect(json.success).to.eql(true);",
-              "    pm.expect(json.message).to.include(\"อนุมัติคำขอเปิดร้านค้าสำเร็จ\");",
+              "    pm.expect(json.message).to.include(\"Seller application approved successfully\");",
               "});"
             ]
           }

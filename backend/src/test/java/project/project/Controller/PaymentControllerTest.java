@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 public class PaymentControllerTest {
+    @Mock private project.project.Security.OrderAccess access;
 
     private MockMvc mockMvc;
 
@@ -170,7 +171,7 @@ public class PaymentControllerTest {
                         .content(simulateJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("จำลองการชำระเงินสำเร็จ (PAID)"));
+                .andExpect(jsonPath("$.message").value("Payment simulation successful (PAID)"));
     }
 
     @Test
@@ -201,7 +202,7 @@ public class PaymentControllerTest {
                         .content(simulateJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("จำลองการชำระเงินล้มเหลว (FAILED)"));
+                .andExpect(jsonPath("$.message").value("Payment simulation failed (FAILED)"));
     }
 
     @Test
@@ -223,7 +224,7 @@ public class PaymentControllerTest {
                         .content(refundJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("ดำเนินการคืนเงินบางส่วนสำเร็จ"));
+                .andExpect(jsonPath("$.message").value("Partial refund completed successfully"));
     }
 
     @Test
@@ -265,7 +266,7 @@ public class PaymentControllerTest {
                         .content(refundJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("ดำเนินการคืนเงินเต็มจำนวนสำเร็จ"));
+                .andExpect(jsonPath("$.message").value("Full refund completed successfully"));
     }
 
     @Test
@@ -317,6 +318,9 @@ public class PaymentControllerTest {
     void getPaymentById_Success() throws Exception {
         Long paymentId = 1L;
         Payment payment = new Payment();
+        OrderGroup group = new OrderGroup();
+        group.setOrderGroupId(100L);
+        payment.setOrderGroup(group);
         payment.setPaymentId(paymentId);
         payment.setPaymentMethod(PaymentMethod.CREDIT_CARD);
         payment.setAmount(new BigDecimal("1200.00"));

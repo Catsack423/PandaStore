@@ -32,7 +32,7 @@ public class SubOrderController {
     public ResponseEntity<ApiResponse<SubOrderResponse>> getSubOrderById(@PathVariable Long orderId) {
         Order order = subOrderService.getSubOrderById(orderId);
         access.requireOrderRead(order);
-        return ResponseEntity.ok(ApiResponse.success("ดึงข้อมูลคำสั่งซื้อย่อยสำเร็จ", SubOrderResponse.fromEntity(order)));
+        return ResponseEntity.ok(ApiResponse.success("Sub-order retrieved successfully", SubOrderResponse.fromEntity(order)));
     }
 
     @GetMapping("/order-group/{orderGroupId}")
@@ -43,7 +43,7 @@ public class SubOrderController {
         List<SubOrderResponse> responses = orders.stream()
                 .map(SubOrderResponse::fromEntity)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success("ดึงรายการคำสั่งซื้อย่อยในกลุ่มสำเร็จ", responses));
+        return ResponseEntity.ok(ApiResponse.success("Order group sub-orders retrieved successfully", responses));
     }
 
     @GetMapping("/seller/{sellerId}")
@@ -54,7 +54,7 @@ public class SubOrderController {
         List<SubOrderResponse> responses = orders.stream()
                 .map(SubOrderResponse::fromEntity)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success("ดึงรายการคำสั่งซื้อย่อยของร้านค้าสำเร็จ", responses));
+        return ResponseEntity.ok(ApiResponse.success("Shop sub-orders retrieved successfully", responses));
     }
 
     @PostMapping("/{orderId}/accept")
@@ -64,7 +64,7 @@ public class SubOrderController {
 
         access.requireSellerOrder(sellerId, orderId);
         subOrderService.sellerAcceptOrder(sellerId, orderId);
-        return ResponseEntity.ok(ApiResponse.success("ยืนยันรับคำสั่งซื้อสำเร็จ", null));
+        return ResponseEntity.ok(ApiResponse.success("Order accepted successfully", null));
     }
 
     @PostMapping("/{orderId}/reject")
@@ -75,7 +75,7 @@ public class SubOrderController {
 
         access.requireSellerOrder(sellerId, orderId);
         subOrderService.sellerRejectOrder(sellerId, orderId, request.getReason());
-        return ResponseEntity.ok(ApiResponse.success("ปฏิเสธคำสั่งซื้อสำเร็จ", null));
+        return ResponseEntity.ok(ApiResponse.success("Order rejected successfully", null));
     }
 
     @PostMapping("/{orderId}/confirm-delivered")
@@ -86,7 +86,7 @@ public class SubOrderController {
         Long effectiveCustomerId = customerId != null ? customerId : access.resolveCustomerId(null);
         access.requireCustomerOrder(effectiveCustomerId, orderId);
         subOrderService.confirmOrderDelivered(effectiveCustomerId, orderId);
-        return ResponseEntity.ok(ApiResponse.success("ยืนยันการรับสินค้าสำเร็จ", null));
+        return ResponseEntity.ok(ApiResponse.success("Delivery receipt confirmed successfully", null));
     }
 
     @PostMapping("/{orderId}/cancel")
@@ -98,6 +98,6 @@ public class SubOrderController {
         Long effectiveCustomerId = customerId != null ? customerId : access.resolveCustomerId(null);
         access.requireCustomerOrder(effectiveCustomerId, orderId);
         subOrderService.customerCancelOrder(effectiveCustomerId, orderId, request.getReason());
-        return ResponseEntity.ok(ApiResponse.success("ยกเลิกคำสั่งซื้อสำเร็จ", null));
+        return ResponseEntity.ok(ApiResponse.success("Order cancelled successfully", null));
     }
 }

@@ -130,7 +130,7 @@ public class AddressServiceImp implements AddressService {
 
         if (orderGroupRepository
                 .existsByShippingAddress_AddressId(addressId)) {
-            throw new IllegalStateException("ไม่สามารถลบที่อยู่ที่มีคำสั่งซื้ออ้างอิงอยู่ได้");
+            throw new IllegalStateException("An address referenced by an order cannot be deleted");
         }
 
         boolean wasDefault = Boolean.TRUE.equals(address.getIsDefault());

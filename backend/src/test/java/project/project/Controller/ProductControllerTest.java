@@ -155,7 +155,7 @@ public class ProductControllerTest {
                 """;
 
         when(productService.createProduct(eq(sellerId), any(Product.class), any(), any()))
-                .thenThrow(new IllegalArgumentException("Category นี้ไม่มีในระบบ: 999999"));
+                .thenThrow(new IllegalArgumentException("Category not found: 999999"));
 
         mockMvc.perform(post("/api/products")
                         .param("sellerId", String.valueOf(sellerId))
@@ -163,7 +163,7 @@ public class ProductControllerTest {
                         .content(requestJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Category นี้ไม่มีในระบบ: 999999"));
+                .andExpect(jsonPath("$.message").value("Category not found: 999999"));
     }
 
     @Test

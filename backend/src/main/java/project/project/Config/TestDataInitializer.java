@@ -65,7 +65,7 @@ public class TestDataInitializer implements CommandLineRunner {
         this.paymentRepository = paymentRepository;
     }
 
-    @org.springframework.beans.factory.annotation.Value("${app.seed-data:true}")
+    @org.springframework.beans.factory.annotation.Value("${app.seed-data:false}")
     private boolean seedOnStartup;
 
     @Override
@@ -86,17 +86,21 @@ public class TestDataInitializer implements CommandLineRunner {
     @Transactional
     public synchronized void resetTestData() {
         entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY FALSE").executeUpdate();
-        String[] tables = {
-            "review_replies", "reviews", "shipments", "order_items", "orders",
-            "payments", "order_groups", "cart_items", "carts", "product_categories",
-            "product_images", "products", "categories", "addresses", "customers",
-            "seller_bank_accounts", "seller_applications", "sellers", "notifications",
-            "auth_sessions", "users"
+        String[] statements = {
+            "TRUNCATE TABLE review_replies RESTART IDENTITY", "TRUNCATE TABLE reviews RESTART IDENTITY",
+            "TRUNCATE TABLE shipments RESTART IDENTITY", "TRUNCATE TABLE order_items RESTART IDENTITY",
+            "TRUNCATE TABLE orders RESTART IDENTITY", "TRUNCATE TABLE payments RESTART IDENTITY",
+            "TRUNCATE TABLE order_groups RESTART IDENTITY", "TRUNCATE TABLE cart_items RESTART IDENTITY",
+            "TRUNCATE TABLE carts RESTART IDENTITY", "TRUNCATE TABLE product_categories RESTART IDENTITY",
+            "TRUNCATE TABLE product_images RESTART IDENTITY", "TRUNCATE TABLE products RESTART IDENTITY",
+            "TRUNCATE TABLE categories RESTART IDENTITY", "TRUNCATE TABLE addresses RESTART IDENTITY",
+            "TRUNCATE TABLE customers RESTART IDENTITY", "TRUNCATE TABLE seller_bank_accounts RESTART IDENTITY",
+            "TRUNCATE TABLE seller_applications RESTART IDENTITY", "TRUNCATE TABLE sellers RESTART IDENTITY",
+            "TRUNCATE TABLE notifications RESTART IDENTITY", "TRUNCATE TABLE auth_sessions RESTART IDENTITY",
+            "TRUNCATE TABLE users RESTART IDENTITY"
         };
-        for (String table : tables) {
-            try {
-                entityManager.createNativeQuery("TRUNCATE TABLE " + table + " RESTART IDENTITY").executeUpdate();
-            } catch (Exception ignored) {}
+        for (String statement : statements) {
+            entityManager.createNativeQuery(statement).executeUpdate();
         }
         entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate();
         entityManager.clear();
@@ -326,10 +330,10 @@ public class TestDataInitializer implements CommandLineRunner {
 
         // 12. Save OrderItems for Order 7 FIRST so that order_item_id maps exactly 1, 2, 3:
         // OrderItem 1 (ID=1): product1, isReviewed = false (For 5.1 Eligibility check & 5.2 Create Standard Review)
-        OrderItem item1 = saveOrderItem(order7, product1, 1, new BigDecimal("350.00"), false);
+        saveOrderItem(order7, product1, 1, new BigDecimal("350.00"), false);
 
         // OrderItem 2 (ID=2): product2, isReviewed = false (For 5.3 Create Review { review: อื่นๆ })
-        OrderItem item2 = saveOrderItem(order7, product2, 1, new BigDecimal("650.00"), false);
+        saveOrderItem(order7, product2, 1, new BigDecimal("650.00"), false);
 
         // OrderItem 3 (ID=3): product1, isReviewed = true (For 5.4 Update Review & 5.5 Seller Reply)
         OrderItem item3 = saveOrderItem(order7, product1, 1, new BigDecimal("350.00"), true);

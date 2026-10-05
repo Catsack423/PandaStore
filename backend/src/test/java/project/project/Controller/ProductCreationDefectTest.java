@@ -177,7 +177,7 @@ class ProductCreationDefectTest {
                 .content(body("[\"" + IMAGE + "\"]", "\"categoryIds\":[" + validId + ",999999]")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Category นี้ไม่มีในระบบ: 999999"));
+                .andExpect(jsonPath("$.message").value("Category not found: 999999"));
         assertEquals(productsBefore, products.count());
         assertEquals(imagesBefore, images.count());
     }

@@ -17,7 +17,7 @@ const Footer = () => {
         <div className="flex flex-wrap xl:flex-nowrap gap-10 xl:gap-19 xl:gap-10 pt-17.5 xl:pt-22.5 pb-10 xl:pb-15">
           <div className="max-w-[330px] w-full">
             <h2 className="mb-7.5 text-custom-1 font-medium text-dark">
-              Help & Support
+              Help &amp; Support
             </h2>
 
             <ul className="flex flex-col gap-3">

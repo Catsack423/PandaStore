@@ -160,7 +160,10 @@ public class SellerApplicationServiceImp implements SellerApplicationService {
         }
 
         User user = application.getUser();
-        if (user != null && (user.getRole() == UserRole.SELLER || sellerRepository.findByUser_UserId(user.getUserId()).isPresent())) {
+        if (user == null) {
+            throw new IllegalStateException("Application has no associated user");
+        }
+        if (user.getRole() == UserRole.SELLER || sellerRepository.findByUser_UserId(user.getUserId()).isPresent()) {
             throw new IllegalStateException("The user associated with this application is already a seller");
         }
 

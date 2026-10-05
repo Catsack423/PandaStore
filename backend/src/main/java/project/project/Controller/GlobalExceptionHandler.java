@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    private static final String INTERNAL_ERROR_MESSAGE = "เกิดข้อผิดพลาดภายในระบบ กรุณาลองใหม่ภายหลัง";
+    private static final String INTERNAL_ERROR_MESSAGE = "An internal error occurred. Please try again later";
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationExceptions(
@@ -42,14 +42,14 @@ public class GlobalExceptionHandler {
 
             String message = error.getDefaultMessage() != null
                     ? error.getDefaultMessage()
-                    : "ข้อมูลไม่ถูกต้อง";
+                    : "Invalid data";
 
             errors.putIfAbsent(name, message);
         });
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.<Void>error(
-                        "ข้อมูลที่ส่งมาไม่ถูกต้อง",
+                        "Invalid request data",
                         errors));
     }
 
@@ -92,8 +92,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(
             RuntimeException ex) {
 
-        log.warn("Runtime exception: {}", ex.getMessage());
-        return error(HttpStatus.BAD_REQUEST, ex.getMessage());
+        log.error("Unexpected runtime exception", ex);
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, INTERNAL_ERROR_MESSAGE);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -104,7 +104,7 @@ public class GlobalExceptionHandler {
 
         return error(
                 HttpStatus.CONFLICT,
-                "ไม่สามารถบันทึกข้อมูลได้ เนื่องจากข้อมูลขัดแย้งกับข้อมูลในระบบ");
+                "Unable to save because the data conflicts with existing records");
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -113,7 +113,7 @@ public class GlobalExceptionHandler {
 
         return error(
                 HttpStatus.BAD_REQUEST,
-                "รูปแบบ JSON หรือค่าข้อมูลที่ส่งมาไม่ถูกต้อง");
+                "Invalid JSON format or request value");
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -122,9 +122,9 @@ public class GlobalExceptionHandler {
 
         return error(
                 HttpStatus.BAD_REQUEST,
-                "ชนิดข้อมูลของพารามิเตอร์ "
+                "Data type for parameter "
                         + ex.getName()
-                        + " ไม่ถูกต้อง");
+                        + " is invalid");
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -183,7 +183,7 @@ public class GlobalExceptionHandler {
     }
 
     private String messageOrDefault(String message) {
-        return message != null && !message.isBlank() ? message : "ไม่สามารถดำเนินการได้";
+        return message != null && !message.isBlank() ? message : "Unable to complete the operation";
     }
 
     // @ExceptionHandler(project.project.Exception.DuplicateUserException.class)

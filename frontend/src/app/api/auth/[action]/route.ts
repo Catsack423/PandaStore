@@ -149,7 +149,7 @@ export async function POST(
       const result = NextResponse.json({
         success: true,
         message: body?.message || "Password updated successfully",
-        data: body.data,
+        data: { success: body.data?.success, user: body.data?.user },
       });
       if (newToken) {
         const options = {

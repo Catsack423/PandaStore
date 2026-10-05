@@ -8,10 +8,10 @@ import lombok.Setter;
 @Setter 
 public class UpdateCustomerRequest {
 
-    @Size(max = 100, message = "Full Name ต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+    @Size(max = 100, message = "Full name must not exceed 100 characters")
     private String fullName;
 
-    @Pattern(regexp = "^[0-9]{9,15}$", message = "เบอร์โทรศัพท์ต้องเป็นตัวเลขความยาว 9-15 หลัก")
+    @Pattern(regexp = "^[0-9]{9,15}$", message = "Phone number must contain 9-15 digits")
     private String phoneNumber;
 
     public UpdateCustomerRequest() {

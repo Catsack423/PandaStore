@@ -30,20 +30,20 @@ public class CategoryServiceImp implements CategoryService {
     @Transactional
     public Category createCategory(String categoryName, String description) {
         if (categoryName == null || categoryName.isBlank()) {
-            throw new IllegalArgumentException("ชื่อหมวดหมู่ห้ามว่าง");
+            throw new IllegalArgumentException("Category name is required");
         }
 
         String name = categoryName.trim();
         if (name.length() > 100) {
-            throw new IllegalArgumentException("ชื่อหมวดหมู่ต้องไม่เกิน 100 ตัวอักษร");
+            throw new IllegalArgumentException("Category name must not exceed 100 characters");
         }
         if (categories.existsByCategoryNameIgnoreCase(name)) {
-            throw new IllegalStateException("มีหมวดหมู่นี้อยู่แล้ว");
+            throw new IllegalStateException("Category already exists");
         }
 
         String detail = description == null ? null : description.trim();
         if (detail != null && detail.length() > 255) {
-            throw new IllegalArgumentException("คำอธิบายต้องไม่เกิน 255 ตัวอักษร");
+            throw new IllegalArgumentException("Description must not exceed 255 characters");
         }
         return categories.save(new Category(null, name, detail));
     }
@@ -60,10 +60,10 @@ public class CategoryServiceImp implements CategoryService {
     @Transactional(readOnly = true)
     public Page<ProductResponse> getProductsByCategory(Long categoryId, int page, int size) {
         if (categoryId == null || categoryId <= 0) {
-            throw new IllegalArgumentException("categoryId ต้องมากกว่า 0");
+            throw new IllegalArgumentException("categoryId must be greater than 0");
         }
         if (!categories.existsById(categoryId)) {
-            throw new EntityNotFoundException("ไม่พบหมวดหมู่ที่ต้องการ");
+            throw new EntityNotFoundException("Category not found");
         }
         return products.searchProductsPage(null, categoryId, page, size);
     }
@@ -72,13 +72,13 @@ public class CategoryServiceImp implements CategoryService {
     @Transactional
     public void deleteCategory(Long categoryId) {
         if (categoryId == null || categoryId <= 0) {
-            throw new IllegalArgumentException("categoryId ต้องมากกว่า 0");
+            throw new IllegalArgumentException("categoryId must be greater than 0");
         }
 
         Category category = categories.findById(categoryId)
-                .orElseThrow(() -> new EntityNotFoundException("ไม่พบหมวดหมู่ที่ต้องการ"));
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
         if (productRepository.existsByCategories_CategoryId(categoryId)) {
-            throw new IllegalStateException("ไม่สามารถลบหมวดหมู่ที่มีสินค้าอยู่");
+            throw new IllegalStateException("A category containing products cannot be deleted");
         }
         categories.delete(category);
     }

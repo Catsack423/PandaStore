@@ -10,23 +10,23 @@ import lombok.Setter;
 @Setter
 public class UpdateShopProfileRequest {
 
-    @NotBlank(message = "ชื่อร้านค้าห้ามว่าง")
-    @Size(max = 100, message = "ชื่อร้านค้าต้องไม่เกิน 100 ตัวอักษร")
+    @NotBlank(message = "Shop name is required")
+    @Size(max = 100, message = "Shop name must not exceed 100 characters")
     private String shopName;
 
     private String shopDescription;
 
-    @NotBlank(message = "เบอร์โทรศัพท์ร้านค้าห้ามว่าง")
-    @Size(max = 20, message = "เบอร์โทรศัพท์ต้องไม่เกิน 20 ตัวอักษร")
+    @NotBlank(message = "Shop phone number is required")
+    @Size(max = 20, message = "Phone number must not exceed 20 characters")
     private String shopPhone;
 
-    @NotBlank(message = "อีเมลร้านค้าห้ามว่าง")
-    @Email(message = "รูปแบบอีเมลไม่ถูกต้อง")
-    @Size(max = 100, message = "อีเมลต้องไม่เกิน 100 ตัวอักษร")
+    @NotBlank(message = "Shop email is required")
+    @Email(message = "Invalid email format")
+    @Size(max = 100, message = "Email must not exceed 100 characters")
     private String shopEmail;
 
-    @NotBlank(message = "ที่อยู่ร้านค้าห้ามว่าง")
-    @Size(max = 255, message = "ที่อยู่ร้านค้าต้องไม่เกิน 255 ตัวอักษร")
+    @NotBlank(message = "Shop address is required")
+    @Size(max = 255, message = "Shop address must not exceed 255 characters")
     private String shopAddress;
 
     public UpdateShopProfileRequest() {

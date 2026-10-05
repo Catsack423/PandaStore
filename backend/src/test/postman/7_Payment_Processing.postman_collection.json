@@ -351,7 +351,7 @@
               "pm.test(\"Partial refund processed successfully\", function () {",
               "    const json = pm.response.json();",
               "    pm.expect(json.success).to.eql(true);",
-              "    pm.expect(json.message).to.include(\"ดำเนินการคืนเงินบางส่วนสำเร็จ\");",
+              "    pm.expect(json.message).to.include(\"Partial refund completed successfully\");",
               "});"
             ]
           }
@@ -443,7 +443,7 @@
               "pm.test(\"Full refund processed successfully\", function () {",
               "    const json = pm.response.json();",
               "    pm.expect(json.success).to.eql(true);",
-              "    pm.expect(json.message).to.include(\"ดำเนินการคืนเงินเต็มจำนวนสำเร็จ\");",
+              "    pm.expect(json.message).to.include(\"Full refund completed successfully\");",
               "});"
             ]
           }

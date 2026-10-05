@@ -89,10 +89,10 @@ public class ProductServiceImp implements ProductService {
         if (categoryIds != null && !categoryIds.isEmpty()) {
             for (Long catId : categoryIds) {
                 if (catId == null || catId <= 0) {
-                    throw new IllegalArgumentException("Category นี้ไม่มีในระบบ: " + catId);
+                    throw new IllegalArgumentException("Category not found: " + catId);
                 }
                 Category cat = categoryRepository.findById(catId)
-                        .orElseThrow(() -> new IllegalArgumentException("Category นี้ไม่มีในระบบ: " + catId));
+                        .orElseThrow(() -> new IllegalArgumentException("Category not found: " + catId));
                 categories.add(cat);
             }
             product.setCategories(categories);
@@ -100,7 +100,7 @@ public class ProductServiceImp implements ProductService {
             for (Category c : product.getCategories()) {
                 if (c != null && c.getCategoryId() != null) {
                     Category cat = categoryRepository.findById(c.getCategoryId())
-                            .orElseThrow(() -> new IllegalArgumentException("Category นี้ไม่มีในระบบ: " + c.getCategoryId()));
+                            .orElseThrow(() -> new IllegalArgumentException("Category not found: " + c.getCategoryId()));
                     categories.add(cat);
                 }
             }
@@ -181,7 +181,7 @@ public class ProductServiceImp implements ProductService {
             for (Category c : updatedProduct.getCategories()) {
                 if (c != null && c.getCategoryId() != null) {
                     Category cat = categoryRepository.findById(c.getCategoryId())
-                            .orElseThrow(() -> new IllegalArgumentException("Categoryนี้ไม่มีในระบบ"));
+                            .orElseThrow(() -> new IllegalArgumentException("Category not found"));
                     categories.add(cat);
                 }
             }
@@ -234,10 +234,10 @@ public class ProductServiceImp implements ProductService {
     @Transactional(readOnly = true)
     public Page<ProductResponse> searchProductsPage(String keyword, Long categoryId, int page, int size) {
         if (page < 0 || size < 1 || size > 100) {
-            throw new IllegalArgumentException("page ต้องไม่ติดลบ และ size ต้องอยู่ระหว่าง 1 ถึง 100");
+            throw new IllegalArgumentException("page must not be negative and size must be between 1 and 100");
         }
         if (categoryId != null && categoryId <= 0) {
-            throw new IllegalArgumentException("categoryId ต้องมากกว่า 0");
+            throw new IllegalArgumentException("categoryId must be greater than 0");
         }
 
         String cleanKeyword = keyword == null || keyword.isBlank() ? null : keyword.trim();

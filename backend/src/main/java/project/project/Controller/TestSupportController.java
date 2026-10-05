@@ -8,6 +8,7 @@ import project.project.ApiResponse.ApiResponse;
 import project.project.Config.TestDataInitializer;
 
 @RestController
+@org.springframework.context.annotation.Profile("test-support")
 @RequestMapping("/api/test")
 public class TestSupportController {
 
@@ -20,6 +21,6 @@ public class TestSupportController {
     @PostMapping("/reset-data")
     public ResponseEntity<ApiResponse<String>> resetData() {
         testDataInitializer.resetTestData();
-        return ResponseEntity.ok(ApiResponse.success("รีเซ็ตและเตรียมข้อมูลทดสอบเรียบร้อย", "OK"));
+        return ResponseEntity.ok(ApiResponse.success("Test data reset and initialized successfully", "OK"));
     }
 }

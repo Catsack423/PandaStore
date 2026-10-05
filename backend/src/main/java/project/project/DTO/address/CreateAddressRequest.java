@@ -8,32 +8,32 @@ import jakarta.validation.constraints.Size;
 
 public record CreateAddressRequest(
 
-        @NotNull(message = "Customer ID ห้ามว่าง")
-        @Positive(message = "Customer ID ต้องมากกว่า 0")
+        @NotNull(message = "Customer ID is required")
+        @Positive(message = "Customer ID must be greater than 0")
         Long customerId,
 
-        @NotBlank(message = "ชื่อผู้รับห้ามว่าง")
-        @Size(max = 100, message = "ชื่อผู้รับต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+        @NotBlank(message = "Recipient name is required")
+        @Size(max = 100, message = "Recipient name must not exceed 100 characters")
         String receiverName,
 
-        @NotBlank(message = "เบอร์โทรศัพท์ห้ามว่าง")
-        @Pattern(regexp = "^[0-9]{9,15}$", message = "เบอร์โทรศัพท์ต้องเป็นตัวเลขความยาว 9-15 หลัก")
+        @NotBlank(message = "Phone number is required")
+        @Pattern(regexp = "^[0-9]{9,15}$", message = "Phone number must contain 9-15 digits")
         String phoneNumber,
 
-        @NotBlank(message = "ที่อยู่ห้ามว่าง")
-        @Size(max = 255, message = "ที่อยู่ต้องมีความยาวไม่เกิน 255 ตัวอักษร")
+        @NotBlank(message = "Address is required")
+        @Size(max = 255, message = "Address must not exceed 255 characters")
         String addressLine,
 
-        @NotBlank(message = "อำเภอ/เขต ห้ามว่าง")
-        @Size(max = 100, message = "อำเภอ/เขต ต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+        @NotBlank(message = "District is required")
+        @Size(max = 100, message = "District must not exceed 100 characters")
         String district,
 
-        @NotBlank(message = "จังหวัดห้ามว่าง")
-        @Size(max = 100, message = "จังหวัดต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+        @NotBlank(message = "Province is required")
+        @Size(max = 100, message = "Province must not exceed 100 characters")
         String province,
 
-        @NotBlank(message = "รหัสไปรษณีย์ห้ามว่าง")
-        @Pattern(regexp = "^[0-9]{5}$", message = "รหัสไปรษณีย์ต้องเป็นตัวเลข 5 หลัก")
+        @NotBlank(message = "Postal code is required")
+        @Pattern(regexp = "^[0-9]{5}$", message = "Postal code must contain 5 digits")
         String postalCode,
 
         Boolean isDefault

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { hasAllowedRequestOrigin } from "./lib/requestOrigin";
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   "/admin": ["ADMIN"],
@@ -47,6 +48,13 @@ function signInRedirect(request: NextRequest, pathname: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  if (pathname.startsWith("/api/")) {
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(request.method)
+        && pathname !== "/api/uploadthing" && !hasAllowedRequestOrigin(request)) {
+      return NextResponse.json({ success: false, message: "Origin not allowed" }, { status: 403 });
+    }
+    return NextResponse.next();
+  }
   const token = request.cookies.get("auth_token")?.value;
   const accountPath = Object.keys(ACCOUNT_PAGES).find((route) =>
     pathname === route || pathname.startsWith(route + "/")
@@ -87,6 +95,7 @@ export async function middleware(request: NextRequest) {
   try {
     if (shopMatch) {
       const shopResponse = await fetch(`${backend}/api/seller/shops/user/${identity.userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
         signal: AbortSignal.timeout(5000),
       });
@@ -104,6 +113,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/api/:path*",
     "/", "/admin/:path*", "/seller/:path*", "/seller-dashboard/:path*", "/account/:path*",
     "/cart/:path*", "/checkout/:path*", "/shop-with-sidebar/:path*",
     "/shop-without-sidebar/:path*", "/shop-details/:path*", "/shop/:path*",
