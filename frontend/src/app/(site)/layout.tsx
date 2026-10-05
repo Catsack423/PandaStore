@@ -17,6 +17,10 @@ import PreviewSliderModal from "@/components/Common/PreviewSlider";
 import ScrollToTop from "@/components/Common/ScrollToTop";
 import PreLoader from "@/components/Common/PreLoader";
 import { ProductContextProvider } from "../context/ProductContext";
+import { AuthProvider } from "../context/AuthContext";
+import { CartProvider, CartQueryProvider } from "../context/CartContext";
+import { SellerPreviewProvider } from "../context/SellerPreviewContext";
+import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({
   children,
@@ -36,7 +40,10 @@ export default function RootLayout({
           <PreLoader />
         ) : (
           <>
+            <CartQueryProvider><AuthProvider>
+            <SellerPreviewProvider>
             <ReduxProvider>
+            <CartProvider>
               <CartModalProvider>
                 <ModalProvider>
                   <PreviewSliderProvider>
@@ -50,9 +57,12 @@ export default function RootLayout({
                   </PreviewSliderProvider>
                 </ModalProvider>
               </CartModalProvider>
-            </ReduxProvider>
-            <ScrollToTop />
+            </CartProvider></ReduxProvider>
+            </SellerPreviewProvider>
             <Footer />
+            </AuthProvider></CartQueryProvider>
+            <Toaster position="top-right" />
+            <ScrollToTop />
           </>
         )}
       </body>

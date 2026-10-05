@@ -29,7 +29,7 @@ public class CurrentUser {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()
                 || !(authentication.getPrincipal() instanceof AuthenticatedUser identity)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "กรุณาเข้าสู่ระบบ");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please log in");
         }
         return identity;
     }
@@ -41,17 +41,17 @@ public class CurrentUser {
     @Transactional(readOnly = true)
     public User requireUser() {
         return usersRepository .findById(getCurrentUserId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "ไม่พบผู้ใช้ปัจจุบัน"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current user not found"));
     }
 
     @Transactional(readOnly = true)
     public Long requireCustomerId() {
         var identity = requireIdentity();
         if (identity.role() != UserRole.CUSTOMER) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "บัญชีนี้ไม่ใช่ลูกค้า");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This account is not a customer account");
         }
         return customersRepository.findByUser_UserId(identity.userId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "ไม่พบข้อมูลลูกค้า"))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Customer not found"))
                 .getCustomerId();
     }
 }

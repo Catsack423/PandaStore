@@ -1,8 +1,13 @@
 package project.project.Service.implement;
 
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import project.project.Entity.product.Category;
+import project.project.DTO.product.ProductResponse;
+import project.project.DTO.product.CatalogSummary;
 import project.project.Entity.product.Product;
 import project.project.Entity.product.ProductImage;
 import project.project.Entity.product.ProductStatus;
@@ -19,7 +24,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -43,6 +50,18 @@ public class ProductServiceImp implements ProductService {
     @Override
     @Transactional
     public Product createProduct(Long sellerId, Product product, List<String> imageUrls) {
+        Set<Long> categoryIds = new HashSet<>();
+        if (product != null && product.getCategories() != null) {
+            for (Category category : product.getCategories()) {
+                categoryIds.add(category == null ? null : category.getCategoryId());
+            }
+        }
+        return createProduct(sellerId, product, imageUrls, categoryIds);
+    }
+
+    @Override
+    @Transactional
+    public Product createProduct(Long sellerId, Product product, List<String> imageUrls, Set<Long> categoryIds) {
         if (sellerId == null) {
             throw new IllegalArgumentException("Seller ID cannot be null");
         }
@@ -61,10 +80,33 @@ public class ProductServiceImp implements ProductService {
         if (product.getStock() == null || product.getStock() < 0) {
             throw new IllegalArgumentException("Product stock cannot be negative");
         }
-        if (imageUrls == null || imageUrls.isEmpty()) {
+        if (imageUrls == null || imageUrls.isEmpty()
+                || imageUrls.stream().anyMatch(url -> url == null || url.trim().isEmpty())) {
             throw new IllegalArgumentException("At least one product image is required");
         }
 
+        Set<Category> categories = new HashSet<>();
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            for (Long catId : categoryIds) {
+                if (catId == null || catId <= 0) {
+                    throw new IllegalArgumentException("Category not found: " + catId);
+                }
+                Category cat = categoryRepository.findById(catId)
+                        .orElseThrow(() -> new IllegalArgumentException("Category not found: " + catId));
+                categories.add(cat);
+            }
+            product.setCategories(categories);
+        } else if (product.getCategories() != null && !product.getCategories().isEmpty()) {
+            for (Category c : product.getCategories()) {
+                if (c != null && c.getCategoryId() != null) {
+                    Category cat = categoryRepository.findById(c.getCategoryId())
+                            .orElseThrow(() -> new IllegalArgumentException("Category not found: " + c.getCategoryId()));
+                    categories.add(cat);
+                }
+            }
+            product.setCategories(categories);
+        }
+        product.setCategories(categories);
         product.setSeller(seller);
         if (product.getStatus() == null) {
             product.setStatus(ProductStatus.ACTIVE);
@@ -82,7 +124,7 @@ public class ProductServiceImp implements ProductService {
         for (int i = 0; i < imageUrls.size(); i++) {
             ProductImage img = new ProductImage();
             img.setProduct(savedProduct);
-            img.setImageUrl(imageUrls.get(i));
+            img.setImageUrl(imageUrls.get(i).trim());
             img.setIsPrimary(i == 0);
             img.setDisplayOrder(i);
             images.add(productImageRepository.save(img));
@@ -124,6 +166,8 @@ public class ProductServiceImp implements ProductService {
             existing.setStock(updatedProduct.getStock());
             if (updatedProduct.getStock() == 0 && existing.getStatus() == ProductStatus.ACTIVE) {
                 existing.setStatus(ProductStatus.OUT_OF_STOCK);
+            } else if (updatedProduct.getStock() > 0 && existing.getStatus() == ProductStatus.OUT_OF_STOCK) {
+                existing.setStatus(ProductStatus.ACTIVE);
             }
         }
         if (updatedProduct.getStatus() != null) {
@@ -133,7 +177,15 @@ public class ProductServiceImp implements ProductService {
             existing.setShippingInfo(updatedProduct.getShippingInfo());
         }
         if (updatedProduct.getCategories() != null && !updatedProduct.getCategories().isEmpty()) {
-            existing.setCategories(updatedProduct.getCategories());
+            Set<Category> categories = new HashSet<>();
+            for (Category c : updatedProduct.getCategories()) {
+                if (c != null && c.getCategoryId() != null) {
+                    Category cat = categoryRepository.findById(c.getCategoryId())
+                            .orElseThrow(() -> new IllegalArgumentException("Category not found"));
+                    categories.add(cat);
+                }
+            }
+            existing.setCategories(categories);
         }
 
         return productRepository.save(existing);
@@ -149,8 +201,19 @@ public class ProductServiceImp implements ProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public CatalogSummary getCatalogSummary() {
+        BigDecimal maxPrice = productRepository.findMaximumAvailablePrice(ProductStatus.ACTIVE);
+        Map<Long, Long> counts = new LinkedHashMap<>();
+        for (Object[] row : productRepository.countAvailableProductsByCategory(ProductStatus.ACTIVE)) {
+            counts.put((Long) row[0], (Long) row[1]);
+        }
+        return new CatalogSummary(maxPrice == null ? BigDecimal.ZERO : maxPrice, counts);
+    }
+
+    @Override
     public List<Product> getAllActiveProducts() {
-        return productRepository.findByStatus(ProductStatus.ACTIVE);
+        return productRepository.findAvailableProducts(ProductStatus.ACTIVE);
     }
 
     @Override
@@ -165,6 +228,58 @@ public class ProductServiceImp implements ProductService {
     public List<Product> searchProducts(String keyword, Long categoryId) {
         String cleanKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
         return productRepository.searchProducts(cleanKeyword, categoryId, ProductStatus.ACTIVE);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> searchProductsPage(String keyword, Long categoryId, int page, int size) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new IllegalArgumentException("page must not be negative and size must be between 1 and 100");
+        }
+        if (categoryId != null && categoryId <= 0) {
+            throw new IllegalArgumentException("categoryId must be greater than 0");
+        }
+
+        String cleanKeyword = keyword == null || keyword.isBlank() ? null : keyword.trim();
+        var sort = Sort.by("productId").ascending();
+        var pageable = PageRequest.of(page, size, sort);
+        Page<Product> products = productRepository.searchProductsPage(
+                cleanKeyword, categoryId, ProductStatus.ACTIVE, pageable);
+        return products.map(ProductResponse::fromEntity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> searchProductsPage(String keyword, List<Long> categoryIds,
+            BigDecimal minPrice, BigDecimal maxPrice, String sort, int page, int size) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new IllegalArgumentException("Invalid page or size");
+        }
+        if (categoryIds != null && categoryIds.stream().anyMatch(id -> id == null || id <= 0)) {
+            throw new IllegalArgumentException("Invalid category ID");
+        }
+        if ((minPrice != null && minPrice.signum() < 0)
+                || (maxPrice != null && maxPrice.signum() < 0)
+                || (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0)) {
+            throw new IllegalArgumentException("Invalid price range");
+        }
+        Sort ordering = switch (sort == null ? "" : sort) {
+            case "", "id-asc" -> Sort.by("productId").ascending();
+            case "latest" -> Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("productId"));
+            case "oldest" -> Sort.by(Sort.Order.asc("createdAt"), Sort.Order.asc("productId"));
+            case "reviews" -> Sort.by(Sort.Order.desc("reviewCount"), Sort.Order.desc("productId"));
+            case "price-asc" -> Sort.by(Sort.Order.asc("price"), Sort.Order.asc("productId"));
+            case "price-desc" -> Sort.by(Sort.Order.desc("price"), Sort.Order.desc("productId"));
+            default -> throw new IllegalArgumentException("Invalid sort order");
+        };
+        List<Long> selected = categoryIds == null || categoryIds.isEmpty() ? List.of(-1L) : categoryIds;
+        String cleanKeyword = keyword == null ? "" : keyword.trim();
+        return productRepository.searchCatalogPage(cleanKeyword, !cleanKeyword.isEmpty(), selected,
+                categoryIds != null && !categoryIds.isEmpty(),
+                minPrice == null ? BigDecimal.ZERO : minPrice, minPrice != null,
+                maxPrice == null ? BigDecimal.ZERO : maxPrice, maxPrice != null,
+                ProductStatus.ACTIVE, PageRequest.of(page, size, ordering))
+                .map(ProductResponse::fromEntity);
     }
 
     @Override

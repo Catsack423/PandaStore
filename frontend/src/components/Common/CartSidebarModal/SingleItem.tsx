@@ -1,34 +1,62 @@
+import { formatBaht } from "@/lib/currency";
 import React from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/redux/store";
-import Image from "next/image";
+import ProductImage from "@/components/Common/ProductImage";
+import Link from "next/link";
+import { productUrl } from "@/lib/productUrl";
+import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
+import { useCart } from "@/app/context/CartContext";
+import { Minus, Plus } from "lucide-react";
 
-const SingleItem = ({ item, removeItemFromCart }) => {
-  const dispatch = useDispatch<AppDispatch>();
+const SingleItem = ({ item, removeItemFromCart, disabled }) => {
+  const { closeCartModal } = useCartModalContext();
+  const { updateCartItemQuantity } = useCart();
+  const quantity = item.quantity;
+  const quantityUnavailable = disabled || item.stock == null;
+  const stockLimitReached = item.stock != null && quantity >= item.stock;
+  const stockNotice = item.stock === 1
+    ? "Only 1 item in stock. You cannot add more."
+    : item.stock === 0
+      ? "Out of stock. You cannot add more."
+      : `Stock limit reached (${item.stock} items). You cannot add more.`;
+
+  const changeQuantity = (nextQuantity: number) => {
+    if (quantityUnavailable || nextQuantity < 1 || nextQuantity > item.stock) return;
+    updateCartItemQuantity({ id: item.id, quantity: nextQuantity });
+  };
 
   const handleRemoveFromCart = () => {
-    dispatch(removeItemFromCart(item.id));
+    removeItemFromCart(item.id);
   };
 
   return (
-    <div className="flex items-center justify-between gap-5">
-      <div className="w-full flex items-center gap-6">
-        <div className="flex items-center justify-center rounded-[10px] bg-gray-3 max-w-[90px] w-full h-22.5">
-          <Image src={item.imgs?.thumbnails[0]} alt="product" width={100} height={100} />
-        </div>
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0 flex flex-1 items-center gap-3">
+        <Link href={productUrl(item)} onNavigate={closeCartModal} aria-label={`View ${item.title}`} className="shrink-0 rounded-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">
+          <ProductImage src={item.imgs?.thumbnails?.[0]} alt={item.title} size="sm" surface="gray3" className="rounded-[10px]" />
+        </Link>
 
-        <div>
+        <div className="min-w-0">
           <h3 className="font-medium text-dark mb-1 ease-out duration-200 hover:text-blue">
-            <a href="#"> {item.title} </a>
+            <Link href={productUrl(item)} onNavigate={closeCartModal} className="break-words rounded-sm hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">{item.title}</Link>
           </h3>
-          <p className="text-custom-sm">Price: ${item.discountedPrice}</p>
+          <p className="text-custom-sm">{formatBaht(Number(item.discountedPrice))} × {item.quantity}</p><p className="mt-1 text-xs">{item.stock == null ? "Stock unavailable" : `${item.stock} in stock`}</p>
+          <div role="group" aria-label={`Quantity for ${item.title}`} className="mt-3 inline-flex items-center overflow-hidden rounded-lg border border-gray-3">
+            <button type="button" onClick={() => changeQuantity(quantity - 1)} disabled={quantityUnavailable || quantity <= 1} aria-label={`Decrease quantity of ${item.title}`} className="flex h-11 w-11 shrink-0 items-center justify-center text-dark transition-colors hover:bg-blue/5 hover:text-blue focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue disabled:cursor-not-allowed disabled:text-dark-5 disabled:hover:bg-transparent">
+              <Minus size={16} aria-hidden="true" />
+            </button>
+            <span aria-live="polite" aria-atomic="true" className="min-w-[32px] px-1 text-center text-sm font-medium tabular-nums text-dark">{quantity}</span>
+            <button type="button" onClick={() => changeQuantity(quantity + 1)} disabled={quantityUnavailable || stockLimitReached} aria-label={`Increase quantity of ${item.title}`} aria-describedby={stockLimitReached ? `cart-stock-limit-${item.id}` : undefined} title={stockLimitReached ? stockNotice : undefined} className="flex h-11 w-11 shrink-0 items-center justify-center text-dark transition-colors hover:bg-blue/5 hover:text-blue focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue disabled:cursor-not-allowed disabled:text-dark-5 disabled:hover:bg-transparent">
+              <Plus size={16} aria-hidden="true" />
+            </button>
+          </div>
+          {stockLimitReached && <p id={`cart-stock-limit-${item.id}`} role="status" className="mt-2 text-xs leading-5 text-orange-dark">{stockNotice}</p>}
         </div>
       </div>
 
       <button
-        onClick={handleRemoveFromCart}
+        onClick={handleRemoveFromCart} disabled={disabled}
         aria-label="button for remove product from cart"
-        className="flex items-center justify-center rounded-lg max-w-[38px] w-full h-9.5 bg-gray-2 border border-gray-3 text-dark ease-out duration-200 hover:bg-red-light-6 hover:border-red-light-4 hover:text-red"
+        className="flex h-9.5 w-[38px] shrink-0 items-center justify-center rounded-lg bg-gray-2 border border-gray-3 text-dark ease-out duration-200 hover:bg-red-light-6 hover:border-red-light-4 hover:text-red"
       >
         <svg
           className="fill-current"

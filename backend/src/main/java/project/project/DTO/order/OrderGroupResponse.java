@@ -40,6 +40,7 @@ public record OrderGroupResponse(
             String subOrderNumber,
             BigDecimal subtotal,
             BigDecimal shippingFee,
+            String shippingMethod,
             BigDecimal sellerDiscount,
             BigDecimal totalAmount,
             OrderStatus orderStatus,
@@ -50,6 +51,7 @@ public record OrderGroupResponse(
                     order.getSubOrderNumber(),
                     order.getSubtotal(),
                     order.getShippingFee(),
+                    order.getShippingMethod(),
                     order.getSellerDiscount(),
                     order.getTotalAmount(),
                     order.getOrderStatus(),
@@ -61,17 +63,30 @@ public record OrderGroupResponse(
 
     public record OrderItemResponse(
             Long orderItemId,
+            Long productId,
             String productName,
             BigDecimal unitPrice,
             Integer quantity,
-            BigDecimal totalPrice) {
+            BigDecimal totalPrice,
+            Boolean isReviewed) {
+        public OrderItemResponse(
+                Long orderItemId,
+                String productName,
+                BigDecimal unitPrice,
+                Integer quantity,
+                BigDecimal totalPrice) {
+            this(orderItemId, null, productName, unitPrice, quantity, totalPrice, false);
+        }
+
         public static OrderItemResponse fromEntity(OrderItem item) {
             return new OrderItemResponse(
                     item.getOrderItemId(),
+                    item.getProduct() != null ? item.getProduct().getProductId() : null,
                     item.getProductName(),
                     item.getUnitPrice(),
                     item.getQuantity(),
-                    item.getTotalPrice());
+                    item.getTotalPrice(),
+                    Boolean.TRUE.equals(item.getIsReviewed()));
         }
     }
 }

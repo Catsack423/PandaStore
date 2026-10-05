@@ -100,11 +100,46 @@ class CartServiceTest {
     }
 
     @Test
-    void missingCartIsNotCreatedByReadOrAdd() {
+    void synchronizeStockDeletesSoldOutItemsAndKeepsOtherItems() {
+        CartItem soldOut = service.addItemToCart(customerId, firstProduct.getProductId(), 2);
+        CartItem kept = service.addItemToCart(customerId, secondProduct.getProductId(), 3);
+        firstProduct.setStock(0);
+        products.save(firstProduct);
+        secondProduct.setStock(1);
+        products.save(secondProduct);
+
+        var result = service.synchronizeStock(customerId);
+        assertEquals(java.util.List.of(firstProduct.getName()), result.removedProducts());
+        assertEquals(1, result.items().size());
+        assertEquals(kept.getCartItemId(), result.items().getFirst().cartItemId());
+        assertEquals(3, result.items().getFirst().quantity());
+        assertFalse(items.existsById(soldOut.getCartItemId()));
+        assertTrue(service.synchronizeStock(customerId).removedProducts().isEmpty());
+        assertEquals(1, service.getCartByCustomerId(customerId).getItems().size());
+    }
+
+    @Test
+    void synchronizeStockDoesNotCreateMissingCartOrTouchAnotherCustomer() {
+        Long withoutCart = customer("sync-no-cart").getCustomerId();
+        assertNull(service.synchronizeStock(withoutCart).cartId());
+        assertEquals(2, carts.count());
+        CartItem otherItem = service.addItemToCart(otherCustomerId, firstProduct.getProductId(), 1);
+        firstProduct.setStock(0);
+        products.save(firstProduct);
+        service.synchronizeStock(customerId);
+        assertTrue(items.existsById(otherItem.getCartItemId()));
+        assertThrows(NoSuchElementException.class, () -> service.synchronizeStock(Long.MAX_VALUE));
+    }
+
+    @Test
+    void readDoesNotCreateCartAndFirstAddCreatesCart() {
         Long id = customer("without-cart").getCustomerId();
         assertThrows(NoSuchElementException.class, () -> service.getCartByCustomerId(id));
-        assertThrows(NoSuchElementException.class, () -> service.addItemToCart(id, firstProduct.getProductId(), 1));
         assertEquals(2, carts.count());
+        var item = service.addItemToCart(id, firstProduct.getProductId(), 1);
+        assertEquals(1, item.getQuantity());
+        assertEquals(3, carts.count());
+        assertEquals(item.getCartItemId(), service.getCartByCustomerId(id).getItems().getFirst().getCartItemId());
     }
 
     @Test

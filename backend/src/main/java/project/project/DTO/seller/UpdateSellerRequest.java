@@ -6,19 +6,19 @@ import jakarta.validation.constraints.Size;
 
 public class UpdateSellerRequest {
 
-    @Size(max = 100, message = "ชื่อร้านค้าต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+    @Size(max = 100, message = "Shop name must not exceed 100 characters")
     private String shopName;
 
     private String shopDescription;
 
-    @Pattern(regexp = "^[0-9]{9,15}$", message = "เบอร์โทรศัพท์ร้านค้าต้องเป็นตัวเลขความยาว 9-15 หลัก")
+    @Pattern(regexp = "^[0-9]{9,15}$", message = "Shop phone number must contain 9-15 digits")
     private String shopPhone;
 
-    @Email(message = "รูปแบบ Email ร้านค้าไม่ถูกต้อง")
-    @Size(max = 100, message = "Email ร้านค้าต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+    @Email(message = "Invalid shop email format")
+    @Size(max = 100, message = "Shop email must not exceed 100 characters")
     private String shopEmail;
 
-    @Size(max = 255, message = "ที่อยู่ร้านค้าต้องมีความยาวไม่เกิน 255 ตัวอักษร")
+    @Size(max = 255, message = "Shop address must not exceed 255 characters")
     private String shopAddress;
 
     public UpdateSellerRequest() {

@@ -8,61 +8,61 @@ import project.project.DTO.auth.AuthRequests;
 
 public class CreateSellerRequest {
 
-    @NotBlank(message = "Username ห้ามว่าง")
-    @Size(min = 3, max = 50, message = "Username ต้องมีความยาวระหว่าง 3 ถึง 50 ตัวอักษร")
+    @NotBlank(message = "Username is required")
+    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     private String username;
 
-    @NotBlank(message = "Email ห้ามว่าง")
-    @Email(message = "รูปแบบ Email ไม่ถูกต้อง")
-    @Size(max = 100, message = "Email ต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    @Size(max = 100, message = "Email must not exceed 100 characters")
     private String email;
 
-    @NotBlank(message = "Password ห้ามว่าง")
-    @Size(min = 6, message = "Password ต้องมีความยาวอย่างน้อย 6 ตัวอักษร")
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must contain at least 6 characters")
     private String password;
 
-    @NotBlank(message = "ชื่อร้านค้าห้ามว่าง")
-    @Size(max = 100, message = "ชื่อร้านค้าต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+    @NotBlank(message = "Shop name is required")
+    @Size(max = 100, message = "Shop name must not exceed 100 characters")
     private String shopName;
 
-    @NotBlank(message = "รายละเอียดร้านค้าห้ามว่าง")
+    @NotBlank(message = "Shop description is required")
     private String shopDescription;
 
-    @NotBlank(message = "เบอร์โทรศัพท์ร้านค้าห้ามว่าง")
-    @Pattern(regexp = "^[0-9]{9,15}$", message = "เบอร์โทรศัพท์ร้านค้าต้องเป็นตัวเลขความยาว 9-15 หลัก")
+    @NotBlank(message = "Shop phone number is required")
+    @Pattern(regexp = "^[0-9]{9,15}$", message = "Shop phone number must contain 9-15 digits")
     private String shopPhone;
 
-    @NotBlank(message = "Email ร้านค้าห้ามว่าง")
-    @Email(message = "รูปแบบ Email ร้านค้าไม่ถูกต้อง")
-    @Size(max = 100, message = "Email ร้านค้าต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+    @NotBlank(message = "Shop email is required")
+    @Email(message = "Invalid shop email format")
+    @Size(max = 100, message = "Shop email must not exceed 100 characters")
     private String shopEmail;
 
-    @NotBlank(message = "ที่อยู่ร้านค้าห้ามว่าง")
-    @Size(max = 255, message = "ที่อยู่ร้านค้าต้องมีความยาวไม่เกิน 255 ตัวอักษร")
+    @NotBlank(message = "Shop address is required")
+    @Size(max = 255, message = "Shop address must not exceed 255 characters")
     private String shopAddress;
 
-    @NotBlank(message = "ชื่อจริงผู้ขายห้ามว่าง")
-    @Size(max = 100, message = "ชื่อจริงผู้ขายต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+    @NotBlank(message = "Seller first name is required")
+    @Size(max = 100, message = "Seller first name must not exceed 100 characters")
     private String sellerFirstName;
 
-    @NotBlank(message = "นามสกุลจริงผู้ขายห้ามว่าง")
-    @Size(max = 100, message = "นามสกุลจริงผู้ขายต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+    @NotBlank(message = "Seller last name is required")
+    @Size(max = 100, message = "Seller last name must not exceed 100 characters")
     private String sellerLastName;
 
-    @NotBlank(message = "เลขบัตรประชาชนห้ามว่าง")
-    @Pattern(regexp = "^[0-9]{13}$", message = "เลขประจำตัวประชาชนต้องเป็นตัวเลข 13 หลัก")
+    @NotBlank(message = "National ID number is required")
+    @Pattern(regexp = "^[0-9]{13}$", message = "National ID number must contain 13 digits")
     private String idCardNumber;
 
-    @NotBlank(message = "ชื่อธนาคารห้ามว่าง")
-    @Size(max = 100, message = "ชื่อธนาคารต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+    @NotBlank(message = "Bank name is required")
+    @Size(max = 100, message = "Bank name must not exceed 100 characters")
     private String bankName;
 
-    @NotBlank(message = "ชื่อบัญชีธนาคารห้ามว่าง")
-    @Size(max = 100, message = "ชื่อบัญชีธนาคารต้องมีความยาวไม่เกิน 100 ตัวอักษร")
+    @NotBlank(message = "Bank account name is required")
+    @Size(max = 100, message = "Bank account name must not exceed 100 characters")
     private String bankAccountName;
 
-    @NotBlank(message = "เลขที่บัญชีธนาคารห้ามว่าง")
-    @Pattern(regexp = "^[0-9]{10,15}$", message = "เลขที่บัญชีต้องเป็นตัวเลข 10-15 หลัก")
+    @NotBlank(message = "Bank account number is required")
+    @Pattern(regexp = "^[0-9]{10,15}$", message = "Bank account number must contain 10-15 digits")
     private String bankAccountNumber;
 
     private String idCardImageUrl;

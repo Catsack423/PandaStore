@@ -23,7 +23,7 @@ Thumbs.db
 *.iml
 *.ipr
 out/
-
+tsconfig.json
 # Visual Studio Code
 .vscode/
 *.code-workspace
@@ -95,3 +95,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
+# Temporary comparison and excel files
+frontend-develop/
+*.xlsx
+
+
+AGENTS.md
+CLAUDE.md

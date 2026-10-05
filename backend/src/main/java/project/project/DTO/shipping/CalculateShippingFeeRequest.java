@@ -10,7 +10,7 @@ public class CalculateShippingFeeRequest {
 
     private Long sellerId;
 
-    @NotBlank(message = "กรุณาระบุวิธีจัดส่ง")
+    @NotBlank(message = "Please specify a shipping method")
     private String shippingMethod;
 
     private Long addressId;
