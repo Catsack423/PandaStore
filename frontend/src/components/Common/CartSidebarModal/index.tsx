@@ -91,9 +91,9 @@ const CartSidebarModal = () => {
             <div className="flex flex-col gap-4">
               {/* <!-- cart item --> */}
               {isLoading ? <p role="status">Loading your cart…</p> : error && cartItems.length === 0 ? <p role="alert">{error}</p> : cartItems.length > 0 ? (
-                cartItems.map((item, key) => (
+                cartItems.map((item) => (
                   <SingleItem
-                    key={key}
+                    key={item.id}
                     item={item}
                     removeItemFromCart={removeItemFromCart} disabled={isPending}
                   />
