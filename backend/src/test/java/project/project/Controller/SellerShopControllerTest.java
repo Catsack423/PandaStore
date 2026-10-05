@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 public class SellerShopControllerTest {
+    @Mock private project.project.Security.OrderAccess access;
 
     private MockMvc mockMvc;
 
@@ -68,9 +69,9 @@ public class SellerShopControllerTest {
                 .thenThrow(new RuntimeException("ไม่พบร้านค้า sellerId: 999"));
 
         mockMvc.perform(get("/api/seller/shops/{sellerId}", sellerId))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("ไม่พบร้านค้า sellerId: 999"));
+                .andExpect(jsonPath("$.message").value("เกิดข้อผิดพลาดภายในระบบ กรุณาลองใหม่ภายหลัง"));
     }
 
     @Test

@@ -65,7 +65,7 @@ public class CartServiceImp implements CartService {
         Cart cart = createCart(customerId);
         Product product = products.getProductById(productId);
         if (product == null) throw new NoSuchElementException("Product not found");
-        product.getImages().size();
+        org.hibernate.Hibernate.initialize(product.getImages());
         CartItem existing = cart.getItems().stream()
                 .filter(item -> item.getProduct().getProductId().equals(productId))
                 .findFirst().orElse(null);
@@ -178,7 +178,7 @@ public class CartServiceImp implements CartService {
     }
 
     private void initializeProductImages(Cart cart) {
-        cart.getItems().forEach(item -> item.getProduct().getImages().size());
+        cart.getItems().forEach(item -> org.hibernate.Hibernate.initialize(item.getProduct().getImages()));
     }
 
     private CartItem findOwnedItem(Cart cart, Long cartItemId) {

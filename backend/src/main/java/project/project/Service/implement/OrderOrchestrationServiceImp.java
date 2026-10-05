@@ -264,7 +264,7 @@ public class OrderOrchestrationServiceImp implements OrderOrchestrationService {
         // โหลด collection อีกระดับใน transaction
         // ไม่ fetch สอง List พร้อมกันใน EntityGraph เดียว
         for (Order order : group.getSubOrders()) {
-            order.getOrderItems().size();
+            org.hibernate.Hibernate.initialize(order.getOrderItems());
         }
 
         return group;

@@ -32,15 +32,17 @@ public class SellerServiceImp implements SellerService {
     private final SellerRepository sellerRepository;
     private final SellerApplicationService sellerApplicationService;
     private final SellerBankAccountRepository sellerBankAccountRepository;
+    private final PasswordService passwords;
 
     public SellerServiceImp(UserRepository userRepository,
                             SellerRepository sellerRepository,
                             SellerApplicationService sellerApplicationService,
-                            SellerBankAccountRepository sellerBankAccountRepository) {
+                            SellerBankAccountRepository sellerBankAccountRepository, PasswordService passwords) {
         this.userRepository = userRepository;
         this.sellerRepository = sellerRepository;
         this.sellerApplicationService = sellerApplicationService;
         this.sellerBankAccountRepository = sellerBankAccountRepository;
+        this.passwords = passwords;
     }
 
     @Override
@@ -58,8 +60,8 @@ public class SellerServiceImp implements SellerService {
         User user = new User(
                 request.getUsername(),
                 request.getEmail(),
-                request.getPassword(),
-                UserRole.SELLER,
+                passwords.hash(request.getPassword()),
+                UserRole.CUSTOMER,
                 UserStatus.ACTIVE);
 
         User savedUser;
@@ -71,6 +73,9 @@ public class SellerServiceImp implements SellerService {
             throw new UserCreationException("บันทึกข้อมูล User ไม่สำเร็จ", e);
         }
 
+        // Submit before creating the pending shop: application submission rejects existing sellers.
+        sellerApplicationService.submitApplication(savedUser.getUserId(), request.toSellerApplicationRequest());
+        savedUser.setRole(UserRole.SELLER);
         Seller seller = new Seller();
         seller.setUser(savedUser);
         seller.setShopName(request.getShopName());
@@ -91,8 +96,6 @@ public class SellerServiceImp implements SellerService {
         }
 
         try {
-            sellerApplicationService.submitApplication(savedUser.getUserId(), request.toSellerApplicationRequest());
-
             SellerBankAccount bankAccount = new SellerBankAccount();
             bankAccount.setSeller(savedSeller);
             bankAccount.setBankName(request.getBankName());

@@ -17,9 +17,11 @@ import project.project.Service.api.SellerShopService;
 public class SellerShopController {
 
     private final SellerShopService sellerShopService;
+    private final project.project.Security.OrderAccess access;
 
-    public SellerShopController(SellerShopService sellerShopService) {
+    public SellerShopController(SellerShopService sellerShopService, project.project.Security.OrderAccess access) {
         this.sellerShopService = sellerShopService;
+        this.access = access;
     }
 
     @GetMapping("/{sellerId}")
@@ -38,6 +40,7 @@ public class SellerShopController {
     public ResponseEntity<ApiResponse<SellerShopResponse>> updateShopProfile(
             @PathVariable Long sellerId,
             @Valid @RequestBody UpdateShopProfileRequest request) {
+        access.requireSeller(sellerId);
 
         Seller updatedInfo = new Seller();
         updatedInfo.setShopName(request.getShopName());
@@ -54,6 +57,7 @@ public class SellerShopController {
     public ResponseEntity<ApiResponse<SellerBankAccountResponse>> updateBankAccount(
             @PathVariable Long sellerId,
             @Valid @RequestBody SellerBankAccountRequest request) {
+        access.requireSeller(sellerId);
 
         SellerBankAccount bankAccount = new SellerBankAccount();
         bankAccount.setBankName(request.getBankName());
@@ -74,6 +78,7 @@ public class SellerShopController {
 
     @GetMapping("/{sellerId}/bank-account")
     public ResponseEntity<ApiResponse<SellerBankAccountResponse>> getBankAccountBySellerId(@PathVariable Long sellerId) {
+        access.requireShopRead(sellerId);
         SellerBankAccount account = sellerShopService.getBankAccountBySellerId(sellerId);
         return ResponseEntity.ok(ApiResponse.success("ดึงข้อมูลบัญชีธนาคารสำเร็จ", SellerBankAccountResponse.fromEntity(account)));
     }

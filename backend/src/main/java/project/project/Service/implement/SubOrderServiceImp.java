@@ -20,6 +20,7 @@ import java.util.List;
 
 @Service
 public class SubOrderServiceImp implements SubOrderService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SubOrderServiceImp.class);
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
@@ -115,6 +116,7 @@ public class SubOrderServiceImp implements SubOrderService {
                     project.project.Entity.notification.NotificationType.NEW_ORDER_FOR_SELLER);
         } catch (Exception e) {
             // ไม่ให้ Notification error กระทบ business logic หลัก
+            log.warn("Order notification could not be delivered", e);
         }
     }
 
@@ -180,6 +182,7 @@ public class SubOrderServiceImp implements SubOrderService {
                     project.project.Entity.notification.NotificationType.PAYMENT_SUCCESS);
         } catch (Exception e) {
             // ไม่ให้ Notification error กระทบ business logic หลัก
+            log.warn("Order notification could not be delivered", e);
         }
     }
 
@@ -311,6 +314,7 @@ public class SubOrderServiceImp implements SubOrderService {
                     project.project.Entity.notification.NotificationType.NEW_ORDER_FOR_SELLER);
         } catch (Exception e) {
             // Notification error does not block transaction
+            log.warn("Order notification could not be delivered", e);
         }
     }
 

@@ -8,6 +8,7 @@ import project.project.ApiResponse.ApiResponse;
 import project.project.Config.TestDataInitializer;
 
 @RestController
+@org.springframework.context.annotation.Profile("test-support")
 @RequestMapping("/api/test")
 public class TestSupportController {
 

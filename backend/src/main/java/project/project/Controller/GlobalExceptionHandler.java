@@ -92,8 +92,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(
             RuntimeException ex) {
 
-        log.warn("Runtime exception: {}", ex.getMessage());
-        return error(HttpStatus.BAD_REQUEST, ex.getMessage());
+        log.error("Unexpected runtime exception", ex);
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, INTERNAL_ERROR_MESSAGE);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

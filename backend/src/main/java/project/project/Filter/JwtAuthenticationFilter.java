@@ -129,7 +129,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(json.writeValueAsString(
-                ApiResponse.error("กรุณาเข้าสู่ระบบ โทเคนไม่ถูกต้องหรือหมดอายุ", null)));
+        json.writeValue(response.getOutputStream(),
+                ApiResponse.error("กรุณาเข้าสู่ระบบ โทเคนไม่ถูกต้องหรือหมดอายุ", null));
     }
 }

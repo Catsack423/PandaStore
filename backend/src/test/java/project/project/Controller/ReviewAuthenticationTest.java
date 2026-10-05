@@ -31,7 +31,7 @@ class ReviewAuthenticationTest {
 
     @BeforeEach
     void setUp() {
-        ReviewController controller = new ReviewController(reviews, currentUser);
+        ReviewController controller = new ReviewController(reviews, currentUser, mock(project.project.Security.OrderAccess.class));
         JwtAuthenticationFilter filter = new JwtAuthenticationFilter(authenticator, new JsonMapper());
         mvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())

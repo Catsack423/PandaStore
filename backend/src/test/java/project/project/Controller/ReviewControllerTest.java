@@ -32,6 +32,7 @@ import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 public class ReviewControllerTest {
+    @Mock private project.project.Security.OrderAccess access;
 
     private MockMvc mockMvc;
 

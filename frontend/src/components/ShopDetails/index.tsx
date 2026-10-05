@@ -643,7 +643,7 @@ const ShopDetails = () => {
 
                   <div className="max-w-[447px] w-full">
                     <h2 className="font-medium text-2xl text-dark mb-7">
-                      Care & Maintenance:
+                      Care &amp; Maintenance:
                     </h2>
 
                     <p className="mb-6">

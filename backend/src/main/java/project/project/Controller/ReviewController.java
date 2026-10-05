@@ -21,10 +21,12 @@ public class ReviewController {
 
     private final ReviewService reviewService;
     private final CurrentUser currentUser;
+    private final project.project.Security.OrderAccess access;
 
-    public ReviewController(ReviewService reviewService, CurrentUser currentUser) {
+    public ReviewController(ReviewService reviewService, CurrentUser currentUser, project.project.Security.OrderAccess access) {
         this.reviewService = reviewService;
         this.currentUser = currentUser;
+        this.access = access;
     }
 
     @PostMapping
@@ -60,6 +62,7 @@ public class ReviewController {
             @PathVariable Long reviewId,
             @RequestParam Long sellerId,
             @Valid @RequestBody ReplyReviewRequest request) {
+        access.requireSeller(sellerId);
         reviewService.replyReview(sellerId, reviewId, request.getReplyMessage());
         return ResponseEntity.ok(ApiResponse.success("ตอบกลับรีวิวสำเร็จ", null));
     }

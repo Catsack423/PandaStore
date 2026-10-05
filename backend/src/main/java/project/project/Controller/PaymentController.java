@@ -11,18 +11,20 @@ import project.project.Service.api.PaymentService;
 
 @RestController
 @RequestMapping("/api/payments")
-@CrossOrigin(origins = "*")
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final project.project.Security.OrderAccess access;
 
-    public PaymentController(PaymentService paymentService) {
+    public PaymentController(PaymentService paymentService, project.project.Security.OrderAccess access) {
         this.paymentService = paymentService;
+        this.access = access;
     }
 
     @PostMapping("/initiate")
     public ResponseEntity<ApiResponse<PaymentResponse>> initiatePayment(
             @Valid @RequestBody InitiatePaymentRequest request) {
+        access.requireGroupRead(request.getOrderGroupId());
         Payment payment = paymentService.initiatePayment(
                 request.getOrderGroupId(),
                 request.getPaymentMethod(),
@@ -35,6 +37,7 @@ public class PaymentController {
     @PostMapping("/callback")
     public ResponseEntity<ApiResponse<PaymentResponse>> handleGatewayCallback(
             @Valid @RequestBody PaymentCallbackRequest request) {
+        access.requireAdmin();
         String txnId = resolveGatewayTransactionId(request);
         boolean isSuccess = request.getIsSuccess() != null ? request.getIsSuccess() : true;
 
@@ -48,7 +51,8 @@ public class PaymentController {
 
     @PostMapping("/simulate")
     public ResponseEntity<ApiResponse<PaymentResponse>> simulatePayment(
-            @RequestBody PaymentCallbackRequest request) {
+            @Valid @RequestBody PaymentCallbackRequest request) {
+        access.requireAdmin();
         String txnId = resolveGatewayTransactionId(request);
         boolean isSuccess = request.getIsSuccess() != null ? request.getIsSuccess() : true;
 
@@ -64,6 +68,7 @@ public class PaymentController {
     @PostMapping("/refund/partial")
     public ResponseEntity<ApiResponse<Void>> processPartialRefund(
             @Valid @RequestBody PartialRefundRequest request) {
+        access.requireAdmin();
         paymentService.processPartialRefund(request.getOrderId(), request.getRefundAmount(), request.getReason());
         return ResponseEntity.ok(ApiResponse.success("ดำเนินการคืนเงินบางส่วนสำเร็จ", null));
     }
@@ -71,12 +76,14 @@ public class PaymentController {
     @PostMapping("/refund/full")
     public ResponseEntity<ApiResponse<Void>> processFullRefund(
             @Valid @RequestBody FullRefundRequest request) {
+        access.requireAdmin();
         paymentService.processFullRefund(request.getOrderGroupId(), request.getReason());
         return ResponseEntity.ok(ApiResponse.success("ดำเนินการคืนเงินเต็มจำนวนสำเร็จ", null));
     }
 
     @GetMapping("/order-group/{orderGroupId}")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentByOrderGroupId(@PathVariable Long orderGroupId) {
+        access.requireGroupRead(orderGroupId);
         Payment payment = paymentService.getPaymentByOrderGroupId(orderGroupId);
         return ResponseEntity.ok(ApiResponse.success("ดึงข้อมูลการชำระเงินสำเร็จ", PaymentResponse.fromEntity(payment)));
     }
@@ -84,6 +91,7 @@ public class PaymentController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentById(@PathVariable Long id) {
         Payment payment = paymentService.getPaymentById(id);
+        access.requireGroupRead(payment.getOrderGroup().getOrderGroupId());
         return ResponseEntity.ok(ApiResponse.success("ดึงข้อมูลการชำระเงินสำเร็จ", PaymentResponse.fromEntity(payment)));
     }
 

@@ -38,6 +38,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 public class CustomerServiceTest {
+    @org.mockito.Spy
+    private project.project.Service.implement.PasswordService passwords = new project.project.Service.implement.PasswordService();
     @InjectMocks
     private CustomerServiceImp customerService;
 

@@ -106,7 +106,7 @@ public class AuthController {
 
     @PutMapping("/me")
     public ResponseEntity<ApiResponse<CurrentUserResponse>> updateProfile(
-            @RequestBody AuthRequests.UpdateProfile request) {
+            @Valid @RequestBody AuthRequests.UpdateProfile request) {
         var user = currentUser.requireUser();
         if (request.email() != null && !request.email().isBlank() && userRepository != null) {
             user.setEmail(request.email().trim());

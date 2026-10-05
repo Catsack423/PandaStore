@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 public class PaymentControllerTest {
+    @Mock private project.project.Security.OrderAccess access;
 
     private MockMvc mockMvc;
 
@@ -317,6 +318,9 @@ public class PaymentControllerTest {
     void getPaymentById_Success() throws Exception {
         Long paymentId = 1L;
         Payment payment = new Payment();
+        OrderGroup group = new OrderGroup();
+        group.setOrderGroupId(100L);
+        payment.setOrderGroup(group);
         payment.setPaymentId(paymentId);
         payment.setPaymentMethod(PaymentMethod.CREDIT_CARD);
         payment.setAmount(new BigDecimal("1200.00"));
