@@ -26,7 +26,6 @@ jobs:
     env:
       FE_URL: http://localhost:3000
       BE_URL: http://localhost:8080
-      MAVEN_ARGS: -DdataDirectory=${{ runner.temp }}/dependency-check-data
       SEMGREP_VERSION: 1.179.0
       GITLEAKS_VERSION: 8.30.1
 
@@ -36,6 +35,10 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Configure the Dependency-Check data directory
+        run: |
+          printf 'MAVEN_ARGS=-DdataDirectory=%s/dependency-check-data\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
 
       - name: Require the NVD API key
         env:
