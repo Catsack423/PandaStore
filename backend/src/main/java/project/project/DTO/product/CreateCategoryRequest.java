@@ -4,9 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record CreateCategoryRequest(
-        @NotBlank(message = "ชื่อหมวดหมู่ห้ามว่าง")
-        @Size(max = 100, message = "ชื่อหมวดหมู่ต้องไม่เกิน 100 ตัวอักษร")
+        @NotBlank(message = "Category name is required")
+        @Size(max = 100, message = "Category name must not exceed 100 characters")
         String categoryName,
-        @Size(max = 255, message = "คำอธิบายต้องไม่เกิน 255 ตัวอักษร")
+        @Size(max = 255, message = "Description must not exceed 255 characters")
         String description) {
 }

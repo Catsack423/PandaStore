@@ -31,7 +31,7 @@ public class PaymentController {
                 request.getAmount()
         );
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("เริ่มทำรายการชำระเงินสำเร็จ", PaymentResponse.fromEntity(payment)));
+                .body(ApiResponse.success("Payment initiated successfully", PaymentResponse.fromEntity(payment)));
     }
 
     @PostMapping("/callback")
@@ -46,7 +46,7 @@ public class PaymentController {
                 ? paymentService.getPaymentByOrderGroupId(request.getOrderGroupId())
                 : paymentService.getPaymentByGatewayTransactionId(txnId);
 
-        return ResponseEntity.ok(ApiResponse.success("ประมวลผลผลการชำระเงินสำเร็จ", PaymentResponse.fromEntity(updatedPayment)));
+        return ResponseEntity.ok(ApiResponse.success("Payment result processed successfully", PaymentResponse.fromEntity(updatedPayment)));
     }
 
     @PostMapping("/simulate")
@@ -61,7 +61,7 @@ public class PaymentController {
                 ? paymentService.getPaymentByOrderGroupId(request.getOrderGroupId())
                 : paymentService.getPaymentByGatewayTransactionId(txnId);
 
-        String msg = isSuccess ? "จำลองการชำระเงินสำเร็จ (PAID)" : "จำลองการชำระเงินล้มเหลว (FAILED)";
+        String msg = isSuccess ? "Payment simulation successful (PAID)" : "Payment simulation failed (FAILED)";
         return ResponseEntity.ok(ApiResponse.success(msg, PaymentResponse.fromEntity(updatedPayment)));
     }
 
@@ -70,7 +70,7 @@ public class PaymentController {
             @Valid @RequestBody PartialRefundRequest request) {
         access.requireAdmin();
         paymentService.processPartialRefund(request.getOrderId(), request.getRefundAmount(), request.getReason());
-        return ResponseEntity.ok(ApiResponse.success("ดำเนินการคืนเงินบางส่วนสำเร็จ", null));
+        return ResponseEntity.ok(ApiResponse.success("Partial refund completed successfully", null));
     }
 
     @PostMapping("/refund/full")
@@ -78,21 +78,21 @@ public class PaymentController {
             @Valid @RequestBody FullRefundRequest request) {
         access.requireAdmin();
         paymentService.processFullRefund(request.getOrderGroupId(), request.getReason());
-        return ResponseEntity.ok(ApiResponse.success("ดำเนินการคืนเงินเต็มจำนวนสำเร็จ", null));
+        return ResponseEntity.ok(ApiResponse.success("Full refund completed successfully", null));
     }
 
     @GetMapping("/order-group/{orderGroupId}")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentByOrderGroupId(@PathVariable Long orderGroupId) {
         access.requireGroupRead(orderGroupId);
         Payment payment = paymentService.getPaymentByOrderGroupId(orderGroupId);
-        return ResponseEntity.ok(ApiResponse.success("ดึงข้อมูลการชำระเงินสำเร็จ", PaymentResponse.fromEntity(payment)));
+        return ResponseEntity.ok(ApiResponse.success("Payment retrieved successfully", PaymentResponse.fromEntity(payment)));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentById(@PathVariable Long id) {
         Payment payment = paymentService.getPaymentById(id);
         access.requireGroupRead(payment.getOrderGroup().getOrderGroupId());
-        return ResponseEntity.ok(ApiResponse.success("ดึงข้อมูลการชำระเงินสำเร็จ", PaymentResponse.fromEntity(payment)));
+        return ResponseEntity.ok(ApiResponse.success("Payment retrieved successfully", PaymentResponse.fromEntity(payment)));
     }
 
     private String resolveGatewayTransactionId(PaymentCallbackRequest request) {
@@ -103,6 +103,6 @@ public class PaymentController {
             Payment payment = paymentService.getPaymentByOrderGroupId(request.getOrderGroupId());
             return payment.getGatewayTransactionId();
         }
-        throw new IllegalArgumentException("ต้องระบุ gatewayTransactionId หรือ orderGroupId อย่างใดอย่างหนึ่ง");
+        throw new IllegalArgumentException("Specify either gatewayTransactionId or orderGroupId");
     }
 }

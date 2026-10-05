@@ -130,6 +130,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
         json.writeValue(response.getOutputStream(),
-                ApiResponse.error("กรุณาเข้าสู่ระบบ โทเคนไม่ถูกต้องหรือหมดอายุ", null));
+                ApiResponse.error("Please log in. Your token is invalid or expired", null));
     }
 }

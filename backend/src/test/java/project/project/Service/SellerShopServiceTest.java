@@ -60,7 +60,7 @@ public class SellerShopServiceTest {
             sellerShopService.getShopBySellerId(sellerId);
         });
 
-        assertTrue(exception.getMessage().contains("ไม่พบร้านค้า sellerId: 999"));
+        assertTrue(exception.getMessage().contains("Shop not found for sellerId: 999"));
         verify(sellerRepository, times(1)).findById(sellerId);
     }
 
@@ -142,7 +142,7 @@ public class SellerShopServiceTest {
             sellerShopService.updateShopProfile(sellerId, updateInfo);
         });
 
-        assertTrue(ex.getMessage().contains("ไม่สามารถแก้ไขร้านค้าที่มีสถานะ"));
+        assertTrue(ex.getMessage().contains("Cannot update a shop with status"));
         verify(sellerRepository, never()).save(any());
     }
 

@@ -36,12 +36,12 @@ public class SellerApplicationController {
         currentUser.requireCustomerId();
         SellerApplication saved = sellerApplicationService.submitApplication(currentUser.getCurrentUserId(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("ยื่นคำขอเปิดร้านค้าสำเร็จ", SellerApplicationResponse.fromEntity(saved)));
+                .body(ApiResponse.success("Seller application submitted successfully", SellerApplicationResponse.fromEntity(saved)));
     }
 
     @GetMapping("/mine")
     public ResponseEntity<ApiResponse<List<SellerApplicationResponse>>> getMyApplications() {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(ApiResponse.success("ดึงรายการใบสมัครของฉันสำเร็จ",
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(ApiResponse.success("Your applications retrieved successfully",
                 sellerApplicationService.getApplicationsForUser(currentUser.getCurrentUserId())));
     }
 
@@ -50,27 +50,27 @@ public class SellerApplicationController {
         SellerApplicationResponse response = sellerApplicationService.getApplicationResponseById(id);
         var identity = currentUser.requireIdentity();
         if (identity.role() != UserRole.ADMIN && (response.getUserId() == null || identity.userId() != response.getUserId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "ไม่มีสิทธิ์ดูใบสมัครนี้");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to view this application");
         }
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(ApiResponse.success("ดึงข้อมูลใบสมัครสำเร็จ", response));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(ApiResponse.success("Application retrieved successfully", response));
     }
 
     @GetMapping("/pending")
     public ResponseEntity<ApiResponse<List<SellerApplicationResponse>>> getPendingApplications() {
         List<SellerApplicationResponse> responses = sellerApplicationService.getPendingApplicationResponses();
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(ApiResponse.success("ดึงรายการใบสมัครที่รอตรวจสอบสำเร็จ", responses));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(ApiResponse.success("Pending applications retrieved successfully", responses));
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<SellerApplicationResponse>>> getAllApplications() {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(ApiResponse.success("ดึงประวัติใบสมัครทั้งหมดสำเร็จ",
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(ApiResponse.success("Application history retrieved successfully",
                 sellerApplicationService.getAllApplicationResponses()));
     }
 
     @PutMapping("/{id}/approve")
     public ResponseEntity<ApiResponse<Void>> approveApplication(@PathVariable Long id) {
         sellerApplicationService.approveApplication(id, currentUser.getCurrentUserId());
-        return ResponseEntity.ok(ApiResponse.success("อนุมัติคำขอเปิดร้านค้าสำเร็จ", null));
+        return ResponseEntity.ok(ApiResponse.success("Seller application approved successfully", null));
     }
 
     @PutMapping("/{id}/reject")
@@ -78,7 +78,7 @@ public class SellerApplicationController {
             @PathVariable Long id,
             @Valid @RequestBody RejectApplicationRequest request) {
         sellerApplicationService.rejectApplication(id, currentUser.getCurrentUserId(), request.getReason());
-        return ResponseEntity.ok(ApiResponse.success("ปฏิเสธคำขอเปิดร้านค้าสำเร็จ", null));
+        return ResponseEntity.ok(ApiResponse.success("Seller application rejected successfully", null));
     }
 
     @PutMapping("/{id}/request-docs")
@@ -86,6 +86,6 @@ public class SellerApplicationController {
             @PathVariable Long id,
             @Valid @RequestBody RequestMoreDocumentsRequest request) {
         sellerApplicationService.requestMoreDocuments(id, currentUser.getCurrentUserId(), request.getMessage());
-        return ResponseEntity.ok(ApiResponse.success("ส่งคำขอเอกสารเพิ่มเติมสำเร็จ", null));
+        return ResponseEntity.ok(ApiResponse.success("Additional documents requested successfully", null));
     }
 }

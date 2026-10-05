@@ -58,7 +58,7 @@ public class AuthController {
         var customer = auth.registerCustomer(request.username(), request.email(), request.password(),
                 request.confirmPassword(), request.fullName(), request.phoneNumber());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("สมัครสมาชิกสำเร็จ", CustomerResponse.fromEntity(customer)));
+                .body(ApiResponse.success("Registration successful", CustomerResponse.fromEntity(customer)));
     }
 
     @PostMapping("/register/seller")
@@ -66,16 +66,16 @@ public class AuthController {
             @Valid @RequestBody AuthRequests.RegisterSeller request) {
         var seller = auth.registerSeller(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("สมัครผู้ขายสำเร็จ", Map.of("sellerId", seller.getSellerId())));
+                .body(ApiResponse.success("Seller registration successful", Map.of("sellerId", seller.getSellerId())));
     }
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody AuthRequests.Login request) {
         try {
-            return ApiResponse.success("เข้าสู่ระบบสำเร็จ",
+            return ApiResponse.success("Login successful",
                     auth.loginWithUser(request.usernameOrEmail(), request.password()));
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
     }
 
@@ -100,7 +100,7 @@ public class AuthController {
             fullName = user.getUsername();
         }
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
-                .body(ApiResponse.success("ดึงข้อมูลผู้ใช้ปัจจุบันสำเร็จ",
+                .body(ApiResponse.success("Current user retrieved successfully",
                         CurrentUserResponse.from(user, fullName, phoneNumber)));
     }
 
@@ -151,14 +151,14 @@ public class AuthController {
             fullName = user.getUsername();
         }
         return ResponseEntity.ok()
-                .body(ApiResponse.success("อัปเดตข้อมูลผู้ใช้สำเร็จ",
+                .body(ApiResponse.success("User profile updated successfully",
                         CurrentUserResponse.from(user, fullName, phoneNumber)));
     }
 
     @GetMapping("/token")
     public ApiResponse<Map<String, Boolean>> validateToken(
             @RequestHeader(value = "Authorization", required = false) String authorization) {
-        return ApiResponse.success("ตรวจสอบโทเคนสำเร็จ",
+        return ApiResponse.success("Token verified successfully",
                 Map.of("valid", auth.validateToken(project.project.Security.BearerTokens.requireToken(authorization))));
     }
 
@@ -168,10 +168,10 @@ public class AuthController {
         // The bearer token identifies this session, not every login belonging to the
         // user.
         if (!auth.logout(BearerTokens.requireToken(authorization))) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "โทเคนไม่ถูกต้องหรือหมดอายุ");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
         }
         SecurityContextHolder.clearContext();
-        return ApiResponse.success("ออกจากระบบสำเร็จ", null);
+        return ApiResponse.success("Logout successful", null);
     }
 
     @PostMapping("/reset-password")
@@ -179,13 +179,13 @@ public class AuthController {
             @Valid @RequestBody AuthRequests.ResetPassword request) {
         var user = currentUser.requireUser();
         if (!passwords.matches(request.currentPassword(), user.getPasswordHash())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "รหัสผ่านเดิมไม่ถูกต้อง");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect current password");
         }
         if (!auth.resetPassword(user.getUserId(), request.password(), request.confirmPassword())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "รหัสผ่านใหม่ไม่ถูกต้องหรือไม่ตรงกัน");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password is invalid or does not match");
         }
         var newSession = auth.loginWithUser(user.getUsername(), request.password());
-        return ApiResponse.success("เปลี่ยนรหัสผ่านสำเร็จ", Map.of(
+        return ApiResponse.success("Password changed successfully", Map.of(
                 "success", true,
                 "token", newSession.token(),
                 "user", newSession.user()

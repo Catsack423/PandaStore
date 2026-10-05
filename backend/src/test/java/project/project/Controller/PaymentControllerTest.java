@@ -171,7 +171,7 @@ public class PaymentControllerTest {
                         .content(simulateJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("จำลองการชำระเงินสำเร็จ (PAID)"));
+                .andExpect(jsonPath("$.message").value("Payment simulation successful (PAID)"));
     }
 
     @Test
@@ -202,7 +202,7 @@ public class PaymentControllerTest {
                         .content(simulateJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("จำลองการชำระเงินล้มเหลว (FAILED)"));
+                .andExpect(jsonPath("$.message").value("Payment simulation failed (FAILED)"));
     }
 
     @Test
@@ -224,7 +224,7 @@ public class PaymentControllerTest {
                         .content(refundJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("ดำเนินการคืนเงินบางส่วนสำเร็จ"));
+                .andExpect(jsonPath("$.message").value("Partial refund completed successfully"));
     }
 
     @Test
@@ -266,7 +266,7 @@ public class PaymentControllerTest {
                         .content(refundJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("ดำเนินการคืนเงินเต็มจำนวนสำเร็จ"));
+                .andExpect(jsonPath("$.message").value("Full refund completed successfully"));
     }
 
     @Test

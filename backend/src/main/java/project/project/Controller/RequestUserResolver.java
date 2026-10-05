@@ -25,27 +25,27 @@ public class RequestUserResolver {
         if (authentication != null && authentication.isAuthenticated()
                 && authentication.getPrincipal() instanceof project.project.Security.AuthenticatedUser identity) {
             var user = userRepository.findById(identity.userId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "ไม่พบผู้ใช้ที่เข้าสู่ระบบ"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Logged-in user not found"));
             if (user.getStatus() != UserStatus.ACTIVE) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "บัญชีนี้ไม่สามารถใช้งานได้");
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This account is unavailable");
             }
             return user.getUserId();
         }
         if (principal == null) {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
-                    "กรุณาเข้าสู่ระบบ");
+                    "Please log in");
         }
 
         var user = userRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED,
-                        "ไม่พบผู้ใช้ที่เข้าสู่ระบบ"));
+                        "Logged-in user not found"));
 
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "บัญชีนี้ไม่สามารถใช้งานได้");
+                    "This account is unavailable");
         }
 
         return user.getUserId();

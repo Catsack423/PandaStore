@@ -27,13 +27,13 @@ public class SellerShopController {
     @GetMapping("/{sellerId}")
     public ResponseEntity<ApiResponse<SellerShopResponse>> getShopBySellerId(@PathVariable Long sellerId) {
         Seller seller = sellerShopService.getShopBySellerId(sellerId);
-        return ResponseEntity.ok(ApiResponse.success("ดึงข้อมูลร้านค้าสำเร็จ", SellerShopResponse.fromEntity(seller)));
+        return ResponseEntity.ok(ApiResponse.success("Shop retrieved successfully", SellerShopResponse.fromEntity(seller)));
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse<SellerShopResponse>> getShopByUserId(@PathVariable Long userId) {
         Seller seller = sellerShopService.getShopByUserId(userId);
-        return ResponseEntity.ok(ApiResponse.success("ดึงข้อมูลร้านค้าสำเร็จ", SellerShopResponse.fromEntity(seller)));
+        return ResponseEntity.ok(ApiResponse.success("Shop retrieved successfully", SellerShopResponse.fromEntity(seller)));
     }
 
     @PutMapping("/{sellerId}")
@@ -50,7 +50,7 @@ public class SellerShopController {
         updatedInfo.setShopAddress(request.getShopAddress());
 
         Seller saved = sellerShopService.updateShopProfile(sellerId, updatedInfo);
-        return ResponseEntity.ok(ApiResponse.success("อัปเดตข้อมูลร้านค้าสำเร็จ", SellerShopResponse.fromEntity(saved)));
+        return ResponseEntity.ok(ApiResponse.success("Shop updated successfully", SellerShopResponse.fromEntity(saved)));
     }
 
     @PutMapping("/{sellerId}/bank-account")
@@ -66,7 +66,7 @@ public class SellerShopController {
         bankAccount.setProofImageUrl(request.getProofImageUrl());
 
         SellerBankAccount saved = sellerShopService.addOrUpdateBankAccount(sellerId, bankAccount);
-        return ResponseEntity.ok(ApiResponse.success("บันทึกข้อมูลบัญชีธนาคารสำเร็จ", SellerBankAccountResponse.fromEntity(saved)));
+        return ResponseEntity.ok(ApiResponse.success("Bank account saved successfully", SellerBankAccountResponse.fromEntity(saved)));
     }
 
     @PostMapping("/{sellerId}/bank-account")
@@ -80,6 +80,6 @@ public class SellerShopController {
     public ResponseEntity<ApiResponse<SellerBankAccountResponse>> getBankAccountBySellerId(@PathVariable Long sellerId) {
         access.requireShopRead(sellerId);
         SellerBankAccount account = sellerShopService.getBankAccountBySellerId(sellerId);
-        return ResponseEntity.ok(ApiResponse.success("ดึงข้อมูลบัญชีธนาคารสำเร็จ", SellerBankAccountResponse.fromEntity(account)));
+        return ResponseEntity.ok(ApiResponse.success("Bank account retrieved successfully", SellerBankAccountResponse.fromEntity(account)));
     }
 }

@@ -56,11 +56,11 @@ public class SellerApplicationAdminFilter extends OncePerRequestFilter {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()
                 || !(authentication.getPrincipal() instanceof AuthenticatedUser identity)) {
-            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "กรุณาเข้าสู่ระบบ");
+            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Please log in");
             return;
         }
         if (identity.role() != UserRole.ADMIN) {
-            deny(response, HttpServletResponse.SC_FORBIDDEN, "ต้องเป็นผู้ดูแลระบบ");
+            deny(response, HttpServletResponse.SC_FORBIDDEN, "Administrator access required");
             return;
         }
         chain.doFilter(request, response);

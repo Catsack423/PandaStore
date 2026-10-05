@@ -39,50 +39,50 @@ const CustomerSignup = () => {
 
     // 1. Username
     if (!formData.username.trim()) {
-      newErrors.username = "กรุณากรอกชื่อผู้ใช้";
+      newErrors.username = "Please enter your username";
     } else if (formData.username.trim().length < 3 || formData.username.trim().length > 50) {
-      newErrors.username = "ชื่อผู้ใช้ต้องมีความยาวระหว่าง 3 ถึง 50 ตัวอักษร";
+      newErrors.username = "Username must be between 3 and 50 characters";
     }
 
     // 2. Full Name
     if (!formData.fullName.trim()) {
-      newErrors.fullName = "กรุณากรอกชื่อ-นามสกุล";
+      newErrors.fullName = "Please enter your full name";
     } else if (formData.fullName.trim().length > 100) {
-      newErrors.fullName = "ชื่อ-นามสกุลต้องมีความยาวไม่เกิน 100 ตัวอักษร";
+      newErrors.fullName = "Full name must not exceed 100 characters";
     }
 
     // 3. Email
     if (!formData.email.trim()) {
-      newErrors.email = "กรุณากรอกอีเมล";
+      newErrors.email = "Please enter your email";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
+      newErrors.email = "Invalid email format";
     } else if (formData.email.trim().length > 100) {
-      newErrors.email = "อีเมลต้องมีความยาวไม่เกิน 100 ตัวอักษร";
+      newErrors.email = "Email must not exceed 100 characters";
     }
 
     // 4. Phone Number (9-15 digits as per backend CreateCustomerRequest)
     if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = "กรุณากรอกเบอร์โทรศัพท์";
+      newErrors.phoneNumber = "Please enter your phone number";
     } else if (
       !/^[0-9]{9,15}$/.test(formData.phoneNumber.replace(/[-\s]/g, ""))
     ) {
-      newErrors.phoneNumber = "เบอร์โทรศัพท์ต้องเป็นตัวเลขความยาว 9-15 หลัก";
+      newErrors.phoneNumber = "Phone number must contain 9-15 digits";
     }
 
     // 5. Password
     if (!formData.password.trim()) {
-      newErrors.password = "กรุณากรอกรหัสผ่าน";
+      newErrors.password = "Please enter your password";
     } else if (formData.password.length < 6) {
-      newErrors.password = "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร";
+      newErrors.password = "Password must contain at least 6 characters";
     } else if (new TextEncoder().encode(formData.password).length > 72) {
-      newErrors.password = "รหัสผ่านต้องมีขนาดไม่เกิน 72 ไบต์ (ภาษาไทยใช้หลายไบต์ต่อตัวอักษร)";
+      newErrors.password = "Password must not exceed 72 bytes (Thai characters use multiple bytes)";
     }
 
     // 6. Confirm Password
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "กรุณายืนยันรหัสผ่าน";
+      newErrors.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "รหัสผ่านไม่ตรงกัน";
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     setErrors(newErrors);
@@ -158,10 +158,10 @@ const CustomerSignup = () => {
                 </svg>
               </div>
               <CardTitle className="text-2xl font-bold text-dark">
-                สมัครสมาชิกสำหรับลูกค้า
+                Create a customer account
               </CardTitle>
               <CardDescription className="text-body text-sm mt-1">
-                กรอกข้อมูลด้านล่างเพื่อเริ่มช้อปปิ้งกับ PandaStore
+                Enter your details below to start shopping with PandaStore
               </CardDescription>
             </CardHeader>
 
@@ -184,10 +184,10 @@ const CustomerSignup = () => {
                     </svg>
                   </div>
                   <h3 className="text-xl font-bold text-dark mb-2">
-                    สร้างบัญชีลูกค้าสำเร็จ!
+                    Customer account created successfully!
                   </h3>
                   <p className="text-body text-sm">
-                    กำลังนำท่านไปยังหน้าแรก...
+                    Redirecting you to the home page...
                   </p>
                 </div>
               ) : (
@@ -203,12 +203,12 @@ const CustomerSignup = () => {
 
             <CardFooter className="flex flex-col items-center gap-2 pt-2 border-t border-gray-3 mt-4">
               <p className="text-sm text-body text-center">
-                มีบัญชีอยู่แล้ว?
+                Already have an account?
                 <Link
                   href="/signin"
                   className="text-dark font-medium ease-out duration-200 hover:text-blue pl-2 underline underline-offset-4"
                 >
-                  เข้าสู่ระบบ
+                  Log in
                 </Link>
               </p>
               <Link

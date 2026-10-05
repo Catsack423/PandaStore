@@ -63,7 +63,7 @@ class CategoryControllerTest {
     @Test
     void anonymousUsersCannotCreateCategory() throws Exception {
         when(currentUser.requireIdentity()).thenThrow(
-                new ResponseStatusException(HttpStatus.UNAUTHORIZED, "กรุณาเข้าสู่ระบบ"));
+                new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please log in"));
 
         mvc.perform(post("/api/categories").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"categoryName\":\"Keyboard\"}"))
@@ -103,7 +103,7 @@ class CategoryControllerTest {
     @Test
     void missingCategoryReturnsNotFound() throws Exception {
         when(categories.getProductsByCategory(99L, 0, 20))
-                .thenThrow(new EntityNotFoundException("ไม่พบหมวดหมู่ที่ต้องการ"));
+                .thenThrow(new EntityNotFoundException("Category not found"));
 
         mvc.perform(get("/api/categories/99/products"))
                 .andExpect(status().isNotFound());
@@ -131,7 +131,7 @@ class CategoryControllerTest {
     @Test
     void anonymousUsersCannotDeleteCategory() throws Exception {
         when(currentUser.requireIdentity()).thenThrow(
-                new ResponseStatusException(HttpStatus.UNAUTHORIZED, "กรุณาเข้าสู่ระบบ"));
+                new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please log in"));
 
         mvc.perform(delete("/api/categories/3"))
                 .andExpect(status().isUnauthorized());
@@ -141,7 +141,7 @@ class CategoryControllerTest {
     @Test
     void categoryWithProductsReturnsConflict() throws Exception {
         when(currentUser.requireIdentity()).thenReturn(new AuthenticatedUser(1, UserRole.ADMIN));
-        doThrow(new IllegalStateException("ไม่สามารถลบหมวดหมู่ที่มีสินค้าอยู่"))
+        doThrow(new IllegalStateException("A category containing products cannot be deleted"))
                 .when(categories).deleteCategory(3L);
 
         mvc.perform(delete("/api/categories/3"))

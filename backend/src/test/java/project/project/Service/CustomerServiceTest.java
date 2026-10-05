@@ -205,6 +205,6 @@ public class CustomerServiceTest {
 
         // ตรวจสอบว่ามี violation เกิดขึ้นจริง
         assertFalse(violations.isEmpty());
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("Username ห้ามว่าง")));
+        assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("Username is required")));
     }
 }

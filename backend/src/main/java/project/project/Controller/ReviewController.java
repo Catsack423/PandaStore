@@ -40,7 +40,7 @@ public class ReviewController {
                 request.getComment()
         );
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("สร้างรีวิวสินค้าสำเร็จ", ReviewResponse.fromEntity(review)));
+                .body(ApiResponse.success("Product review created successfully", ReviewResponse.fromEntity(review)));
     }
 
     @PutMapping("/{reviewId}")
@@ -54,7 +54,7 @@ public class ReviewController {
                 request.getRating(),
                 request.getComment()
         );
-        return ResponseEntity.ok(ApiResponse.success("แก้ไขรีวิวสำเร็จ", ReviewResponse.fromEntity(updated)));
+        return ResponseEntity.ok(ApiResponse.success("Review updated successfully", ReviewResponse.fromEntity(updated)));
     }
 
     @PostMapping("/{reviewId}/reply")
@@ -64,7 +64,7 @@ public class ReviewController {
             @Valid @RequestBody ReplyReviewRequest request) {
         access.requireSeller(sellerId);
         reviewService.replyReview(sellerId, reviewId, request.getReplyMessage());
-        return ResponseEntity.ok(ApiResponse.success("ตอบกลับรีวิวสำเร็จ", null));
+        return ResponseEntity.ok(ApiResponse.success("Review reply submitted successfully", null));
     }
 
     @GetMapping("/product/{productId}")
@@ -73,13 +73,13 @@ public class ReviewController {
         List<ReviewResponse> responses = reviews.stream()
                 .map(ReviewResponse::fromEntity)
                 .toList();
-        return ResponseEntity.ok(ApiResponse.success("ดึงรายการรีวิวของสินค้าสำเร็จ", responses));
+        return ResponseEntity.ok(ApiResponse.success("Product reviews retrieved successfully", responses));
     }
 
     @GetMapping("/order-item/{orderItemId}")
     public ResponseEntity<ApiResponse<ReviewResponse>> getReviewByOrderItemId(@PathVariable Long orderItemId) {
         Review review = reviewService.getReviewByOrderItemId(orderItemId);
-        return ResponseEntity.ok(ApiResponse.success("ดึงข้อมูลรีวิวของรายการสั่งซื้อสำเร็จ", ReviewResponse.fromEntity(review)));
+        return ResponseEntity.ok(ApiResponse.success("Order item review retrieved successfully", ReviewResponse.fromEntity(review)));
     }
 
     @GetMapping("/check-eligibility")
@@ -87,6 +87,6 @@ public class ReviewController {
             @RequestParam Long orderItemId) {
         Long customerId = currentUser.requireCustomerId();
         boolean eligible = reviewService.isEligibleToReview(customerId, orderItemId);
-        return ResponseEntity.ok(ApiResponse.success("ตรวจสอบสิทธิ์การรีวิวสำเร็จ", eligible));
+        return ResponseEntity.ok(ApiResponse.success("Review eligibility checked successfully", eligible));
     }
 }

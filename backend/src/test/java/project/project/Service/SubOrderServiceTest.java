@@ -140,7 +140,7 @@ public class SubOrderServiceTest {
         verify(orderRepository, times(1)).save(order);
         verify(notificationService, times(1)).sendNotification(
                 eq(200L),
-                eq("ร้านค้ายืนยันคำสั่งซื้อ"),
+                eq("Shop accepted your order"),
                 contains("ORD-001"),
                 any()
         );
@@ -191,7 +191,7 @@ public class SubOrderServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> {
             subOrderService.sellerAcceptOrder(sellerId, orderId);
         });
-        assertTrue(ex.getMessage().contains("ต้องเป็น WAITING_SELLER_CONFIRM"));
+        assertTrue(ex.getMessage().contains("must be WAITING_SELLER_CONFIRM"));
     }
 
     @Test
@@ -257,7 +257,7 @@ public class SubOrderServiceTest {
         // ตรวจสอบ Notification
         verify(notificationService, times(1)).sendNotification(
                 eq(200L),
-                eq("ร้านค้าปฏิเสธคำสั่งซื้อ"),
+                eq("Shop rejected your order"),
                 contains("สินค้าหมดสต็อก"),
                 any()
         );
@@ -339,7 +339,7 @@ public class SubOrderServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> {
             subOrderService.confirmOrderDelivered(customerId, orderId);
         });
-        assertTrue(ex.getMessage().contains("ต้องเป็น SHIPPED"));
+        assertTrue(ex.getMessage().contains("must be SHIPPED"));
     }
 
     @Test
@@ -421,7 +421,7 @@ public class SubOrderServiceTest {
         assertEquals("เปลี่ยนใจไม่ต้องการสินค้า", order.getRejectionReason());
         assertEquals(7, product.getStock()); // 5 + 2 = 7
         verify(productRepository, times(1)).save(product);
-        verify(paymentService, times(1)).processPartialRefund(eq(orderId), eq(new java.math.BigDecimal("600.00")), contains("ลูกค้ายกเลิก"));
+        verify(paymentService, times(1)).processPartialRefund(eq(orderId), eq(new java.math.BigDecimal("600.00")), contains("Order cancelled by customer"));
         assertEquals(OrderGroupPaymentStatus.REFUNDED, group.getPaymentStatus());
     }
 
@@ -449,7 +449,7 @@ public class SubOrderServiceTest {
                 subOrderService.customerCancelOrder(customerId, orderId, "ขอยกเลิก")
         );
 
-        assertTrue(ex.getMessage().contains("ไม่สามารถยกเลิกคำสั่งซื้อได้"));
+        assertTrue(ex.getMessage().contains("Cannot cancel the order"));
     }
 
     @Test
@@ -476,6 +476,6 @@ public class SubOrderServiceTest {
                 subOrderService.customerCancelOrder(customerId, orderId, "ขอยกเลิก")
         );
 
-        assertTrue(ex.getMessage().contains("คำสั่งซื้อนี้ไม่ใช่ของลูกค้า"));
+        assertTrue(ex.getMessage().contains("This order does not belong to customerId"));
     }
 }

@@ -55,13 +55,13 @@ public class ProductController {
 
         Product created = productService.createProduct(sellerId, product, request.getImageUrls(), request.getCategoryIds());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("สร้างสินค้าสำเร็จ", ProductResponse.fromEntity(created)));
+                .body(ApiResponse.success("Product created successfully", ProductResponse.fromEntity(created)));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable Long id) {
         Product product = productService.getProductById(id);
-        return ResponseEntity.ok(ApiResponse.success("ดึงข้อมูลสินค้าสำเร็จ", ProductResponse.fromEntity(product)));
+        return ResponseEntity.ok(ApiResponse.success("Product retrieved successfully", ProductResponse.fromEntity(product)));
     }
 
     @GetMapping
@@ -70,7 +70,7 @@ public class ProductController {
         List<ProductResponse> responses = products.stream()
                 .map(ProductResponse::fromEntity)
                 .toList();
-        return ResponseEntity.ok(ApiResponse.success("ดึงรายการสินค้าที่วางจำหน่ายทั้งหมดสำเร็จ", responses));
+        return ResponseEntity.ok(ApiResponse.success("Available products retrieved successfully", responses));
     }
 
     @GetMapping("/seller/{sellerId}")
@@ -79,7 +79,7 @@ public class ProductController {
         List<ProductResponse> responses = products.stream()
                 .map(ProductResponse::fromEntity)
                 .toList();
-        return ResponseEntity.ok(ApiResponse.success("ดึงรายการสินค้าของร้านค้าสำเร็จ", responses));
+        return ResponseEntity.ok(ApiResponse.success("Shop products retrieved successfully", responses));
     }
 
     @GetMapping("/search")
@@ -95,12 +95,12 @@ public class ProductController {
         var selected = categoryIds != null && !categoryIds.isEmpty()
                 ? categoryIds : categoryId == null ? List.<Long>of() : List.of(categoryId);
         var result = productService.searchProductsPage(keyword, selected, minPrice, maxPrice, sort, page, size);
-        return ResponseEntity.ok(ApiResponse.success("ค้นหาสินค้าสำเร็จ", PageResponse.from(result)));
+        return ResponseEntity.ok(ApiResponse.success("Product search completed successfully", PageResponse.from(result)));
     }
 
     @GetMapping("/catalog-summary")
     public ResponseEntity<ApiResponse<CatalogSummary>> getCatalogSummary() {
-        return ResponseEntity.ok(ApiResponse.success("ดึงสรุปรายการสินค้าสำเร็จ", productService.getCatalogSummary()));
+        return ResponseEntity.ok(ApiResponse.success("Product catalog summary retrieved successfully", productService.getCatalogSummary()));
     }
 
     @GetMapping("/category/{categoryId}")
@@ -109,7 +109,7 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         var result = productService.searchProductsPage(null, categoryId, page, size);
-        return ResponseEntity.ok(ApiResponse.success("ดึงสินค้าตามหมวดหมู่สำเร็จ", PageResponse.from(result)));
+        return ResponseEntity.ok(ApiResponse.success("Products retrieved by category successfully", PageResponse.from(result)));
     }
 
     @PutMapping("/{id}")
@@ -155,7 +155,7 @@ public class ProductController {
         }
 
         Product updated = productService.updateProduct(effectiveSellerId, id, product);
-        return ResponseEntity.ok(ApiResponse.success("แก้ไขข้อมูลสินค้าสำเร็จ", ProductResponse.fromEntity(updated)));
+        return ResponseEntity.ok(ApiResponse.success("Product updated successfully", ProductResponse.fromEntity(updated)));
     }
 
     @PostMapping("/{id}/deduct-stock")
@@ -163,7 +163,7 @@ public class ProductController {
             @PathVariable Long id,
             @RequestParam Integer quantity) {
         productService.validateAndDeductStock(id, quantity);
-        return ResponseEntity.ok(ApiResponse.success("ตัดสต็อกสินค้าสำเร็จ", null));
+        return ResponseEntity.ok(ApiResponse.success("Stock deducted successfully", null));
     }
 
     @PostMapping("/{id}/restore-stock")
@@ -171,6 +171,6 @@ public class ProductController {
             @PathVariable Long id,
             @RequestParam Integer quantity) {
         productService.restoreStock(id, quantity);
-        return ResponseEntity.ok(ApiResponse.success("คืนสต็อกสินค้าสำเร็จ", null));
+        return ResponseEntity.ok(ApiResponse.success("Stock restored successfully", null));
     }
 }

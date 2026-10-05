@@ -63,7 +63,7 @@ public class OrderSchedulerService {
                     subOrderService.sellerRejectOrder(
                             order.getSeller().getSellerId(),
                             order.getOrderId(),
-                            "ระบบยกเลิกคำสั่งซื้ออัตโนมัติเนื่องจากร้านค้าไม่ยืนยันภายใน 24 ชั่วโมง");
+                            "Order automatically cancelled because the shop did not confirm within 24 hours");
                 } catch (Exception e) {
                     // Log error and continue to next order
                 }

@@ -75,20 +75,20 @@ public class ShippingServiceImp implements ShippingService {
         // 1. ค้นหา Order
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalStateException(
-                        "ไม่พบคำสั่งซื้อ orderId: " + orderId));
+                        "Order not found for orderId: " + orderId));
 
         stateLock.lock(order);
         // 2. ตรวจว่า Order เป็นของ Seller นี้
         if (!order.getSeller().getSellerId().equals(sellerId)) {
             throw new IllegalStateException(
-                    "คำสั่งซื้อนี้ไม่ใช่ของร้านค้า sellerId: " + sellerId);
+                    "This order does not belong to sellerId: " + sellerId);
         }
 
         // 3. ตรวจสถานะ — ต้อง PREPARING เท่านั้น
         if (order.getOrderStatus() != OrderStatus.PREPARING) {
             throw new IllegalStateException(
-                    "ไม่สามารถกรอก Tracking ได้ สถานะปัจจุบัน: " + order.getOrderStatus()
-                            + " (ต้องเป็น PREPARING เท่านั้น)");
+                    "Cannot assign tracking information with current status: " + order.getOrderStatus()
+                            + " (must be PREPARING)");
         }
 
         var paymentStatus = order.getOrderGroup().getPaymentStatus();
@@ -97,10 +97,10 @@ public class ShippingServiceImp implements ShippingService {
             throw new IllegalStateException("This order has not been paid");
         // 4. ตรวจว่า courierName และ trackingNumber ไม่ว่าง (UC1-41A)
         if (courierName == null || courierName.isBlank() || courierName.trim().length() > 100) {
-            throw new IllegalArgumentException("กรุณาระบุชื่อบริษัทขนส่ง (courierName) ไม่เกิน 100 ตัวอักษร");
+            throw new IllegalArgumentException("Please provide a courier name (courierName) of no more than 100 characters");
         }
         if (trackingNumber == null || trackingNumber.isBlank() || trackingNumber.trim().length() > 100) {
-            throw new IllegalArgumentException("กรุณาระบุหมายเลข Tracking (trackingNumber) ไม่เกิน 100 ตัวอักษร");
+            throw new IllegalArgumentException("Please provide a tracking number (trackingNumber) of no more than 100 characters");
         }
 
         // 5. สร้างหรืออัปเดต Shipment
@@ -144,7 +144,7 @@ public class ShippingServiceImp implements ShippingService {
     public Shipment getShipmentByOrderId(Long orderId) {
         return shipmentRepository.findByOrder_OrderId(orderId)
                 .orElseThrow(() -> new IllegalStateException(
-                        "ไม่พบข้อมูลการจัดส่งสำหรับ orderId: " + orderId));
+                        "Shipping information not found for orderId: " + orderId));
     }
 
     /**
@@ -158,7 +158,7 @@ public class ShippingServiceImp implements ShippingService {
     public void updateShippingStatus(Long shipmentId, String status) {
         Shipment shipment = shipmentRepository.findById(shipmentId)
                 .orElseThrow(() -> new IllegalStateException(
-                        "ไม่พบ Shipment shipmentId: " + shipmentId));
+                        "Shipment not found for shipmentId: " + shipmentId));
 
         stateLock.lock(shipment.getOrder());
 
@@ -167,8 +167,8 @@ public class ShippingServiceImp implements ShippingService {
             newStatus = ShippingStatus.valueOf(status.toUpperCase().trim());
         } catch (IllegalArgumentException e) {
             throw new IllegalStateException(
-                    "สถานะไม่ถูกต้อง: " + status
-                            + " (ต้องเป็น PENDING, SHIPPED, หรือ DELIVERED)");
+                    "Invalid status: " + status
+                            + " (must be PENDING, SHIPPED, or DELIVERED)");
         }
 
         shipment.setShippingStatus(newStatus);

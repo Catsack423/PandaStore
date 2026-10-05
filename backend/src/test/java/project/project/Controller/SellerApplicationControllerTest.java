@@ -214,7 +214,7 @@ public class SellerApplicationControllerTest {
                         .param("adminId", String.valueOf(adminId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("อนุมัติคำขอเปิดร้านค้าสำเร็จ"));
+                .andExpect(jsonPath("$.message").value("Seller application approved successfully"));
     }
 
     @Test
@@ -237,7 +237,7 @@ public class SellerApplicationControllerTest {
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("ปฏิเสธคำขอเปิดร้านค้าสำเร็จ"));
+                .andExpect(jsonPath("$.message").value("Seller application rejected successfully"));
     }
 
     @Test
@@ -280,7 +280,7 @@ public class SellerApplicationControllerTest {
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("ส่งคำขอเอกสารเพิ่มเติมสำเร็จ"));
+                .andExpect(jsonPath("$.message").value("Additional documents requested successfully"));
     }
 
     @Test

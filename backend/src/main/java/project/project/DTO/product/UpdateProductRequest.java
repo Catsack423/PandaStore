@@ -12,20 +12,20 @@ import java.util.Set;
 
 public class UpdateProductRequest {
 
-    @Size(max = 200, message = "ชื่อสินค้าต้องมีความยาวไม่เกิน 200 ตัวอักษร")
+    @Size(max = 200, message = "Product name must not exceed 200 characters")
     private String name;
 
     private String description;
 
-    @DecimalMin(value = "0.01", message = "ราคาสินค้าต้องมากกว่า 0")
+    @DecimalMin(value = "0.01", message = "Product price must be greater than 0")
     private BigDecimal price;
 
-    @Min(value = 0, message = "จำนวนสต็อกต้องไม่ติดลบ")
+    @Min(value = 0, message = "Stock quantity must not be negative")
     private Integer stock;
 
     private ProductStatus status;
 
-    @Size(max = 255, message = "ข้อมูลการจัดส่งต้องมีความยาวไม่เกิน 255 ตัวอักษร")
+    @Size(max = 255, message = "Shipping information must not exceed 255 characters")
     private String shippingInfo;
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)

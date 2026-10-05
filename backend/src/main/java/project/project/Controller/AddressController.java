@@ -44,7 +44,7 @@ public class AddressController {
         var address = addressService.addAddressToCustomerByCustomerId(customerId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("เพิ่มที่อยู่สำเร็จ", AddressResponse.fromEntity(address)));
+                .body(ApiResponse.success("Address added successfully", AddressResponse.fromEntity(address)));
     }
 
     @PutMapping("/{addressId}")
@@ -59,7 +59,7 @@ public class AddressController {
         var address = addressService.updateAddress(customerId, addressId, request);
 
         return ResponseEntity.ok(
-                ApiResponse.success("แก้ไขที่อยู่สำเร็จ", AddressResponse.fromEntity(address)));
+                ApiResponse.success("Address updated successfully", AddressResponse.fromEntity(address)));
     }
 
     @GetMapping
@@ -76,7 +76,7 @@ public class AddressController {
                 .toList();
 
         return ResponseEntity.ok(
-                ApiResponse.success("ดึงข้อมูลที่อยู่สำเร็จ", addresses));
+                ApiResponse.success("Address retrieved successfully", addresses));
     }
 
     @PutMapping("/{addressId}/default")
@@ -105,7 +105,7 @@ public class AddressController {
         }
 
         return ResponseEntity.ok(
-                ApiResponse.<Void>success("ลบที่อยู่สำเร็จ", null));
+                ApiResponse.<Void>success("Address deleted successfully", null));
     }
 
     private void requireOwner(Principal principal, Long customerId) {

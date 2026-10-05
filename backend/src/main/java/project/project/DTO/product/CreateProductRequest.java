@@ -17,22 +17,22 @@ import java.util.Set;
 
 public class CreateProductRequest {
 
-    @NotBlank(message = "ชื่อสินค้าห้ามว่าง")
-    @Size(max = 200, message = "ชื่อสินค้าต้องมีความยาวไม่เกิน 200 ตัวอักษร")
+    @NotBlank(message = "Product name is required")
+    @Size(max = 200, message = "Product name must not exceed 200 characters")
     private String name;
 
     private String description;
 
-    @NotNull(message = "ราคาสินค้าห้ามว่าง")
-    @DecimalMin(value = "0.01", message = "ราคาสินค้าต้องมากกว่า 0")
+    @NotNull(message = "Product price is required")
+    @DecimalMin(value = "0.01", message = "Product price must be greater than 0")
     @Digits(integer = 10, fraction = 2, message = "Price must fit 10 integer digits and 2 decimal places")
     private BigDecimal price;
 
-    @NotNull(message = "จำนวนสต็อกห้ามว่าง")
-    @Min(value = 1, message = "จำนวนสต็อกต้องมีอย่างน้อย 1 ชิ้น")
+    @NotNull(message = "Stock quantity is required")
+    @Min(value = 1, message = "Stock quantity must be at least 1")
     private Integer stock;
 
-    @Size(max = 255, message = "ข้อมูลการจัดส่งต้องมีความยาวไม่เกิน 255 ตัวอักษร")
+    @Size(max = 255, message = "Shipping information must not exceed 255 characters")
     private String shippingInfo;
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)

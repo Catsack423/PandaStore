@@ -65,27 +65,27 @@ const SellerSignup = () => {
     const errs: FormErrors = {};
 
     if (!formData.username.trim()) {
-      errs.username = "กรุณากรอกชื่อผู้ใช้";
+      errs.username = "Please enter your username";
     } else if (formData.username.length < 3 || formData.username.length > 50) {
-      errs.username = "ชื่อผู้ใช้ต้องมีความยาวระหว่าง 3 ถึง 50 ตัวอักษร";
+      errs.username = "Username must be between 3 and 50 characters";
     }
 
     if (!formData.email.trim()) {
-      errs.email = "กรุณากรอกอีเมล";
+      errs.email = "Please enter your email";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errs.email = "รูปแบบอีเมลไม่ถูกต้อง";
+      errs.email = "Invalid email format";
     }
 
     if (!formData.password) {
-      errs.password = "กรุณากรอกรหัสผ่าน";
+      errs.password = "Please enter your password";
     } else if (formData.password.length < 6) {
-      errs.password = "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร";
+      errs.password = "Password must contain at least 6 characters";
     }
 
     if (!formData.confirmPassword) {
-      errs.confirmPassword = "กรุณายืนยันรหัสผ่าน";
+      errs.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
-      errs.confirmPassword = "รหัสผ่านไม่ตรงกัน";
+      errs.confirmPassword = "Passwords do not match";
     }
 
     setErrors(errs);
@@ -97,27 +97,27 @@ const SellerSignup = () => {
     const errs: FormErrors = {};
 
     if (!formData.shopName.trim()) {
-      errs.shopName = "กรุณากรอกชื่อร้านค้า";
+      errs.shopName = "Please enter your shop name";
     } else if (formData.shopName.length > 100) {
-      errs.shopName = "ชื่อร้านค้าต้องไม่เกิน 100 ตัวอักษร";
+      errs.shopName = "Shop name must not exceed 100 characters";
     }
 
     if (!formData.shopPhone.trim()) {
-      errs.shopPhone = "กรุณากรอกเบอร์โทรศัพท์ร้านค้า";
+      errs.shopPhone = "Please enter your shop phone number";
     } else if (
       !/^[0-9]{9,15}$/.test(formData.shopPhone.replace(/[-\s]/g, ""))
     ) {
-      errs.shopPhone = "เบอร์โทรศัพท์ต้องเป็นตัวเลขความยาว 9-15 หลัก";
+      errs.shopPhone = "Phone number must contain 9-15 digits";
     }
 
     if (!formData.shopEmail.trim()) {
-      errs.shopEmail = "กรุณากรอกอีเมลติดต่อร้านค้า";
+      errs.shopEmail = "Please enter your shop contact email";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.shopEmail)) {
-      errs.shopEmail = "รูปแบบอีเมลร้านค้าไม่ถูกต้อง";
+      errs.shopEmail = "Invalid shop email format";
     }
 
     if (!formData.shopAddress.trim()) {
-      errs.shopAddress = "กรุณากรอกที่อยู่ร้านค้า / สถานที่ส่งสินค้า";
+      errs.shopAddress = "Please enter your shop address / shipping location";
     }
 
     setErrors(errs);
@@ -129,35 +129,35 @@ const SellerSignup = () => {
     const errs: FormErrors = {};
 
     if (!formData.sellerFirstName.trim()) {
-      errs.sellerFirstName = "กรุณากรอกชื่อจริงผู้ขาย";
+      errs.sellerFirstName = "Please enter the seller's first name";
     }
 
     if (!formData.sellerLastName.trim()) {
-      errs.sellerLastName = "กรุณากรอกนามสกุลจริงผู้ขาย";
+      errs.sellerLastName = "Please enter the seller's last name";
     }
 
     if (!formData.idCardNumber.trim()) {
-      errs.idCardNumber = "กรุณากรอกเลขประจำตัวประชาชน 13 หลัก";
+      errs.idCardNumber = "Please enter your 13-digit national ID number";
     } else if (
       !/^[0-9]{13}$/.test(formData.idCardNumber.replace(/[-\s]/g, ""))
     ) {
-      errs.idCardNumber = "เลขประจำตัวประชาชนต้องเป็นตัวเลข 13 หลัก";
+      errs.idCardNumber = "National ID number must contain 13 digits";
     }
 
     if (!formData.bankName.trim()) {
-      errs.bankName = "กรุณาระบุชื่อธนาคาร";
+      errs.bankName = "Please specify your bank name";
     }
 
     if (!formData.bankAccountName.trim()) {
-      errs.bankAccountName = "กรุณากรอกชื่อบัญชีธนาคาร";
+      errs.bankAccountName = "Please enter your bank account name";
     }
 
     if (!formData.bankAccountNumber.trim()) {
-      errs.bankAccountNumber = "กรุณากรอกเลขที่บัญชีธนาคาร";
+      errs.bankAccountNumber = "Please enter your bank account number";
     } else if (
       !/^[0-9]{10,15}$/.test(formData.bankAccountNumber.replace(/[-\s]/g, ""))
     ) {
-      errs.bankAccountNumber = "เลขที่บัญชีต้องเป็นตัวเลข 10-15 หลัก";
+      errs.bankAccountNumber = "Bank account number must contain 10-15 digits";
     }
 
     setErrors(errs);
@@ -256,10 +256,10 @@ const SellerSignup = () => {
                 </svg>
               </div>
               <CardTitle className="text-2xl font-bold text-dark">
-                {isReapplying ? "Revise your seller application" : "สมัครเปิดร้านค้า (Seller Registration)"}
+                {isReapplying ? "Revise your seller application" : "Seller registration"}
               </CardTitle>
               <CardDescription className="text-body text-sm mt-1">
-                {isReapplying ? "Your shop details are prefilled. Review the rejection reason, correct the information, and complete all three steps to submit again." : "กรอกข้อมูล 3 ขั้นตอนเพื่อยื่นขอเปิดร้านค้าบน PandaStore"}
+                {isReapplying ? "Your shop details are prefilled. Review the rejection reason, correct the information, and complete all three steps to submit again." : "Complete all 3 steps to apply for a shop on PandaStore"}
               </CardDescription>
               {isReapplying && application?.adminNote && <div className="mt-4 w-full rounded-lg border border-yellow/30 bg-yellow-light-4 px-4 py-3 text-left text-sm text-dark"><strong>Previous review note</strong><p className="mt-1">{application.adminNote}</p></div>}
 
@@ -333,7 +333,7 @@ const SellerSignup = () => {
                         onClick={handlePrev}
                         className="h-11 px-5 text-sm font-medium border-gray-3 hover:bg-gray-1"
                       >
-                        ⬅ ย้อนกลับ
+                        ⬅ Back
                       </Button>
                     ) : (
                       <div />
@@ -346,7 +346,7 @@ const SellerSignup = () => {
                         onClick={handleNext}
                         className="h-11 px-7 text-sm font-medium bg-dark text-white hover:bg-blue ml-auto"
                       >
-                        ถัดไป ➔
+                        Next ➔
                       </Button>
                     ) : (
                       <Button
@@ -364,19 +364,19 @@ const SellerSignup = () => {
 
             <CardFooter className="flex flex-col items-center gap-2 pt-2 border-t border-gray-3 mt-4">
               <p className="text-sm text-body text-center">
-                มีบัญชีอยู่แล้ว?
+                Already have an account?
                 <Link
                   href="/signin"
                   className="text-dark font-medium ease-out duration-200 hover:text-blue pl-2 underline underline-offset-4"
                 >
-                  เข้าสู่ระบบ
+                  Log in
                 </Link>
               </p>
               <Link
                 href="/signup"
                 className="text-xs text-dark-4 hover:text-dark mt-1 flex items-center gap-1"
               >
-                ⬅ เปลี่ยนบทบาท (เลือกประเภทบัญชีอื่น)
+                ⬅ Change account type
               </Link>
             </CardFooter>
           </Card>

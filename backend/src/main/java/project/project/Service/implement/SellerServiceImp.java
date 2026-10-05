@@ -48,13 +48,13 @@ public class SellerServiceImp implements SellerService {
     @Override
     public Seller createSeller(CreateSellerRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new DuplicateUserException("Username '" + request.getUsername() + "' ถูกใช้ไปแล้ว");
+            throw new DuplicateUserException("Username '" + request.getUsername() + "' is already in use");
         }
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateUserException("Email '" + request.getEmail() + "' ถูกใช้ไปแล้ว");
+            throw new DuplicateUserException("Email '" + request.getEmail() + "' is already in use");
         }
         if (sellerRepository.existsByShopName(request.getShopName())) {
-            throw new DuplicateUserException("ชื่อร้านค้า '" + request.getShopName() + "' ถูกใช้ไปแล้ว");
+            throw new DuplicateUserException("Shop name '" + request.getShopName() + "' is already in use");
         }
 
         User user = new User(
@@ -68,9 +68,9 @@ public class SellerServiceImp implements SellerService {
         try {
             savedUser = userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateUserException("Username หรือ Email นี้ถูกใช้ไปแล้ว");
+            throw new DuplicateUserException("Username or email is already in use");
         } catch (DataAccessException e) {
-            throw new UserCreationException("บันทึกข้อมูล User ไม่สำเร็จ", e);
+            throw new UserCreationException("Unable to save user", e);
         }
 
         // Submit before creating the pending shop: application submission rejects existing sellers.
@@ -90,9 +90,9 @@ public class SellerServiceImp implements SellerService {
         try {
             savedSeller = sellerRepository.save(seller);
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateUserException("ชื่อร้านค้า '" + request.getShopName() + "' ถูกใช้ไปแล้ว");
+            throw new DuplicateUserException("Shop name '" + request.getShopName() + "' is already in use");
         } catch (DataAccessException e) {
-            throw new UserCreationException("บันทึกข้อมูล Seller ไม่สำเร็จ", e);
+            throw new UserCreationException("Unable to save seller", e);
         }
 
         try {
@@ -106,7 +106,7 @@ public class SellerServiceImp implements SellerService {
 
             return savedSeller;
         } catch (DataAccessException e) {
-            throw new UserCreationException("บันทึกข้อมูลใบสมัครหรือบัญชีธนาคารร้านค้าไม่สำเร็จ", e);
+            throw new UserCreationException("Unable to save application or shop bank account", e);
         }
     }
 

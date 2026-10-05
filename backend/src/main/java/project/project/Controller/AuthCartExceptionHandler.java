@@ -24,22 +24,22 @@ public class AuthCartExceptionHandler {
     @ExceptionHandler({IllegalArgumentException.class, ConstraintViolationException.class,
             HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ApiResponse<Void>> badRequest(Exception e) {
-        return error(HttpStatus.BAD_REQUEST, "ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบจำนวนสินค้าและข้อมูลที่กรอก");
+        return error(HttpStatus.BAD_REQUEST, "Invalid data. Please check the item quantities and entered information");
     }
 
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ApiResponse<Void>> notFound(Exception e) {
-        return error(HttpStatus.NOT_FOUND, "ไม่พบข้อมูลที่ต้องการ");
+        return error(HttpStatus.NOT_FOUND, "Requested information not found");
     }
 
     @ExceptionHandler({DuplicateUserException.class, DataIntegrityViolationException.class})
     public ResponseEntity<ApiResponse<Void>> conflict(Exception e) {
-        return error(HttpStatus.CONFLICT, "ข้อมูลซ้ำหรือไม่สามารถบันทึกได้");
+        return error(HttpStatus.CONFLICT, "Duplicate data or unable to save");
     }
 
     @ExceptionHandler(UnsupportedOperationException.class)
     public ResponseEntity<ApiResponse<Void>> notImplemented(Exception e) {
-        return error(HttpStatus.NOT_IMPLEMENTED, "การสมัครผู้ขายยังไม่พร้อมใช้งาน");
+        return error(HttpStatus.NOT_IMPLEMENTED, "Seller registration is unavailable");
     }
 
     @ExceptionHandler(ResponseStatusException.class)
