@@ -72,7 +72,7 @@ class SecurityGateTest {
         String token = customerToken();
         mvc.perform(get("/api/customers").header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
-        for (String path : new String[] {"/api/payments/callback", "/api/payments/simulate", "/api/test/reset-data"}) {
+        for (String path : new String[] {"/api/payments/callback", "/api/payments/refund/full", "/api/payments/refund/partial", "/api/test/reset-data"}) {
             mvc.perform(post(path).header("Authorization", "Bearer " + token)
                     .contentType(MediaType.APPLICATION_JSON).content("{}"))
                     .andExpect(status().isForbidden());

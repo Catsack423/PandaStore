@@ -115,6 +115,9 @@
 					<failOnError>true</failOnError>
 					<nvdApiKeyEnvironmentVariable>NVD_API_KEY</nvdApiKeyEnvironmentVariable>
 					<formats><format>HTML</format><format>JSON</format></formats>
+					<suppressionFiles>
+						<suppressionFile>${project.basedir}/dependency-check-suppressions.xml</suppressionFile>
+					</suppressionFiles>
 				</configuration>
 			</plugin>
 			<plugin>

@@ -35,6 +35,8 @@ class CustomerCheckoutTest {
     @Autowired CurrentUser currentUser;
     @Autowired CustomerCheckoutService checkout;
     @Autowired ProductService products;
+    @Autowired project.project.Service.api.PaymentService payments;
+    @Autowired OrderAccess orderAccess;
     @Autowired UserRepository users;
     @Autowired CustomerRepository customers;
     @Autowired SellerRepository sellers;
@@ -49,7 +51,8 @@ class CustomerCheckoutTest {
         customerId = customers.save(new Customer(user, "Checkout Tester", "0812345678")).getCustomerId();
         SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(
                 new AuthenticatedUser(user.getUserId(), UserRole.CUSTOMER), null, List.of()));
-        mvc = MockMvcBuilders.standaloneSetup(new CustomerCheckoutController(currentUser, checkout), new ProductController(products, currentUser, sellers))
+        mvc = MockMvcBuilders.standaloneSetup(new CustomerCheckoutController(currentUser, checkout), new ProductController(products, currentUser, sellers),
+                new PaymentController(payments, orderAccess))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
         seller1 = seller("one"); seller2 = seller("two");
         product1 = product(seller1, "First product", 100); product2 = product(seller2, "Second product", 200);
@@ -93,6 +96,26 @@ class CustomerCheckoutTest {
         mvc.perform(post("/api/checkout/orders").contentType(MediaType.APPLICATION_JSON).content(orderBody(address, "J&T", "EMS")))
                 .andExpect(status().isBadRequest());
         assertEquals(1, orderGroups.count());
+    }
+
+    @Test void checkoutCustomerCanCompleteMockPaymentAndReadPaidOrder() throws Exception {
+        var address = address();
+        sync();
+        var placed = mvc.perform(post("/api/checkout/orders").contentType(MediaType.APPLICATION_JSON)
+                .content(orderBody(address, "J&T", "EMS"))).andExpect(status().isCreated()).andReturn();
+        long groupId = new JsonMapper().readTree(placed.getResponse().getContentAsString()).path("data").path("orderGroupId").asLong();
+        mvc.perform(post("/api/payments/initiate").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"orderGroupId\":" + groupId + ",\"paymentMethod\":\"BANK_TRANSFER\",\"amount\":505}"))
+                .andExpect(status().isCreated());
+        mvc.perform(post("/api/payments/simulate").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"orderGroupId\":" + groupId + ",\"isSuccess\":true}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("SUCCESS"));
+        em.flush();
+        em.clear();
+        mvc.perform(get("/api/checkout/orders/" + groupId)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.paymentStatus").value("PAID"))
+                .andExpect(jsonPath("$.data.subOrders[0].orderStatus").value("WAITING_SELLER_CONFIRM"))
+                .andExpect(jsonPath("$.data.subOrders[1].orderStatus").value("WAITING_SELLER_CONFIRM"));
     }
 
     @Test void unsupportedMethodDoesNotCreateOrder() throws Exception {

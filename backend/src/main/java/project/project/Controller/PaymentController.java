@@ -52,8 +52,14 @@ public class PaymentController {
     @PostMapping("/simulate")
     public ResponseEntity<ApiResponse<PaymentResponse>> simulatePayment(
             @Valid @RequestBody PaymentCallbackRequest request) {
-        access.requireAdmin();
         String txnId = resolveGatewayTransactionId(request);
+        // Authorize the transaction that will be mutated, even when both identifiers are supplied.
+        Payment targetPayment = paymentService.getPaymentByGatewayTransactionId(txnId);
+        Long targetGroupId = targetPayment.getOrderGroup().getOrderGroupId();
+        access.requireGroupRead(targetGroupId);
+        if (request.getOrderGroupId() != null && !request.getOrderGroupId().equals(targetGroupId)) {
+            throw new IllegalArgumentException("Payment transaction does not match order group");
+        }
         boolean isSuccess = request.getIsSuccess() != null ? request.getIsSuccess() : true;
 
         paymentService.handleGatewayCallback(txnId, isSuccess);

@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -164,6 +165,7 @@ public class PaymentControllerTest {
         updated.setGatewayTransactionId("TXN_100_SIMULATED");
 
         doNothing().when(paymentService).handleGatewayCallback("TXN_100_SIMULATED", true);
+        when(paymentService.getPaymentByGatewayTransactionId("TXN_100_SIMULATED")).thenReturn(updated);
         when(paymentService.getPaymentByOrderGroupId(100L)).thenReturn(updated);
 
         mockMvc.perform(post("/api/payments/simulate")
@@ -172,6 +174,7 @@ public class PaymentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Payment simulation successful (PAID)"));
+        verify(access).requireGroupRead(100L);
     }
 
     @Test
@@ -195,6 +198,7 @@ public class PaymentControllerTest {
         updated.setGatewayTransactionId("TXN_100_FAILED");
 
         doNothing().when(paymentService).handleGatewayCallback("TXN_100_FAILED", false);
+        when(paymentService.getPaymentByGatewayTransactionId("TXN_100_FAILED")).thenReturn(updated);
         when(paymentService.getPaymentByOrderGroupId(100L)).thenReturn(updated);
 
         mockMvc.perform(post("/api/payments/simulate")
@@ -203,6 +207,7 @@ public class PaymentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Payment simulation failed (FAILED)"));
+        verify(access).requireGroupRead(100L);
     }
 
     @Test
