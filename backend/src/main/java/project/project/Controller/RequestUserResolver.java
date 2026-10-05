@@ -25,7 +25,8 @@ public class RequestUserResolver {
         if (authentication != null && authentication.isAuthenticated()
                 && authentication.getPrincipal() instanceof project.project.Security.AuthenticatedUser identity) {
             var user = userRepository.findById(identity.userId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Logged-in user not found"));
+                    .orElseThrow(
+                            () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Logged-in user not found"));
             if (user.getStatus() != UserStatus.ACTIVE) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This account is unavailable");
             }
