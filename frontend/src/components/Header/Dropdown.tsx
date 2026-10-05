@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/app/context/AuthContext";
 
 const Dropdown = ({ menuItem, stickyMenu }) => {
   const [dropdownToggler, setDropdownToggler] = useState(false);
   const pathUrl = usePathname();
-  const { user, isLoading } = useAuth();
 
   return (
     <li
@@ -47,15 +45,7 @@ const Dropdown = ({ menuItem, stickyMenu }) => {
             : "xl:group-hover:translate-y-0"
         }`}
       >
-        {menuItem.submenu.filter(item => {
-          if (user?.role === "ADMIN") return ["/contact", "/my-account"].includes(item.path);
-          if (item.path === "/seller-dashboard") return user?.role === "SELLER" && user.status === "ACTIVE";
-          if (item.path === "/seller-application") return user?.role === "CUSTOMER";
-          if (user?.role === "SELLER") return !["/shop-with-sidebar", "/shop-without-sidebar", "/checkout", "/cart", "/seller-application", "/signup"].includes(item.path);
-          if (isLoading) return !["/shop-with-sidebar", "/shop-without-sidebar", "/checkout", "/cart", "/seller-application", "/my-account"].includes(item.path);
-          if (!user) return !["/seller-application", "/my-account"].includes(item.path);
-          return true;
-        }).map((item, i) => (
+        {menuItem.submenu.map((item, i) => (
           <li key={i}>
             <Link
               href={item.path}

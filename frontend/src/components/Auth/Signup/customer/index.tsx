@@ -2,7 +2,7 @@
 
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import Link from "next/link";
-import React, { useState, useTransition } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/card";
 import { CustomerFormData, FormErrors } from "./types";
 import { CustomerForm } from "./CustomerForm";
-import { useAuth } from "@/app/context/AuthContext";
 
 const initialFormData: CustomerFormData = {
   username: "",
@@ -27,11 +26,10 @@ const initialFormData: CustomerFormData = {
 
 const CustomerSignup = () => {
   const router = useRouter();
-  const { registerCustomer, login } = useAuth();
 
   const [formData, setFormData] = useState<CustomerFormData>(initialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [loading, startTransition] = useTransition();
+  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const validate = (): boolean => {
@@ -39,50 +37,48 @@ const CustomerSignup = () => {
 
     // 1. Username
     if (!formData.username.trim()) {
-      newErrors.username = "Please enter your username";
-    } else if (formData.username.trim().length < 3 || formData.username.trim().length > 50) {
-      newErrors.username = "Username must be between 3 and 50 characters";
+      newErrors.username = "กรุณากรอกชื่อผู้ใช้";
+    } else if (formData.username.length < 3 || formData.username.length > 50) {
+      newErrors.username = "ชื่อผู้ใช้ต้องมีความยาวระหว่าง 3 ถึง 50 ตัวอักษร";
     }
 
     // 2. Full Name
     if (!formData.fullName.trim()) {
-      newErrors.fullName = "Please enter your full name";
-    } else if (formData.fullName.trim().length > 100) {
-      newErrors.fullName = "Full name must not exceed 100 characters";
+      newErrors.fullName = "กรุณากรอกชื่อ-นามสกุล";
+    } else if (formData.fullName.length > 100) {
+      newErrors.fullName = "ชื่อ-นามสกุลต้องมีความยาวไม่เกิน 100 ตัวอักษร";
     }
 
     // 3. Email
     if (!formData.email.trim()) {
-      newErrors.email = "Please enter your email";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      newErrors.email = "Invalid email format";
-    } else if (formData.email.trim().length > 100) {
-      newErrors.email = "Email must not exceed 100 characters";
+      newErrors.email = "กรุณากรอกอีเมล";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
+    } else if (formData.email.length > 100) {
+      newErrors.email = "อีเมลต้องมีความยาวไม่เกิน 100 ตัวอักษร";
     }
 
     // 4. Phone Number (9-15 digits as per backend CreateCustomerRequest)
     if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = "Please enter your phone number";
+      newErrors.phoneNumber = "กรุณากรอกเบอร์โทรศัพท์";
     } else if (
       !/^[0-9]{9,15}$/.test(formData.phoneNumber.replace(/[-\s]/g, ""))
     ) {
-      newErrors.phoneNumber = "Phone number must contain 9-15 digits";
+      newErrors.phoneNumber = "เบอร์โทรศัพท์ต้องเป็นตัวเลขความยาว 9-15 หลัก";
     }
 
     // 5. Password
-    if (!formData.password.trim()) {
-      newErrors.password = "Please enter your password";
+    if (!formData.password) {
+      newErrors.password = "กรุณากรอกรหัสผ่าน";
     } else if (formData.password.length < 6) {
-      newErrors.password = "Password must contain at least 6 characters";
-    } else if (new TextEncoder().encode(formData.password).length > 72) {
-      newErrors.password = "Password must not exceed 72 bytes (Thai characters use multiple bytes)";
+      newErrors.password = "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร";
     }
 
     // 6. Confirm Password
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
+      newErrors.confirmPassword = "กรุณายืนยันรหัสผ่าน";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = "รหัสผ่านไม่ตรงกัน";
     }
 
     setErrors(newErrors);
@@ -97,42 +93,53 @@ const CustomerSignup = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading || !validate()) return;
+    if (!validate()) return;
 
+    setLoading(true);
     setErrors({});
 
-    startTransition(async () => {
-      const registered = await registerCustomer({
-        username: formData.username.trim(),
-        fullName: formData.fullName.trim(),
-        email: formData.email.trim(),
-        phoneNumber: formData.phoneNumber.replace(/[-\s]/g, ""),
-        password: formData.password,
-        confirmPassword: formData.confirmPassword,
+    try {
+      // const payload = {
+      //   username: formData.username.trim(),
+      //   fullName: formData.fullName.trim(),
+      //   email: formData.email.trim(),
+      //   phoneNumber: formData.phoneNumber.replace(/[-\s]/g, ""),
+      //   password: formData.password,
+      // };
+
+      // const res = await fetch("/api/customers", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify(payload),
+      // });
+      //  setSuccess(true);
+      //   setTimeout(() => {
+      //     router.push("/signin");
+      //   }, 2000);
+      // const data = await res.json().catch(() => null);
+
+      // if (res.ok) {
+      //   setSuccess(true);
+      //   setTimeout(() => {
+      //     router.push("/signin");
+      //   }, 2000);
+      // } else {
+      //   setErrors({
+      //     general:
+      //       data?.message ||
+      //       "เกิดข้อผิดพลาดในการสมัครสมาชิก กรุณาลองใหม่อีกครั้ง",
+      //   });
+      // }
+    } catch (err: any) {
+      console.error("Signup error:", err);
+      setErrors({
+        general: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่อ",
       });
-      if (registered.success === false) {
-        startTransition(() => {
-          setErrors({ general: registered.error });
-        });
-        return;
-      }
-      const signedIn = await login(formData.email.trim(), formData.password);
-      startTransition(() => {
-        if (!signedIn.success) {
-          setErrors({
-            general:
-              "Account created. Automatic sign in failed; please sign in to continue.",
-          });
-          router.push("/signin");
-          return;
-        }
-        setSuccess(true);
-        router.replace("/");
-        router.refresh();
-      });
-    });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -158,10 +165,10 @@ const CustomerSignup = () => {
                 </svg>
               </div>
               <CardTitle className="text-2xl font-bold text-dark">
-                Create a customer account
+                สมัครสมาชิกสำหรับลูกค้า
               </CardTitle>
               <CardDescription className="text-body text-sm mt-1">
-                Enter your details below to start shopping with PandaStore
+                กรอกข้อมูลด้านล่างเพื่อเริ่มช้อปปิ้งกับ PandaStore
               </CardDescription>
             </CardHeader>
 
@@ -184,10 +191,10 @@ const CustomerSignup = () => {
                     </svg>
                   </div>
                   <h3 className="text-xl font-bold text-dark mb-2">
-                    Customer account created successfully!
+                    สร้างบัญชีลูกค้าสำเร็จ!
                   </h3>
                   <p className="text-body text-sm">
-                    Redirecting you to the home page...
+                    กำลังนำท่านไปยังหน้าเข้าสู่ระบบ...
                   </p>
                 </div>
               ) : (
@@ -203,19 +210,19 @@ const CustomerSignup = () => {
 
             <CardFooter className="flex flex-col items-center gap-2 pt-2 border-t border-gray-3 mt-4">
               <p className="text-sm text-body text-center">
-                Already have an account?
+                มีบัญชีอยู่แล้ว?
                 <Link
                   href="/signin"
                   className="text-dark font-medium ease-out duration-200 hover:text-blue pl-2 underline underline-offset-4"
                 >
-                  Log in
+                  เข้าสู่ระบบ
                 </Link>
               </p>
               <Link
-                href="/seller-application"
+                href="/signup"
                 className="text-xs text-dark-4 hover:text-dark mt-1 flex items-center gap-1"
               >
-                Become a seller after creating your account
+                ⬅ เปลี่ยนบทบาท (เลือกประเภทบัญชีอื่น)
               </Link>
             </CardFooter>
           </Card>

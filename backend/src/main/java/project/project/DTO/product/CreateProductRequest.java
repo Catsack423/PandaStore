@@ -1,48 +1,38 @@
 package project.project.DTO.product;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Digits;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class CreateProductRequest {
 
-    @NotBlank(message = "Product name is required")
-    @Size(max = 200, message = "Product name must not exceed 200 characters")
+    @NotBlank(message = "ชื่อสินค้าห้ามว่าง")
+    @Size(max = 200, message = "ชื่อสินค้าต้องมีความยาวไม่เกิน 200 ตัวอักษร")
     private String name;
 
     private String description;
 
-    @NotNull(message = "Product price is required")
-    @DecimalMin(value = "0.01", message = "Product price must be greater than 0")
-    @Digits(integer = 10, fraction = 2, message = "Price must fit 10 integer digits and 2 decimal places")
+    @NotNull(message = "ราคาสินค้าห้ามว่าง")
+    @DecimalMin(value = "0.01", message = "ราคาสินค้าต้องมากกว่า 0")
     private BigDecimal price;
 
-    @NotNull(message = "Stock quantity is required")
-    @Min(value = 1, message = "Stock quantity must be at least 1")
+    @NotNull(message = "จำนวนสต็อกห้ามว่าง")
+    @Min(value = 0, message = "จำนวนสต็อกต้องไม่ติดลบ")
     private Integer stock;
 
-    @Size(max = 255, message = "Shipping information must not exceed 255 characters")
+    @Size(max = 255, message = "ข้อมูลการจัดส่งต้องมีความยาวไม่เกิน 255 ตัวอักษร")
     private String shippingInfo;
 
-    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    @JsonAlias({"category_id", "categoryId", "categories"})
-    private Set<Long> categoryIds = new HashSet<>();
+    private Set<Long> categoryIds;
 
-    @Size(max = 5, message = "Choose no more than 5 product images")
-    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    @JsonAlias({"image_urls", "imageUrl", "image_url"})
-    private List<@Size(max = 255, message = "Image URL must not exceed 255 characters") String> imageUrls = new ArrayList<>();
+    private List<String> imageUrls = new ArrayList<>();
 
     public CreateProductRequest() {
     }

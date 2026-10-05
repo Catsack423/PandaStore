@@ -150,7 +150,7 @@ public class ReviewServiceImp implements ReviewService {
         review.setProduct(product);
         review.setCustomer(customer);
         review.setRating(5);
-        review.setComment("Automatic 5-star review from the system");
+        review.setComment("รีวิว 5 ดาวอัตโนมัติจากระบบ");
         review.setIsAutoReview(true);
 
         Review savedReview = reviewRepository.save(review);
@@ -220,8 +220,8 @@ public class ReviewServiceImp implements ReviewService {
         if (notificationService != null && review.getCustomer() != null && review.getCustomer().getUser() != null) {
             notificationService.sendNotification(
                     review.getCustomer().getUser().getUserId(),
-                    "Shop replied to your review",
-                    "The shop replied to your product review: " + review.getProduct().getName(),
+                    "ร้านค้าตอบกลับรีวิวของคุณ",
+                    "ร้านค้าได้ตอบกลับรีวิวสินค้า: " + review.getProduct().getName(),
                     NotificationType.NEW_REVIEW
             );
         }

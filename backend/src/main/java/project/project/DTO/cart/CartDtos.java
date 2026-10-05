@@ -14,12 +14,11 @@ public final class CartDtos {
     public record UpdateQuantity(@NotNull @Positive Integer quantity) {}
     public record UpdateSelection(@NotNull Boolean selected) {}
     public record Item(Long cartItemId, Long productId, String productName, Long sellerId,
-            BigDecimal unitPrice, Integer quantity, Boolean selected, String sellerShopName, List<String> imageUrls, Integer stock) {
+            BigDecimal unitPrice, Integer quantity, Boolean selected) {
         public static Item from(CartItem item) {
             var product = item.getProduct();
             return new Item(item.getCartItemId(), product.getProductId(), product.getName(),
-                    product.getSeller().getSellerId(), product.getPrice(), item.getQuantity(), item.getIsSelected(),
-                    product.getSeller().getShopName(), product.getImages().stream().map(image -> image.getImageUrl()).toList(), product.getStock());
+                    product.getSeller().getSellerId(), product.getPrice(), item.getQuantity(), item.getIsSelected());
         }
     }
     public record CartResponse(Long cartId, List<Item> items) {
@@ -27,5 +26,4 @@ public final class CartDtos {
             return new CartResponse(cart.getCartId(), cart.getItems().stream().map(Item::from).toList());
         }
     }
-    public record StockSyncResponse(Long cartId, List<Item> items, List<String> removedProducts) {}
 }

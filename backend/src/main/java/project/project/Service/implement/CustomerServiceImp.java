@@ -25,28 +25,26 @@ public class CustomerServiceImp implements CustomerService {
 
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
-    private final PasswordService passwords;
 
-    public CustomerServiceImp(UserRepository userRepository, CustomerRepository customerRepository, PasswordService passwords) {
+    public CustomerServiceImp(UserRepository userRepository, CustomerRepository customerRepository) {
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
-        this.passwords = passwords;
     }
 
     @Override
     @Transactional
     public long createCustomer(CreateCustomerRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new DuplicateUserException("Username '" + request.getUsername() + "' is already in use");
+            throw new DuplicateUserException("Username '" + request.getUsername() + "' ถูกใช้ไปแล้ว");
         }
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateUserException("Email '" + request.getEmail() + "' is already in use");
+            throw new DuplicateUserException("Email '" + request.getEmail() + "' ถูกใช้ไปแล้ว");
         }
 
         User user = new User(
                 request.getUsername(),
                 request.getEmail(),
-                passwords.hash(request.getPassword()),
+                request.getPassword(),
                 UserRole.CUSTOMER,
                 UserStatus.ACTIVE);
 
@@ -54,9 +52,9 @@ public class CustomerServiceImp implements CustomerService {
         try {
             savedUser = userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateUserException("Username or email is already in use");
+            throw new DuplicateUserException("Username หรือ Email นี้ถูกใช้ไปแล้ว");
         } catch (DataAccessException e) {
-            throw new UserCreationException("Unable to save user", e);
+            throw new UserCreationException("บันทึกข้อมูล User ไม่สำเร็จ", e);
         }
         Customer savedCustomer;
         try {
@@ -65,7 +63,7 @@ public class CustomerServiceImp implements CustomerService {
             return savedCustomer.getCustomerId();
 
         } catch (DataAccessException e) {
-            throw new UserCreationException("Unable to save customer", e);
+            throw new UserCreationException("บันทึกข้อมูล Customer ไม่สำเร็จ", e);
         }
 
     }

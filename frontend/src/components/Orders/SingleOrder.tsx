@@ -1,4 +1,3 @@
-import { formatBaht } from "@/lib/currency";
 import React, { useState } from "react";
 import OrderActions from "./OrderActions";
 import OrderModal from "./OrderModal";
@@ -54,7 +53,7 @@ const SingleOrder = ({ orderItem, smallView }: any) => {
           </div>
 
           <div className="min-w-[113px]">
-            <p className="text-custom-sm text-dark">{formatBaht(orderItem.total)}</p>
+            <p className="text-custom-sm text-dark">{orderItem.total}</p>
           </div>
 
           <div className="flex gap-5 items-center">
@@ -109,8 +108,8 @@ const SingleOrder = ({ orderItem, smallView }: any) => {
 
             <div className="">
               <p className="text-custom-sm text-dark">
-                <span className="font-bold pr-2">Total:</span>
-                {formatBaht(orderItem.total)}
+                <span className="font-bold pr-2">Total:</span> $
+                {orderItem.total}
               </p>
             </div>
 

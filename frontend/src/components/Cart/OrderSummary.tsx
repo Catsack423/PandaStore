@@ -1,9 +1,11 @@
-import { formatBaht } from "@/lib/currency";
+import { selectTotalPrice } from "@/redux/features/cart-slice";
+import { useAppSelector } from "@/redux/store";
 import React from "react";
-import { useCart } from "@/app/context/CartContext";
+import { useSelector } from "react-redux";
 
 const OrderSummary = () => {
-  const { items: cartItems, totalPrice } = useCart();
+  const cartItems = useAppSelector((state) => state.cartReducer.items);
+  const totalPrice = useSelector(selectTotalPrice);
 
   return (
     <div className="lg:max-w-[455px] w-full">
@@ -32,7 +34,7 @@ const OrderSummary = () => {
               </div>
               <div>
                 <p className="text-dark text-right">
-                  {formatBaht(item.discountedPrice * item.quantity)}
+                  ${item.discountedPrice * item.quantity}
                 </p>
               </div>
             </div>
@@ -45,7 +47,7 @@ const OrderSummary = () => {
             </div>
             <div>
               <p className="font-medium text-lg text-dark text-right">
-                {formatBaht(totalPrice)}
+                ${totalPrice}
               </p>
             </div>
           </div>

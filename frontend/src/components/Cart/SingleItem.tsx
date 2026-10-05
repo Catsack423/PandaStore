@@ -1,25 +1,31 @@
-import { formatBaht } from "@/lib/currency";
 import React, { useState } from "react";
-import { useCart } from "@/app/context/CartContext";
+import { AppDispatch } from "@/redux/store";
+import { useDispatch } from "react-redux";
+import {
+  removeItemFromCart,
+  updateCartItemQuantity,
+} from "@/redux/features/cart-slice";
 
-import ProductImage from "@/components/Common/ProductImage";
+import Image from "next/image";
 
 const SingleItem = ({ item }) => {
-  const quantity = item.quantity;
+  const [quantity, setQuantity] = useState(item.quantity);
 
-  const { removeItemFromCart, updateCartItemQuantity } = useCart();
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleRemoveFromCart = () => {
-    removeItemFromCart(item.id);
+    dispatch(removeItemFromCart(item.id));
   };
 
   const handleIncreaseQuantity = () => {
-    updateCartItemQuantity({ id: item.id, quantity: quantity + 1 });
+    setQuantity(quantity + 1);
+    dispatch(updateCartItemQuantity({ id: item.id, quantity: quantity + 1 }));
   };
 
   const handleDecreaseQuantity = () => {
     if (quantity > 1) {
-      updateCartItemQuantity({ id: item.id, quantity: quantity - 1 });
+      setQuantity(quantity - 1);
+      dispatch(updateCartItemQuantity({ id: item.id, quantity: quantity - 1 }));
     } else {
       return;
     }
@@ -30,7 +36,9 @@ const SingleItem = ({ item }) => {
       <div className="min-w-[400px]">
         <div className="flex items-center justify-between gap-5">
           <div className="w-full flex items-center gap-5.5">
-            <ProductImage src={item.imgs?.thumbnails?.[0]} alt={item.title} size="sm" surface="soft" />
+            <div className="flex items-center justify-center rounded-[5px] bg-gray-2 max-w-[80px] w-full h-17.5">
+              <Image width={200} height={200} src={item.imgs?.thumbnails[0]} alt="product" />
+            </div>
 
             <div>
               <h3 className="text-dark ease-out duration-200 hover:text-blue">
@@ -42,7 +50,7 @@ const SingleItem = ({ item }) => {
       </div>
 
       <div className="min-w-[180px]">
-        <p className="text-dark">{formatBaht(item.discountedPrice)}</p>
+        <p className="text-dark">${item.discountedPrice}</p>
       </div>
 
       <div className="min-w-[275px]">
@@ -98,7 +106,7 @@ const SingleItem = ({ item }) => {
       </div>
 
       <div className="min-w-[200px]">
-        <p className="text-dark">{formatBaht(item.discountedPrice * quantity)}</p>
+        <p className="text-dark">${item.discountedPrice * quantity}</p>
       </div>
 
       <div className="min-w-[50px] flex justify-end">

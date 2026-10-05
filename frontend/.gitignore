@@ -13,10 +13,9 @@
 .next/
 /out/
 
-tsconfig.tsbuildinfo
 # production
 /build
-tsconfig.json
+
 # misc
 .DS_Store
 *.pem
@@ -35,7 +34,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-
-AGENTS.md
-CLAUDE.md

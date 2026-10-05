@@ -41,20 +41,16 @@ public class CartServiceImp implements CartService {
     @Override
     public Cart createCart(Long customerId) {
         Customer customer = lockCustomer(customerId);
-        Cart cart = carts.findByCustomer_CustomerId(customerId)
+        return carts.findByCustomer_CustomerId(customerId)
                 .orElseGet(() -> carts.save(new Cart(null, customer)));
-        initializeProductImages(cart);
-        return cart;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Cart getCartByCustomerId(Long customerId) {
         requireId(customerId, "Customer");
-        Cart cart = carts.findByCustomer_CustomerId(customerId)
+        return carts.findByCustomer_CustomerId(customerId)
                 .orElseThrow(() -> new NoSuchElementException("Cart not found for customer " + customerId));
-        initializeProductImages(cart);
-        return cart;
     }
 
     @Override
@@ -62,15 +58,16 @@ public class CartServiceImp implements CartService {
         requireId(productId, "Product");
         requireQuantity(quantity);
         lockCustomer(customerId);
-        Cart cart = createCart(customerId);
+        Cart cart = getCartByCustomerId(customerId);
         Product product = products.getProductById(productId);
         if (product == null) throw new NoSuchElementException("Product not found");
-        org.hibernate.Hibernate.initialize(product.getImages());
         CartItem existing = cart.getItems().stream()
                 .filter(item -> item.getProduct().getProductId().equals(productId))
                 .findFirst().orElse(null);
         long total = (long) quantity + (existing == null ? 0 : existing.getQuantity());
-        requireAvailable(product, total);
+        if (total > Integer.MAX_VALUE || !isAvailable(product, total)) {
+            throw new IllegalArgumentException("Product is unavailable or stock is insufficient");
+        }
         if (existing != null) {
             existing.setQuantity((int) total);
             return items.save(existing);
@@ -85,7 +82,9 @@ public class CartServiceImp implements CartService {
         requireQuantity(quantity);
         lockCustomer(customerId);
         CartItem item = findOwnedItem(getCartByCustomerId(customerId), cartItemId);
-        requireAvailable(item.getProduct(), quantity);
+        if (!isAvailable(item.getProduct(), quantity)) {
+            throw new IllegalArgumentException("Product is unavailable or stock is insufficient");
+        }
         item.setQuantity(quantity);
         return items.save(item);
     }
@@ -155,32 +154,6 @@ public class CartServiceImp implements CartService {
                 .orElseThrow(() -> new NoSuchElementException("Customer not found"));
     }
 
-    @Override
-    public project.project.DTO.cart.CartDtos.StockSyncResponse synchronizeStock(Long customerId) {
-        lockCustomer(customerId);
-        Cart cart = carts.findByCustomer_CustomerId(customerId).orElse(null);
-        if (cart == null) {
-            return new project.project.DTO.cart.CartDtos.StockSyncResponse(null, List.of(), List.of());
-        }
-        List<String> removedProducts = new ArrayList<>();
-        cart.getItems().removeIf(item -> {
-            Integer stock = item.getProduct().getStock();
-            if (stock != null && stock <= 0) {
-                removedProducts.add(item.getProduct().getName());
-                return true;
-            }
-            return false;
-        });
-        // orphanRemoval persists these deletions in the same transaction.
-        initializeProductImages(cart);
-        return new project.project.DTO.cart.CartDtos.StockSyncResponse(cart.getCartId(),
-                cart.getItems().stream().map(project.project.DTO.cart.CartDtos.Item::from).toList(), removedProducts);
-    }
-
-    private void initializeProductImages(Cart cart) {
-        cart.getItems().forEach(item -> org.hibernate.Hibernate.initialize(item.getProduct().getImages()));
-    }
-
     private CartItem findOwnedItem(Cart cart, Long cartItemId) {
         requireId(cartItemId, "Cart item");
         return cart.getItems().stream().filter(item -> item.getCartItemId().equals(cartItemId))
@@ -196,20 +169,6 @@ public class CartServiceImp implements CartService {
                 && product.getStock() != null && quantity <= product.getStock()
                 && product.getSeller().getStatus() == SellerStatus.ACTIVE
                 && product.getSeller().getUser().getStatus() == UserStatus.ACTIVE;
-    }
-
-    private void requireAvailable(Product product, long quantity) {
-        if (product.getStock() == null || product.getStock() <= 0) {
-            throw new project.project.Exception.CartAvailabilityException("OUT_OF_STOCK", "Out of stock. This product is no longer available.");
-        }
-        if (product.getStatus() != ProductStatus.ACTIVE
-                || product.getSeller().getStatus() != SellerStatus.ACTIVE
-                || product.getSeller().getUser().getStatus() != UserStatus.ACTIVE) {
-            throw new project.project.Exception.CartAvailabilityException("PRODUCT_UNAVAILABLE", "This product or store is not available for purchase.");
-        }
-        if (quantity > product.getStock()) {
-            throw new project.project.Exception.CartAvailabilityException("INSUFFICIENT_STOCK", "Only " + product.getStock() + " items are available. Stock has changed.");
-        }
     }
 
     private void requireId(Long id, String name) {

@@ -1,20 +1,64 @@
-"use client";
+import React, { useState, useEffect, useRef } from "react";
 
-import { useState } from "react";
+const CustomSelect = ({ options }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(options[0]);
+  const selectRef = useRef(null);
 
-type Option = { label: string; value: string };
-type Props = { options: Option[]; value?: string; onChange?: (value: string) => void };
+  // Function to close the dropdown when a click occurs outside the component
+  const handleClickOutside = (event) => {
+    if (selectRef.current && !selectRef.current.contains(event.target)) {
+      setIsOpen(false);
+    }
+  };
 
-export default function CustomSelect({ options, value, onChange }: Props) {
-  const [selectedValue, setSelectedValue] = useState(options[0]?.value ?? "");
+  useEffect(() => {
+    // Add a click event listener to the document
+    document.addEventListener("click", handleClickOutside);
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const handleOptionClick = (option) => {
+    setSelectedOption(option);
+    toggleDropdown();
+  };
+
   return (
-    <select aria-label="Sort products" value={value ?? selectedValue}
-      onChange={(event) => {
-        setSelectedValue(event.target.value);
-        onChange?.(event.target.value);
-      }}
-      className="h-10 max-w-full rounded-md border border-gray-3 bg-white px-3 text-sm text-dark focus:outline-none focus:ring-2 focus:ring-blue/20">
-      {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-    </select>
+    <div
+      className="custom-select custom-select-2 flex-shrink-0 relative"
+      ref={selectRef}
+    >
+      <div
+        className={`select-selected whitespace-nowrap ${
+          isOpen ? "select-arrow-active" : ""
+        }`}
+        onClick={toggleDropdown}
+      >
+        {selectedOption.label}
+      </div>
+      <div className={`select-items ${isOpen ? "" : "select-hide"}`}>
+        {options.slice(1).map((option, index) => (
+          <div
+            key={index}
+            onClick={() => handleOptionClick(option)}
+            className={`select-item ${
+              selectedOption === option ? "same-as-selected" : ""
+            }`}
+          >
+            {option.label}
+          </div>
+        ))}
+      </div>
+    </div>
   );
-}
+};
+
+export default CustomSelect;

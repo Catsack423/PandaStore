@@ -64,8 +64,8 @@ public class NotificationServiceImp implements NotificationService {
 
                 sendNotification(
                                 findCustomerUserId(customerId),
-                                "Payment successful",
-                                "Payment received for order #" + orderGroupId,
+                                "ชำระเงินสำเร็จ",
+                                "ได้รับการชำระเงินสำหรับคำสั่งซื้อ #" + orderGroupId,
                                 NotificationType.PAYMENT_SUCCESS);
         }
 
@@ -76,8 +76,8 @@ public class NotificationServiceImp implements NotificationService {
 
                 sendNotification(
                                 findSellerUserId(sellerId),
-                                "New order",
-                                "Order #" + orderId + " is awaiting confirmation from your shop",
+                                "มีคำสั่งซื้อใหม่",
+                                "คำสั่งซื้อ #" + orderId + " รอการยืนยันจากร้านค้า",
                                 NotificationType.NEW_ORDER_FOR_SELLER);
         }
 
@@ -93,8 +93,8 @@ public class NotificationServiceImp implements NotificationService {
                 for (User admin : admins) {
                         saveNotification(
                                         admin,
-                                        "New seller application",
-                                        "Please review seller application #" + applicationId,
+                                        "มีคำขอสมัครผู้ขายใหม่",
+                                        "กรุณาตรวจสอบคำขอสมัครผู้ขาย #" + applicationId,
                                         NotificationType.NEW_SELLER_APPLICATION);
                 }
         }
@@ -110,9 +110,9 @@ public class NotificationServiceImp implements NotificationService {
 
                 sendNotification(
                                 findCustomerUserId(customerId),
-                                "Order shipped",
-                                "Order #" + orderId
-                                                + " Tracking number: " + trackingNumber,
+                                "จัดส่งสินค้าแล้ว",
+                                "คำสั่งซื้อ #" + orderId
+                                                + " เลขติดตามพัสดุ: " + trackingNumber,
                                 NotificationType.ORDER_SHIPPED);
         }
 
@@ -123,8 +123,8 @@ public class NotificationServiceImp implements NotificationService {
 
                 sendNotification(
                                 findSellerUserId(sellerId),
-                                "New review",
-                                "Your shop received a new review #" + reviewId,
+                                "มีรีวิวใหม่",
+                                "ร้านค้าของคุณได้รับรีวิวใหม่ #" + reviewId,
                                 NotificationType.NEW_REVIEW);
         }
 

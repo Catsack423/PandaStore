@@ -1,16 +1,18 @@
+import Signup from "@/components/Auth/Signup";
 import React from "react";
 
 import { Metadata } from "next";
-import CustomerSignup from "@/components/Auth/Signup/customer";
+import SignSelection from "@/components/Auth/SignSelect";
 export const metadata: Metadata = {
-  title: "Create customer account | PandaStore",
-  description: "Create a PandaStore customer account before applying to sell.",
+  title: "Signup Page | NextCommerce Nextjs E-commerce template",
+  description: "This is Signup Page for NextCommerce Template",
+  // other metadata
 };
 
 const SignupPage = () => {
   return (
     <main>
-      <CustomerSignup />
+      <SignSelection />
     </main>
   );
 };

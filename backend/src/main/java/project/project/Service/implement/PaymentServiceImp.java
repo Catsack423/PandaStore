@@ -13,7 +13,6 @@ import project.project.Service.api.PaymentService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,17 +23,15 @@ public class PaymentServiceImp implements PaymentService {
     private final OrderGroupRepository orderGroupRepository;
     private final OrderRepository orderRepository;
     private final NotificationService notificationService;
-    private final OrderStateLock stateLock;
 
     public PaymentServiceImp(PaymentRepository paymentRepository,
-            OrderGroupRepository orderGroupRepository,
-            OrderRepository orderRepository,
-            @Autowired(required = false) NotificationService notificationService, OrderStateLock stateLock) {
+                             OrderGroupRepository orderGroupRepository,
+                             OrderRepository orderRepository,
+                             @Autowired(required = false) NotificationService notificationService) {
         this.paymentRepository = paymentRepository;
         this.orderGroupRepository = orderGroupRepository;
         this.orderRepository = orderRepository;
         this.notificationService = notificationService;
-        this.stateLock = stateLock;
     }
 
     @Override
@@ -65,8 +62,7 @@ public class PaymentServiceImp implements PaymentService {
         }
 
         if (orderGroup.getGrandTotal() != null && amount.compareTo(orderGroup.getGrandTotal()) != 0) {
-            throw new IllegalArgumentException("Payment amount (" + amount + ") does not match order grand total ("
-                    + orderGroup.getGrandTotal() + ")");
+            throw new IllegalArgumentException("Payment amount (" + amount + ") does not match order grand total (" + orderGroup.getGrandTotal() + ")");
         }
 
         Optional<Payment> existingOpt = paymentRepository.findByOrderGroup_OrderGroupId(orderGroupId);
@@ -76,8 +72,7 @@ public class PaymentServiceImp implements PaymentService {
             if (payment.getStatus() == PaymentStatus.SUCCESS) {
                 throw new IllegalStateException("Order group has already been successfully paid");
             }
-            if (payment.getStatus() == PaymentStatus.REFUNDED
-                    || payment.getStatus() == PaymentStatus.PARTIALLY_REFUNDED) {
+            if (payment.getStatus() == PaymentStatus.REFUNDED || payment.getStatus() == PaymentStatus.PARTIALLY_REFUNDED) {
                 throw new IllegalStateException("Order group has already been processed and refunded");
             }
             payment.setPaymentMethod(method);
@@ -95,12 +90,11 @@ public class PaymentServiceImp implements PaymentService {
             payment.setGatewayTransactionId("GW-TXN-" + UUID.randomUUID().toString());
         }
 
-        Payment savedPayment = paymentRepository.save(payment);
-        orderGroup.setPayment(savedPayment);
+        orderGroup.setPayment(payment);
         orderGroup.setPaymentStatus(OrderGroupPaymentStatus.PENDING);
         orderGroupRepository.save(orderGroup);
 
-        return savedPayment;
+        return paymentRepository.save(payment);
     }
 
     @Override
@@ -111,11 +105,7 @@ public class PaymentServiceImp implements PaymentService {
         }
 
         Payment payment = paymentRepository.findByGatewayTransactionId(gatewayTransactionId.trim())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Payment not found with gateway transaction id: " + gatewayTransactionId));
-        stateLock.lock(payment);
-        if (!gatewayTransactionId.trim().equals(payment.getGatewayTransactionId()))
-            throw new IllegalStateException("Payment transaction has changed");
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with gateway transaction id: " + gatewayTransactionId));
 
         if (payment.getStatus() == PaymentStatus.SUCCESS) {
             if (isSuccess) {
@@ -137,22 +127,9 @@ public class PaymentServiceImp implements PaymentService {
 
             if (orderGroup != null) {
                 orderGroup.setPaymentStatus(OrderGroupPaymentStatus.PAID);
-                List<Order> subOrders = orderRepository.findByOrderGroup_OrderGroupId(orderGroup.getOrderGroupId());
-                if (subOrders != null && !subOrders.isEmpty()) {
-                    for (Order subOrder : subOrders) {
-                        if (subOrder.getOrderStatus() == null
-                                || subOrder.getOrderStatus() == OrderStatus.PENDING_PAYMENT
-                                || subOrder.getOrderStatus() == OrderStatus.WAITING_SELLER_CONFIRM) {
-                            subOrder.setOrderStatus(OrderStatus.WAITING_SELLER_CONFIRM);
-                            orderRepository.save(subOrder);
-                        }
-                    }
-                }
                 if (orderGroup.getSubOrders() != null) {
                     for (Order subOrder : orderGroup.getSubOrders()) {
-                        if (subOrder.getOrderStatus() == null
-                                || subOrder.getOrderStatus() == OrderStatus.PENDING_PAYMENT
-                                || subOrder.getOrderStatus() == OrderStatus.WAITING_SELLER_CONFIRM) {
+                        if (subOrder.getOrderStatus() == null || subOrder.getOrderStatus() == OrderStatus.WAITING_SELLER_CONFIRM) {
                             subOrder.setOrderStatus(OrderStatus.WAITING_SELLER_CONFIRM);
                         }
                     }
@@ -161,16 +138,12 @@ public class PaymentServiceImp implements PaymentService {
 
                 if (notificationService != null) {
                     if (orderGroup.getCustomer() != null && orderGroup.getCustomer().getCustomerId() != null) {
-                        notificationService.notifyCustomerOrderPaid(orderGroup.getCustomer().getCustomerId(),
-                                orderGroup.getOrderGroupId());
+                        notificationService.notifyCustomerOrderPaid(orderGroup.getCustomer().getCustomerId(), orderGroup.getOrderGroupId());
                     }
-                    List<Order> notifyOrders = (subOrders != null && !subOrders.isEmpty()) ? subOrders
-                            : orderGroup.getSubOrders();
-                    if (notifyOrders != null) {
-                        for (Order subOrder : notifyOrders) {
+                    if (orderGroup.getSubOrders() != null) {
+                        for (Order subOrder : orderGroup.getSubOrders()) {
                             if (subOrder.getSeller() != null && subOrder.getSeller().getSellerId() != null) {
-                                notificationService.notifySellerNewOrder(subOrder.getSeller().getSellerId(),
-                                        subOrder.getOrderId());
+                                notificationService.notifySellerNewOrder(subOrder.getSeller().getSellerId(), subOrder.getOrderId());
                             }
                         }
                     }
@@ -202,11 +175,9 @@ public class PaymentServiceImp implements PaymentService {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
-        stateLock.lock(order);
 
         if (order.getTotalAmount() != null && refundAmount.compareTo(order.getTotalAmount()) > 0) {
-            throw new IllegalArgumentException("Refund amount (" + refundAmount
-                    + ") cannot exceed sub-order total amount (" + order.getTotalAmount() + ")");
+            throw new IllegalArgumentException("Refund amount (" + refundAmount + ") cannot exceed sub-order total amount (" + order.getTotalAmount() + ")");
         }
 
         OrderGroup orderGroup = order.getOrderGroup();
@@ -215,21 +186,17 @@ public class PaymentServiceImp implements PaymentService {
         }
 
         Payment payment = paymentRepository.findByOrderGroup_OrderGroupId(orderGroup.getOrderGroupId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Payment not found for order group id: " + orderGroup.getOrderGroupId()));
-        stateLock.lock(payment);
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order group id: " + orderGroup.getOrderGroupId()));
 
         if (payment.getStatus() != PaymentStatus.SUCCESS && payment.getStatus() != PaymentStatus.PARTIALLY_REFUNDED) {
             throw new IllegalStateException("Cannot refund payment with status: " + payment.getStatus());
         }
 
-        BigDecimal currentRefunded = payment.getRefundedAmount() != null ? payment.getRefundedAmount()
-                : BigDecimal.ZERO;
+        BigDecimal currentRefunded = payment.getRefundedAmount() != null ? payment.getRefundedAmount() : BigDecimal.ZERO;
         BigDecimal remainingRefundable = payment.getAmount().subtract(currentRefunded);
 
         if (refundAmount.compareTo(remainingRefundable) > 0) {
-            throw new IllegalArgumentException("Refund amount (" + refundAmount
-                    + ") exceeds remaining refundable amount (" + remainingRefundable + ")");
+            throw new IllegalArgumentException("Refund amount (" + refundAmount + ") exceeds remaining refundable amount (" + remainingRefundable + ")");
         }
 
         BigDecimal newRefunded = currentRefunded.add(refundAmount);
@@ -244,13 +211,7 @@ public class PaymentServiceImp implements PaymentService {
         }
 
         order.setOrderStatus(OrderStatus.CANCELLED);
-        if (order.getRejectionReason() == null || order.getRejectionReason().isBlank()) {
-            String sanitizedReason = reason.trim();
-            if (sanitizedReason.length() > 255) {
-                sanitizedReason = sanitizedReason.substring(0, 255);
-            }
-            order.setRejectionReason(sanitizedReason);
-        }
+        order.setRejectionReason(reason.trim());
 
         orderRepository.save(order);
         orderGroupRepository.save(orderGroup);
@@ -269,19 +230,15 @@ public class PaymentServiceImp implements PaymentService {
 
         OrderGroup orderGroup = orderGroupRepository.findById(orderGroupId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order group not found with id: " + orderGroupId));
-        stateLock.lockGroup(orderGroup);
 
         Payment payment = paymentRepository.findByOrderGroup_OrderGroupId(orderGroupId)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException("Payment not found for order group id: " + orderGroupId));
-        stateLock.lock(payment);
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order group id: " + orderGroupId));
 
         if (payment.getStatus() != PaymentStatus.SUCCESS && payment.getStatus() != PaymentStatus.PARTIALLY_REFUNDED) {
             throw new IllegalStateException("Cannot refund payment with status: " + payment.getStatus());
         }
 
-        BigDecimal currentRefunded = payment.getRefundedAmount() != null ? payment.getRefundedAmount()
-                : BigDecimal.ZERO;
+        BigDecimal currentRefunded = payment.getRefundedAmount() != null ? payment.getRefundedAmount() : BigDecimal.ZERO;
         if (currentRefunded.compareTo(payment.getAmount()) >= 0) {
             throw new IllegalStateException("Payment has already been fully refunded");
         }
@@ -311,8 +268,7 @@ public class PaymentServiceImp implements PaymentService {
             throw new IllegalArgumentException("Order group ID cannot be null");
         }
         return paymentRepository.findByOrderGroup_OrderGroupId(orderGroupId)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException("Payment not found for order group id: " + orderGroupId));
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order group id: " + orderGroupId));
     }
 
     @Override
@@ -332,7 +288,6 @@ public class PaymentServiceImp implements PaymentService {
             throw new IllegalArgumentException("Gateway transaction ID cannot be null or empty");
         }
         return paymentRepository.findByGatewayTransactionId(gatewayTransactionId.trim())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Payment not found with gateway transaction id: " + gatewayTransactionId));
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with gateway transaction id: " + gatewayTransactionId));
     }
 }

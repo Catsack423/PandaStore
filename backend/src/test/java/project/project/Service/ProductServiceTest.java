@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import project.project.Entity.product.Category;
 import project.project.Entity.product.Product;
 import project.project.Entity.product.ProductImage;
 import project.project.Entity.product.ProductStatus;
@@ -23,7 +22,6 @@ import project.project.Service.implement.ProductServiceImp;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -64,25 +62,6 @@ public class ProductServiceTest {
         sampleProduct.setPrice(new BigDecimal("1500.00"));
         sampleProduct.setStock(10);
         sampleProduct.setStatus(ProductStatus.ACTIVE);
-    }
-
-    @Test
-    void restockingSoldOutProductReactivatesItWithoutReactivatingHiddenProducts() {
-        sampleProduct.setStatus(ProductStatus.OUT_OF_STOCK);
-        sampleProduct.setStock(0);
-        when(productRepository.findById(100L)).thenReturn(Optional.of(sampleProduct));
-        when(productRepository.save(any(Product.class))).thenAnswer(call -> call.getArgument(0));
-        Product update = new Product();
-        update.setStatus(null);
-        update.setStock(18);
-        assertEquals(ProductStatus.ACTIVE, productService.updateProduct(1L, 100L, update).getStatus());
-        assertEquals(18, sampleProduct.getStock());
-
-        sampleProduct.setStatus(ProductStatus.INACTIVE);
-        assertEquals(ProductStatus.INACTIVE, productService.updateProduct(1L, 100L, update).getStatus());
-        sampleProduct.setStatus(ProductStatus.OUT_OF_STOCK);
-        update.setStatus(ProductStatus.INACTIVE);
-        assertEquals(ProductStatus.INACTIVE, productService.updateProduct(1L, 100L, update).getStatus());
     }
 
     @Test
@@ -147,71 +126,6 @@ public class ProductServiceTest {
             productService.createProduct(1L, sampleProduct, List.of());
         });
 
-        verify(productRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("DEF-007: สร้างสินค้าพร้อม Category สำเร็จ และบันทึกข้อมูล Category ลงระบบ")
-    void testCreateProduct_WithCategories_Success() {
-        List<String> images = List.of("https://cdn.example.com/img1.jpg");
-        Category category = new Category(1L, "เสื้อผ้า", "หมวดหมู่เสื้อผ้า");
-
-        when(sellerRepository.findById(1L)).thenReturn(Optional.of(sampleSeller));
-        when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> {
-            Product p = invocation.getArgument(0);
-            p.setProductId(101L);
-            return p;
-        });
-        when(productImageRepository.save(any(ProductImage.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Product result = productService.createProduct(1L, sampleProduct, images, Set.of(1L));
-
-        assertNotNull(result);
-        assertEquals(1, result.getCategories().size());
-        assertTrue(result.getCategories().contains(category));
-        verify(categoryRepository, times(1)).findById(1L);
-        verify(productRepository, times(1)).save(any(Product.class));
-    }
-
-    @Test
-    @DisplayName("DEF-008: สร้างสินค้าด้วย Category ที่ไม่มีในระบบ ต้องโยน IllegalArgumentException พร้อมข้อความ 'Categoryนี้ไม่มีในระบบ'")
-    void testCreateProduct_NonExistentCategory_ThrowsException() {
-        List<String> images = List.of("https://cdn.example.com/img1.jpg");
-        when(sellerRepository.findById(1L)).thenReturn(Optional.of(sampleSeller));
-        when(categoryRepository.findById(999L)).thenReturn(Optional.empty());
-
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            productService.createProduct(1L, sampleProduct, images, Set.of(999L));
-        });
-
-        assertTrue(ex.getMessage().contains("Category") && ex.getMessage().contains("not found"));
-        verify(productRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("DEF-009: สร้างสินค้าด้วย imageUrls เป็น empty string [\"\"] ต้องโยน IllegalArgumentException")
-    void testCreateProduct_EmptyImageString_ThrowsException() {
-        when(sellerRepository.findById(1L)).thenReturn(Optional.of(sampleSeller));
-
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            productService.createProduct(1L, sampleProduct, List.of(""));
-        });
-
-        assertEquals("At least one product image is required", ex.getMessage());
-        verify(productRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("DEF-010: สร้างสินค้าด้วย imageUrls เป็น whitespace [\"  \"] ต้องโยน IllegalArgumentException")
-    void testCreateProduct_WhitespaceImageString_ThrowsException() {
-        when(sellerRepository.findById(1L)).thenReturn(Optional.of(sampleSeller));
-
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            productService.createProduct(1L, sampleProduct, List.of("   "));
-        });
-
-        assertEquals("At least one product image is required", ex.getMessage());
         verify(productRepository, never()).save(any());
     }
 

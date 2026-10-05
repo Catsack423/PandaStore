@@ -1,4 +1,3 @@
-import { formatBaht } from "@/lib/currency";
 import React from "react";
 
 const OrderDetails = ({ orderItem }: any) => {
@@ -63,7 +62,7 @@ const OrderDetails = ({ orderItem }: any) => {
 
         <div className="min-w-[113px]">
           <p className="text-custom-sm text-dark">
-            {formatBaht(orderItem.total)}
+            {orderItem.total}
           </p>
         </div>
       </div>

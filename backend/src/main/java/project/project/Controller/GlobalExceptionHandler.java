@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    private static final String INTERNAL_ERROR_MESSAGE = "An internal error occurred. Please try again later";
+    private static final String INTERNAL_ERROR_MESSAGE = "เกิดข้อผิดพลาดภายในระบบ กรุณาลองใหม่ภายหลัง";
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationExceptions(
@@ -42,20 +42,20 @@ public class GlobalExceptionHandler {
 
             String message = error.getDefaultMessage() != null
                     ? error.getDefaultMessage()
-                    : "Invalid data";
+                    : "ข้อมูลไม่ถูกต้อง";
 
             errors.putIfAbsent(name, message);
         });
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.<Void>error(
-                        "Invalid request data",
+                        "ข้อมูลที่ส่งมาไม่ถูกต้อง",
                         errors));
     }
 
-    @ExceptionHandler({EntityNotFoundException.class, project.project.Exception.ResourceNotFoundException.class})
+    @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(
-            RuntimeException ex) {
+            EntityNotFoundException ex) {
 
         return error(HttpStatus.NOT_FOUND, ex.getMessage());
     }
@@ -81,21 +81,6 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.CONFLICT, ex.getMessage());
     }
 
-    @ExceptionHandler(project.project.Exception.InvalidReviewException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidReview(
-            project.project.Exception.InvalidReviewException ex) {
-
-        return error(HttpStatus.BAD_REQUEST, ex.getMessage());
-    }
-
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiResponse<Void>> handleRuntimeException(
-            RuntimeException ex) {
-
-        log.error("Unexpected runtime exception", ex);
-        return error(HttpStatus.INTERNAL_SERVER_ERROR, INTERNAL_ERROR_MESSAGE);
-    }
-
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(
             DataIntegrityViolationException ex) {
@@ -104,7 +89,7 @@ public class GlobalExceptionHandler {
 
         return error(
                 HttpStatus.CONFLICT,
-                "Unable to save because the data conflicts with existing records");
+                "ไม่สามารถบันทึกข้อมูลได้ เนื่องจากข้อมูลขัดแย้งกับข้อมูลในระบบ");
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -113,7 +98,7 @@ public class GlobalExceptionHandler {
 
         return error(
                 HttpStatus.BAD_REQUEST,
-                "Invalid JSON format or request value");
+                "รูปแบบ JSON หรือค่าข้อมูลที่ส่งมาไม่ถูกต้อง");
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -122,9 +107,9 @@ public class GlobalExceptionHandler {
 
         return error(
                 HttpStatus.BAD_REQUEST,
-                "Data type for parameter "
+                "ชนิดข้อมูลของพารามิเตอร์ "
                         + ex.getName()
-                        + " is invalid");
+                        + " ไม่ถูกต้อง");
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -183,7 +168,7 @@ public class GlobalExceptionHandler {
     }
 
     private String messageOrDefault(String message) {
-        return message != null && !message.isBlank() ? message : "Unable to complete the operation";
+        return message != null && !message.isBlank() ? message : "ไม่สามารถดำเนินการได้";
     }
 
     // @ExceptionHandler(project.project.Exception.DuplicateUserException.class)

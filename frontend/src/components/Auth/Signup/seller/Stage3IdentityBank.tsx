@@ -20,12 +20,12 @@ export const Stage3IdentityBank: React.FC<Stage3IdentityBankProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="sellerFirstName" className="text-dark font-medium">
-            Applicant&apos;s first name <span className="text-red">*</span>
+            ชื่อจริงผู้สมัคร <span className="text-red">*</span>
           </Label>
           <Input
             id="sellerFirstName"
             name="sellerFirstName"
-            placeholder="First name as shown on your national ID card"
+            placeholder="ชื่อตามบัตรประชาชน"
             value={formData.sellerFirstName}
             onChange={onChange}
             className={errors.sellerFirstName ? "border-red" : ""}
@@ -37,12 +37,12 @@ export const Stage3IdentityBank: React.FC<Stage3IdentityBankProps> = ({
 
         <div className="space-y-1.5">
           <Label htmlFor="sellerLastName" className="text-dark font-medium">
-            Last name <span className="text-red">*</span>
+            นามสกุลจริง <span className="text-red">*</span>
           </Label>
           <Input
             id="sellerLastName"
             name="sellerLastName"
-            placeholder="Last name as shown on your national ID card"
+            placeholder="นามสกุลตามบัตรประชาชน"
             value={formData.sellerLastName}
             onChange={onChange}
             className={errors.sellerLastName ? "border-red" : ""}
@@ -56,13 +56,13 @@ export const Stage3IdentityBank: React.FC<Stage3IdentityBankProps> = ({
       {/* ID Card Number */}
       <div className="space-y-1.5">
         <Label htmlFor="idCardNumber" className="text-dark font-medium">
-          National ID number (13 digits) <span className="text-red">*</span>
+          เลขประจำตัวประชาชน (13 หลัก) <span className="text-red">*</span>
         </Label>
         <Input
           id="idCardNumber"
           name="idCardNumber"
           maxLength={13}
-          placeholder="e.g. 1100123456789 (13 digits)"
+          placeholder="เช่น 1100123456789 (ตัวเลข 13 หลัก)"
           value={formData.idCardNumber}
           onChange={onChange}
           className={errors.idCardNumber ? "border-red" : ""}
@@ -74,18 +74,18 @@ export const Stage3IdentityBank: React.FC<Stage3IdentityBankProps> = ({
 
       <div className="pt-2 border-t border-gray-3 mt-4">
         <h5 className="font-semibold text-sm text-dark mb-3">
-          Bank account for receiving sales payments
+          ข้อมูลบัญชีธนาคารสำหรับรับเงินยอดขาย
         </h5>
 
         {/* Bank Name */}
         <div className="space-y-1.5 mb-3.5">
           <Label htmlFor="bankName" className="text-dark font-medium">
-            Bank name <span className="text-red">*</span>
+            ชื่อธนาคาร <span className="text-red">*</span>
           </Label>
           <Input
             id="bankName"
             name="bankName"
-            placeholder="e.g. Kasikornbank, Siam Commercial Bank"
+            placeholder="เช่น ธนาคารกสิกรไทย, ธนาคารไทยพาณิชย์"
             value={formData.bankName}
             onChange={onChange}
             className={errors.bankName ? "border-red" : ""}
@@ -99,12 +99,12 @@ export const Stage3IdentityBank: React.FC<Stage3IdentityBankProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="bankAccountName" className="text-dark font-medium">
-              Bank account name <span className="text-red">*</span>
+              ชื่อบัญชีธนาคาร <span className="text-red">*</span>
             </Label>
             <Input
               id="bankAccountName"
               name="bankAccountName"
-              placeholder="Must match the applicant's name"
+              placeholder="ตรงกับชื่อผู้สมัคร"
               value={formData.bankAccountName}
               onChange={onChange}
               className={errors.bankAccountName ? "border-red" : ""}
@@ -119,12 +119,12 @@ export const Stage3IdentityBank: React.FC<Stage3IdentityBankProps> = ({
               htmlFor="bankAccountNumber"
               className="text-dark font-medium"
             >
-              Bank account number <span className="text-red">*</span>
+              เลขที่บัญชีธนาคาร <span className="text-red">*</span>
             </Label>
             <Input
               id="bankAccountNumber"
               name="bankAccountNumber"
-              placeholder="e.g. 1234567890"
+              placeholder="เช่น 1234567890"
               value={formData.bankAccountNumber}
               onChange={onChange}
               className={errors.bankAccountNumber ? "border-red" : ""}

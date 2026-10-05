@@ -34,7 +34,7 @@ public class SellerShopServiceImp implements SellerShopService {
     public Seller getShopBySellerId(Long sellerId) {
         return sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new RuntimeException(
-                        "Shop not found for sellerId: " + sellerId));
+                        "ไม่พบร้านค้า sellerId: " + sellerId));
     }
 
     /**
@@ -47,7 +47,7 @@ public class SellerShopServiceImp implements SellerShopService {
     public Seller getShopByUserId(Long userId) {
         return sellerRepository.findByUser_UserId(userId)
                 .orElseThrow(() -> new RuntimeException(
-                        "Shop not found for userId: " + userId));
+                        "ไม่พบร้านค้าสำหรับ userId: " + userId));
     }
 
     /**
@@ -64,12 +64,12 @@ public class SellerShopServiceImp implements SellerShopService {
     public Seller updateShopProfile(Long sellerId, Seller updatedInfo) {
         Seller existingSeller = sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new RuntimeException(
-                        "Shop not found for sellerId: " + sellerId));
+                        "ไม่พบร้านค้า sellerId: " + sellerId));
 
         // ตรวจสอบสถานะร้านค้า — ต้อง ACTIVE เท่านั้นจึงจะแก้ไขได้
         if (existingSeller.getStatus() != SellerStatus.ACTIVE) {
             throw new RuntimeException(
-                    "Cannot update a shop with status: " + existingSeller.getStatus());
+                    "ไม่สามารถแก้ไขร้านค้าที่มีสถานะ: " + existingSeller.getStatus());
         }
 
         // อัปเดตเฉพาะฟิลด์ที่มีค่า (Partial Update) 
@@ -108,7 +108,7 @@ public class SellerShopServiceImp implements SellerShopService {
         // ตรวจว่า Seller มีอยู่จริง
         Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new RuntimeException(
-                        "Shop not found for sellerId: " + sellerId));
+                        "ไม่พบร้านค้า sellerId: " + sellerId));
 
         // ค้นหาบัญชีธนาคารที่มีอยู่
         Optional<SellerBankAccount> existingAccount =
@@ -139,6 +139,6 @@ public class SellerShopServiceImp implements SellerShopService {
     public SellerBankAccount getBankAccountBySellerId(Long sellerId) {
         return sellerBankAccountRepository.findBySeller_SellerId(sellerId)
                 .orElseThrow(() -> new RuntimeException(
-                        "Bank account not found for sellerId: " + sellerId));
+                        "ไม่พบบัญชีธนาคารสำหรับ sellerId: " + sellerId));
     }
 }

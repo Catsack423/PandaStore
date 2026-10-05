@@ -1,8 +1,6 @@
-import { formatBaht } from "@/lib/currency";
 import React from "react";
-import ProductImage from "@/components/Common/ProductImage";
+import Image from "next/image";
 import Link from "next/link";
-import { productUrl } from "@/lib/productUrl";
 
 const LatestProducts = ({ products }) => {
   return (
@@ -16,13 +14,15 @@ const LatestProducts = ({ products }) => {
           {/* <!-- product item --> */}
           {products.slice(0, 3).map((product, key) => (
             <div className="flex items-center gap-6" key={key}>
-              <ProductImage src={product.imgs?.thumbnails?.[0]} alt={product.title} size="sm" surface="gray3" />
+              <div className="flex items-center justify-center rounded-[10px] bg-gray-3 max-w-[90px] w-full h-22.5">
+                <Image src={product.imgs?.thumbnails?.[0]} alt="product" width={74} height={74} />
+              </div>
 
               <div>
                 <h3 className="font-medium text-dark mb-1 ease-out duration-200 hover:text-blue">
-                  <Link href={productUrl(product)}> {product.title} </Link>
+                  <Link href="/shop-details"> {product.title} </Link>
                 </h3>
-                <p className="text-custom-sm">Price: {formatBaht(product.price)}</p>
+                <p className="text-custom-sm">Price: ${product.price}</p>
               </div>
             </div>
           ))}

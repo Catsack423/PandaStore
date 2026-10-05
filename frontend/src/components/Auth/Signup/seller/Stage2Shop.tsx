@@ -24,12 +24,12 @@ export const Stage2Shop: React.FC<Stage2ShopProps> = ({
       {/* Shop Name */}
       <div className="space-y-1.5">
         <Label htmlFor="shopName" className="text-dark font-medium">
-          Shop name <span className="text-red">*</span>
+          ชื่อร้านค้า (Shop Name) <span className="text-red">*</span>
         </Label>
         <Input
           id="shopName"
           name="shopName"
-          placeholder="e.g. Panda Official Store"
+          placeholder="เช่น Panda Official Store"
           value={formData.shopName}
           onChange={onChange}
           className={errors.shopName ? "border-red" : ""}
@@ -42,12 +42,12 @@ export const Stage2Shop: React.FC<Stage2ShopProps> = ({
       {/* Shop Description */}
       <div className="space-y-1.5">
         <Label htmlFor="shopDescription" className="text-dark font-medium">
-          Shop description
+          คำอธิบายร้านค้า (Shop Description)
         </Label>
         <Textarea
           id="shopDescription"
           name="shopDescription"
-          placeholder="Describe your shop and the products you sell"
+          placeholder="อธิบายเกี่ยวกับร้านค้าและประเภทสินค้าที่จำหน่าย"
           value={formData.shopDescription}
           onChange={onChange}
           className={errors.shopDescription ? "border-red" : ""}
@@ -61,20 +61,15 @@ export const Stage2Shop: React.FC<Stage2ShopProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="shopPhone" className="text-dark font-medium">
-            Shop phone number <span className="text-red">*</span>
+            เบอร์โทรร้านค้า <span className="text-red">*</span>
           </Label>
           <Input
             id="shopPhone"
             name="shopPhone"
             type="tel"
-            inputMode="numeric"
-            maxLength={10}
-            placeholder="e.g. 021234567 or 0812345678"
+            placeholder="เช่น 021234567"
             value={formData.shopPhone}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
-              onChange({ target: { name: "shopPhone", value: digits } } as React.ChangeEvent<HTMLInputElement>);
-            }}
+            onChange={onChange}
             className={errors.shopPhone ? "border-red" : ""}
           />
           {errors.shopPhone && (
@@ -84,7 +79,7 @@ export const Stage2Shop: React.FC<Stage2ShopProps> = ({
 
         <div className="space-y-1.5">
           <Label htmlFor="shopEmail" className="text-dark font-medium">
-            Shop contact email <span className="text-red">*</span>
+            อีเมลติดต่อร้านค้า <span className="text-red">*</span>
           </Label>
           <Input
             id="shopEmail"
@@ -104,12 +99,12 @@ export const Stage2Shop: React.FC<Stage2ShopProps> = ({
       {/* Shop Address */}
       <div className="space-y-1.5">
         <Label htmlFor="shopAddress" className="text-dark font-medium">
-          Shop address / shipping location <span className="text-red">*</span>
+          ที่อยู่ร้านค้า / สถานที่ส่งสินค้า <span className="text-red">*</span>
         </Label>
         <Textarea
           id="shopAddress"
           name="shopAddress"
-          placeholder="House number, building, street, subdistrict, district, province, postal code"
+          placeholder="เลขที่ อาคาร ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์"
           value={formData.shopAddress}
           onChange={onChange}
           className={errors.shopAddress ? "border-red" : ""}

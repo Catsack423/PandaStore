@@ -36,8 +36,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class SellerServiceTest {
-    @org.mockito.Spy
-    private project.project.Service.implement.PasswordService passwords = new project.project.Service.implement.PasswordService();
 
     @InjectMocks
     private SellerServiceImp sellerService;
@@ -84,9 +82,9 @@ public class SellerServiceTest {
         savedSeller.setRating(BigDecimal.ZERO);
         when(sellerRepository.save(any(Seller.class))).thenReturn(savedSeller);
 
-        Seller created = sellerService.createSeller(request);
+        long sellerId = sellerService.createSeller(request);
 
-        assertEquals(10L, created.getSellerId());
+        assertEquals(10L, sellerId);
         verify(userRepository, times(1)).save(any(User.class));
         verify(sellerRepository, times(1)).save(any(Seller.class));
         verify(sellerApplicationService, times(1)).submitApplication(eq(1L), any(CreateSellerApplicationRequest.class));

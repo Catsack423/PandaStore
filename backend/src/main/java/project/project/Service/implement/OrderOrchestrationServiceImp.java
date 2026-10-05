@@ -22,10 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import project.project.Entity.product.ProductStatus;
-import project.project.Repository.CartItemRepository;
-import project.project.Repository.ProductRepository;
-
 @Service
 @Transactional(readOnly = true)
 public class OrderOrchestrationServiceImp implements OrderOrchestrationService {
@@ -33,8 +29,6 @@ public class OrderOrchestrationServiceImp implements OrderOrchestrationService {
     private final OrderGroupRepository orderGroupRepository;
     private final CartRepository cartRepository;
     private final AddressRepository addressRepository;
-    private final ProductRepository productRepository;
-    private final CartItemRepository cartItemRepository;
 
     private final InventoryService inventoryService;
     private final OrderDraftFactory orderDraftFactory;
@@ -44,16 +38,12 @@ public class OrderOrchestrationServiceImp implements OrderOrchestrationService {
             OrderGroupRepository orderGroupRepository,
             CartRepository cartRepository,
             AddressRepository addressRepository,
-            ProductRepository productRepository,
-            CartItemRepository cartItemRepository,
             InventoryService inventoryService,
             OrderDraftFactory orderDraftFactory,
             ApplicationEventPublisher eventPublisher) {
         this.orderGroupRepository = orderGroupRepository;
         this.cartRepository = cartRepository;
         this.addressRepository = addressRepository;
-        this.productRepository = productRepository;
-        this.cartItemRepository = cartItemRepository;
         this.inventoryService = inventoryService;
         this.orderDraftFactory = orderDraftFactory;
         this.eventPublisher = eventPublisher;
@@ -91,22 +81,7 @@ public class OrderOrchestrationServiceImp implements OrderOrchestrationService {
                 .toList();
 
         if (selectedItems.isEmpty()) {
-            Product defaultProduct = productRepository.findAll().stream()
-                    .filter(p -> p.getStatus() == ProductStatus.ACTIVE && p.getStock() > 0)
-                    .findFirst()
-                    .orElse(null);
-            if (defaultProduct != null) {
-                CartItem newItem = new CartItem();
-                newItem.setCart(cart);
-                newItem.setProduct(defaultProduct);
-                newItem.setQuantity(2);
-                newItem.setIsSelected(true);
-                cartItemRepository.save(newItem);
-                cart.getItems().add(newItem);
-                selectedItems = List.of(newItem);
-            } else {
-                throw new IllegalStateException("No selected cart items");
-            }
+            throw new IllegalStateException("No selected cart items");
         }
 
         Map<Long, Integer> quantities = new HashMap<>();
@@ -264,7 +239,7 @@ public class OrderOrchestrationServiceImp implements OrderOrchestrationService {
         // โหลด collection อีกระดับใน transaction
         // ไม่ fetch สอง List พร้อมกันใน EntityGraph เดียว
         for (Order order : group.getSubOrders()) {
-            org.hibernate.Hibernate.initialize(order.getOrderItems());
+            order.getOrderItems().size();
         }
 
         return group;

@@ -5,8 +5,8 @@ import jakarta.validation.constraints.Size;
 
 public class ReplyReviewRequest {
 
-    @NotBlank(message = "Reply is required")
-    @Size(max = 2000, message = "Reply must not exceed 2000 characters")
+    @NotBlank(message = "ข้อความตอบกลับห้ามว่าง")
+    @Size(max = 2000, message = "ข้อความตอบกลับต้องมีความยาวไม่เกิน 2000 ตัวอักษร")
     private String replyMessage;
 
     public ReplyReviewRequest() {

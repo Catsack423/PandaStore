@@ -9,19 +9,19 @@ import lombok.Setter;
 @Setter
 public class SellerBankAccountRequest {
 
-    @NotBlank(message = "Bank name is required")
-    @Size(max = 100, message = "Bank name must not exceed 100 characters")
+    @NotBlank(message = "ชื่อธนาคารห้ามว่าง")
+    @Size(max = 100, message = "ชื่อธนาคารต้องไม่เกิน 100 ตัวอักษร")
     private String bankName;
 
-    @NotBlank(message = "Bank account number is required")
-    @Size(max = 30, message = "Bank account number must not exceed 30 characters")
+    @NotBlank(message = "เลขที่บัญชีห้ามว่าง")
+    @Size(max = 30, message = "เลขที่บัญชีต้องไม่เกิน 30 ตัวอักษร")
     private String accountNumber;
 
-    @NotBlank(message = "Account name is required")
-    @Size(max = 100, message = "Account name must not exceed 100 characters")
+    @NotBlank(message = "ชื่อบัญชีห้ามว่าง")
+    @Size(max = 100, message = "ชื่อบัญชีต้องไม่เกิน 100 ตัวอักษร")
     private String accountName;
 
-    @Size(max = 255, message = "Image URL must not exceed 255 characters")
+    @Size(max = 255, message = "URL รูปภาพต้องไม่เกิน 255 ตัวอักษร")
     private String proofImageUrl;
 
     public SellerBankAccountRequest() {

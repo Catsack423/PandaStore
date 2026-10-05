@@ -1,15 +1,13 @@
-import { formatBaht } from "@/lib/currency";
 import React from "react";
 import { AppDispatch } from "@/redux/store";
 import { useDispatch } from "react-redux";
 
 import { removeItemFromWishlist } from "@/redux/features/wishlist-slice";
-import { useCart } from "@/app/context/CartContext";
+import { addItemToCart } from "@/redux/features/cart-slice";
 
-import ProductImage from "@/components/Common/ProductImage";
+import Image from "next/image";
 
 const SingleItem = ({ item }) => {
-  const { addItemToCart } = useCart();
   const dispatch = useDispatch<AppDispatch>();
 
   const handleRemoveFromWishlist = () => {
@@ -17,10 +15,12 @@ const SingleItem = ({ item }) => {
   };
 
   const handleAddToCart = () => {
-    addItemToCart({
+    dispatch(
+      addItemToCart({
         ...item,
         quantity: 1,
-      });
+      })
+    );
   };
 
   return (
@@ -56,7 +56,9 @@ const SingleItem = ({ item }) => {
       <div className="min-w-[387px]">
         <div className="flex items-center justify-between gap-5">
           <div className="w-full flex items-center gap-5.5">
-            <ProductImage src={item.imgs?.thumbnails?.[0]} alt={item.title} size="sm" surface="soft" />
+            <div className="flex items-center justify-center rounded-[5px] bg-gray-2 max-w-[80px] w-full h-17.5">
+              <Image src={item.imgs?.thumbnails[0]} alt="product" width={200} height={200} />
+            </div>
 
             <div>
               <h3 className="text-dark ease-out duration-200 hover:text-blue">
@@ -68,7 +70,7 @@ const SingleItem = ({ item }) => {
       </div>
 
       <div className="min-w-[205px]">
-        <p className="text-dark">{formatBaht(item.discountedPrice)}</p>
+        <p className="text-dark">${item.discountedPrice}</p>
       </div>
 
       <div className="min-w-[265px]">

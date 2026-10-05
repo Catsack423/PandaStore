@@ -21,12 +21,12 @@ export const Stage1Account: React.FC<Stage1AccountProps> = ({
       {/* Username */}
       <div className="space-y-1.5">
         <Label htmlFor="username" className="text-dark font-medium">
-          Username <span className="text-red">*</span>
+          ชื่อผู้ใช้ (Username) <span className="text-red">*</span>
         </Label>
         <Input
           id="username"
           name="username"
-          placeholder="e.g. seller_panda (3-50 characters)"
+          placeholder="เช่น seller_panda (3-50 ตัวอักษร)"
           value={formData.username}
           onChange={onChange}
           className={errors.username ? "border-red" : ""}
@@ -39,7 +39,7 @@ export const Stage1Account: React.FC<Stage1AccountProps> = ({
       {/* Email */}
       <div className="space-y-1.5">
         <Label htmlFor="email" className="text-dark font-medium">
-          Seller email <span className="text-red">*</span>
+          อีเมลผู้ขาย (Email) <span className="text-red">*</span>
         </Label>
         <Input
           id="email"
@@ -59,13 +59,13 @@ export const Stage1Account: React.FC<Stage1AccountProps> = ({
       <div className="grid grid-cols-1 sm:grid-rows-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="password" className="text-dark font-medium">
-            Password <span className="text-red">*</span>
+            รหัสผ่าน <span className="text-red">*</span>
           </Label>
           <Input
             id="password"
             name="password"
             type="password"
-            placeholder="At least 6 characters"
+            placeholder="อย่างน้อย 6 ตัวอักษร"
             value={formData.password}
             onChange={onChange}
             className={errors.password ? "border-red" : ""}
@@ -77,13 +77,13 @@ export const Stage1Account: React.FC<Stage1AccountProps> = ({
 
         <div className="space-y-1.5">
           <Label htmlFor="confirmPassword" className="text-dark font-medium">
-            Confirm password <span className="text-red">*</span>
+            ยืนยันรหัสผ่าน <span className="text-red">*</span>
           </Label>
           <Input
             id="confirmPassword"
             name="confirmPassword"
             type="password"
-            placeholder="Enter your password again"
+            placeholder="กรอกรหัสผ่านอีกครั้ง"
             value={formData.confirmPassword}
             onChange={onChange}
             className={errors.confirmPassword ? "border-red" : ""}

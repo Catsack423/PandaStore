@@ -10,11 +10,11 @@ import java.util.Map;
 
 public record CreateOrderGroupRequest(
 
-        @NotNull(message = "Please provide a customer ID") @Positive(message = "Customer ID must be greater than 0") Long customerId,
+        @NotNull(message = "กรุณาระบุรหัสลูกค้า") @Positive(message = "รหัสลูกค้าต้องมากกว่า 0") Long customerId,
 
-        @NotNull(message = "Please specify a shipping address") @Positive(message = "Address ID must be greater than 0") Long shippingAddressId,
+        @NotNull(message = "กรุณาระบุที่อยู่จัดส่ง") @Positive(message = "รหัสที่อยู่ต้องมากกว่า 0") Long shippingAddressId,
 
-        @NotEmpty(message = "Please specify a shipping method for each shop") Map<@NotNull @Positive Long, @NotBlank(message = "Please specify a shipping method") String> sellerShippingMethods,
+        @NotEmpty(message = "กรุณาระบุวิธีจัดส่งของแต่ละร้านค้า") Map<@NotNull @Positive Long, @NotBlank(message = "กรุณาระบุวิธีจัดส่ง") String> sellerShippingMethods,
 
-        @NotNull(message = "Please specify a payment method") PaymentMethod paymentMethod) {
+        @NotNull(message = "กรุณาระบุวิธีชำระเงิน") PaymentMethod paymentMethod) {
 }

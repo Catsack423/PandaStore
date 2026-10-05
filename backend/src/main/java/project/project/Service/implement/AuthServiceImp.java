@@ -14,7 +14,6 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import project.project.DTO.auth.AuthRequests;
 import project.project.DTO.customer.CreateCustomerRequest;
-import project.project.DTO.auth.LoginResponse;
 import project.project.DTO.seller.CreateSellerRequest;
 import project.project.Entity.seller.Seller;
 import project.project.Entity.user.*;
@@ -70,6 +69,9 @@ public class AuthServiceImp implements AuthService {
         long id = customerService.createCustomer(request);
         Customer customer = customers.findById(id)
                 .orElseThrow(() -> new IllegalStateException("Created customer was not found"));
+        // Auth owns password hashing; leave CustomerService's implementation unchanged.
+        customer.getUser().setPasswordHash(passwords.hash(password));
+        users.save(customer.getUser());
         cartService.createCart(id);
         return customer;
     }
@@ -97,16 +99,13 @@ public class AuthServiceImp implements AuthService {
         long sellerId = sellerService.createSeller(createSellerRequest).getSellerId();
         Seller seller = sellers.findById(sellerId)
                 .orElseThrow(() -> new IllegalStateException("Created seller was not found"));
+        seller.getUser().setPasswordHash(passwords.hash(request.password()));
+        users.save(seller.getUser());
         return seller;
     }
 
     @Override
     public String login(String usernameOrEmail, String password) {
-        return loginWithUser(usernameOrEmail, password).token();
-    }
-
-    @Override
-    public LoginResponse loginWithUser(String usernameOrEmail, String password) {
         if (usernameOrEmail == null || usernameOrEmail.isBlank()) {
             throw new IllegalArgumentException("Invalid credentials");
         }
@@ -127,7 +126,7 @@ public class AuthServiceImp implements AuthService {
         String token = jwt.issue(user.getUserId(), now, expiresAt);
         sessions.deleteByExpiresAtBefore(now);
         sessions.save(new AuthSession(tokenHash(token), user, expiresAt));
-        return LoginResponse.from(token, user);
+        return token;
     }
 
     @Override

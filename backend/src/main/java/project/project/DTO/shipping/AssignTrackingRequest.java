@@ -9,12 +9,12 @@ import lombok.Setter;
 @Setter
 public class AssignTrackingRequest {
 
-    @NotBlank(message = "Please specify the courier name (courierName)")
-    @Size(max = 100, message = "Courier name must not exceed 100 characters")
+    @NotBlank(message = "กรุณาระบุชื่อบริษัทขนส่ง (courierName)")
+    @Size(max = 100, message = "ชื่อบริษัทขนส่งต้องไม่เกิน 100 ตัวอักษร")
     private String courierName;
 
-    @NotBlank(message = "Please specify the tracking number (trackingNumber)")
-    @Size(max = 100, message = "Tracking number must not exceed 100 characters")
+    @NotBlank(message = "กรุณาระบุหมายเลข Tracking (trackingNumber)")
+    @Size(max = 100, message = "หมายเลข Tracking ต้องไม่เกิน 100 ตัวอักษร")
     private String trackingNumber;
 
     public AssignTrackingRequest() {

@@ -15,6 +15,7 @@ public interface AddressRepository extends JpaRepository<Address, Long> {
     List<Address> findByCustomer_CustomerIdOrderByIsDefaultDescAddressIdAsc(
             Long customerId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select a from Address a
             where a.addressId = :addressId

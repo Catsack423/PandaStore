@@ -22,16 +22,6 @@ class JwtAuthenticationFilterTest {
     private final JwtAuthenticationFilter filter = new JwtAuthenticationFilter(auth, new JsonMapper());
     private final String token = "abc.def.ghi";
 
-    @Test void subOrderReadsAndActionsRequireAuthentication() throws Exception {
-        for (String[] route : new String[][] { {"GET", "/api/sub-orders/1"}, {"GET", "/api/sub-orders/seller/1"}, {"GET", "/api/sub-orders/order-group/1"}, {"POST", "/api/sub-orders/1/accept"} }) {
-            var request = new MockHttpServletRequest(route[0], route[1]);
-            var response = new MockHttpServletResponse();
-            FilterChain chain = mock(FilterChain.class);
-            filter.doFilter(request, response, chain);
-            assertEquals(401, response.getStatus()); verifyNoInteractions(chain);
-        }
-    }
-
     @Test
     void rejectsMissingMalformedDuplicateAndInvalidTokensBeforeChain() throws Exception {
         for (String header : new String[] {"", "Basic abc", "Bearer invalid", "Bearer " + token}) {

@@ -5,8 +5,8 @@ import jakarta.validation.constraints.Size;
 
 public class RejectApplicationRequest {
 
-    @NotBlank(message = "Rejection reason is required")
-    @Size(max = 1000, message = "Rejection reason must not exceed 1000 characters")
+    @NotBlank(message = "เหตุผลในการปฏิเสธห้ามว่าง")
+    @Size(max = 1000, message = "เหตุผลในการปฏิเสธต้องมีความยาวไม่เกิน 1000 ตัวอักษร")
     private String reason;
 
     public RejectApplicationRequest() {

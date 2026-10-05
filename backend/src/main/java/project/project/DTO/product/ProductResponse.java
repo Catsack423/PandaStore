@@ -194,10 +194,6 @@ public class ProductResponse {
         return categoryIds;
     }
 
-    public List<Long> getCategory_id() {
-        return categoryIds;
-    }
-
     public void setCategoryIds(List<Long> categoryIds) {
         this.categoryIds = categoryIds;
     }

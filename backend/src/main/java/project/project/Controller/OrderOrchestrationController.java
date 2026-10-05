@@ -46,7 +46,7 @@ public class OrderOrchestrationController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
                         ApiResponse.success(
-                                "Order created successfully",
+                                "สร้างคำสั่งซื้อสำเร็จ",
                                 group.getOrderGroupId()));
     }
 
@@ -63,7 +63,7 @@ public class OrderOrchestrationController {
 
         return ResponseEntity.ok(
                 ApiResponse.success(
-                        "Order retrieved successfully",
+                        "ดึงข้อมูลคำสั่งซื้อสำเร็จ",
                         OrderGroupResponse.fromEntity(group)));
     }
 }

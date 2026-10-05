@@ -32,50 +32,45 @@ public class SellerServiceImp implements SellerService {
     private final SellerRepository sellerRepository;
     private final SellerApplicationService sellerApplicationService;
     private final SellerBankAccountRepository sellerBankAccountRepository;
-    private final PasswordService passwords;
 
     public SellerServiceImp(UserRepository userRepository,
                             SellerRepository sellerRepository,
                             SellerApplicationService sellerApplicationService,
-                            SellerBankAccountRepository sellerBankAccountRepository, PasswordService passwords) {
+                            SellerBankAccountRepository sellerBankAccountRepository) {
         this.userRepository = userRepository;
         this.sellerRepository = sellerRepository;
         this.sellerApplicationService = sellerApplicationService;
         this.sellerBankAccountRepository = sellerBankAccountRepository;
-        this.passwords = passwords;
     }
 
     @Override
     public Seller createSeller(CreateSellerRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new DuplicateUserException("Username '" + request.getUsername() + "' is already in use");
+            throw new DuplicateUserException("Username '" + request.getUsername() + "' ถูกใช้ไปแล้ว");
         }
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateUserException("Email '" + request.getEmail() + "' is already in use");
+            throw new DuplicateUserException("Email '" + request.getEmail() + "' ถูกใช้ไปแล้ว");
         }
         if (sellerRepository.existsByShopName(request.getShopName())) {
-            throw new DuplicateUserException("Shop name '" + request.getShopName() + "' is already in use");
+            throw new DuplicateUserException("ชื่อร้านค้า '" + request.getShopName() + "' ถูกใช้ไปแล้ว");
         }
 
         User user = new User(
                 request.getUsername(),
                 request.getEmail(),
-                passwords.hash(request.getPassword()),
-                UserRole.CUSTOMER,
+                request.getPassword(),
+                UserRole.SELLER,
                 UserStatus.ACTIVE);
 
         User savedUser;
         try {
             savedUser = userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateUserException("Username or email is already in use");
+            throw new DuplicateUserException("Username หรือ Email นี้ถูกใช้ไปแล้ว");
         } catch (DataAccessException e) {
-            throw new UserCreationException("Unable to save user", e);
+            throw new UserCreationException("บันทึกข้อมูล User ไม่สำเร็จ", e);
         }
 
-        // Submit before creating the pending shop: application submission rejects existing sellers.
-        sellerApplicationService.submitApplication(savedUser.getUserId(), request.toSellerApplicationRequest());
-        savedUser.setRole(UserRole.SELLER);
         Seller seller = new Seller();
         seller.setUser(savedUser);
         seller.setShopName(request.getShopName());
@@ -89,25 +84,14 @@ public class SellerServiceImp implements SellerService {
         Seller savedSeller;
         try {
             savedSeller = sellerRepository.save(seller);
-        } catch (DataIntegrityViolationException e) {
-            throw new DuplicateUserException("Shop name '" + request.getShopName() + "' is already in use");
-        } catch (DataAccessException e) {
-            throw new UserCreationException("Unable to save seller", e);
-        }
-
-        try {
-            SellerBankAccount bankAccount = new SellerBankAccount();
-            bankAccount.setSeller(savedSeller);
-            bankAccount.setBankName(request.getBankName());
-            bankAccount.setAccountNumber(request.getBankAccountNumber());
-            bankAccount.setAccountName(request.getBankAccountName());
-            bankAccount.setProofImageUrl(request.getProofImageUrl() != null ? request.getProofImageUrl() : "");
-            sellerBankAccountRepository.save(bankAccount);
-
             return savedSeller;
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateUserException("ชื่อร้านค้า '" + request.getShopName() + "' ถูกใช้ไปแล้ว");
         } catch (DataAccessException e) {
-            throw new UserCreationException("Unable to save application or shop bank account", e);
+            throw new UserCreationException("บันทึกข้อมูล Seller ไม่สำเร็จ", e);
         }
+
+        
     }
 
     @Override

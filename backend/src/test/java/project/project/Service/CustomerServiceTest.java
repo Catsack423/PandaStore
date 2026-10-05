@@ -38,8 +38,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 public class CustomerServiceTest {
-    @org.mockito.Spy
-    private project.project.Service.implement.PasswordService passwords = new project.project.Service.implement.PasswordService();
     @InjectMocks
     private CustomerServiceImp customerService;
 
@@ -205,6 +203,6 @@ public class CustomerServiceTest {
 
         // ตรวจสอบว่ามี violation เกิดขึ้นจริง
         assertFalse(violations.isEmpty());
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("Username is required")));
+        assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("Username ห้ามว่าง")));
     }
 }

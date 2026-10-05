@@ -43,8 +43,6 @@ public class SubOrderServiceTest {
 
     @Mock
     private NotificationService notificationService;
-    @Mock
-    private project.project.Service.implement.OrderStateLock stateLock;
 
     @Test
     @DisplayName("getSubOrderById - สำเร็จเมื่อพบคำสั่งซื้อ")
@@ -122,7 +120,6 @@ public class SubOrderServiceTest {
         customer.setUser(user);
 
         OrderGroup group = new OrderGroup();
-        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setCustomer(customer);
 
         Order order = new Order();
@@ -140,7 +137,7 @@ public class SubOrderServiceTest {
         verify(orderRepository, times(1)).save(order);
         verify(notificationService, times(1)).sendNotification(
                 eq(200L),
-                eq("Shop accepted your order"),
+                eq("ร้านค้ายืนยันคำสั่งซื้อ"),
                 contains("ORD-001"),
                 any()
         );
@@ -182,16 +179,12 @@ public class SubOrderServiceTest {
         order.setSeller(seller);
         order.setOrderStatus(OrderStatus.PREPARING);
 
-        OrderGroup paid = new OrderGroup();
-        paid.setPaymentStatus(OrderGroupPaymentStatus.PAID);
-        order.setOrderGroup(paid);
-
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> {
             subOrderService.sellerAcceptOrder(sellerId, orderId);
         });
-        assertTrue(ex.getMessage().contains("must be WAITING_SELLER_CONFIRM"));
+        assertTrue(ex.getMessage().contains("ต้องเป็น WAITING_SELLER_CONFIRM"));
     }
 
     @Test
@@ -210,7 +203,6 @@ public class SubOrderServiceTest {
         customer.setUser(user);
 
         OrderGroup group = new OrderGroup();
-        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setOrderGroupId(100L);
         group.setCustomer(customer);
 
@@ -233,7 +225,6 @@ public class SubOrderServiceTest {
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
         when(orderRepository.findByOrderGroup_OrderGroupId(100L)).thenReturn(List.of(order));
-        when(productRepository.findByIdForUpdate(product.getProductId())).thenReturn(Optional.of(product));
 
         subOrderService.sellerRejectOrder(sellerId, orderId, "สินค้าหมดสต็อก");
 
@@ -257,7 +248,7 @@ public class SubOrderServiceTest {
         // ตรวจสอบ Notification
         verify(notificationService, times(1)).sendNotification(
                 eq(200L),
-                eq("Shop rejected your order"),
+                eq("ร้านค้าปฏิเสธคำสั่งซื้อ"),
                 contains("สินค้าหมดสต็อก"),
                 any()
         );
@@ -273,7 +264,6 @@ public class SubOrderServiceTest {
         customer.setCustomerId(customerId);
 
         OrderGroup group = new OrderGroup();
-        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setCustomer(customer);
 
         Order order = new Order();
@@ -301,7 +291,6 @@ public class SubOrderServiceTest {
         otherCustomer.setCustomerId(otherCustomerId);
 
         OrderGroup group = new OrderGroup();
-        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setCustomer(otherCustomer);
 
         Order order = new Order();
@@ -326,7 +315,6 @@ public class SubOrderServiceTest {
         customer.setCustomerId(customerId);
 
         OrderGroup group = new OrderGroup();
-        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setCustomer(customer);
 
         Order order = new Order();
@@ -339,7 +327,7 @@ public class SubOrderServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> {
             subOrderService.confirmOrderDelivered(customerId, orderId);
         });
-        assertTrue(ex.getMessage().contains("must be SHIPPED"));
+        assertTrue(ex.getMessage().contains("ต้องเป็น SHIPPED"));
     }
 
     @Test
@@ -384,12 +372,10 @@ public class SubOrderServiceTest {
         customer.setCustomerId(customerId);
 
         OrderGroup group = new OrderGroup();
-        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setOrderGroupId(100L);
         group.setCustomer(customer);
 
         Product product = new Product();
-        product.setProductId(2L);
         product.setStock(5);
 
         OrderItem item = new OrderItem();
@@ -413,7 +399,6 @@ public class SubOrderServiceTest {
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
         when(orderRepository.findByOrderGroup_OrderGroupId(100L)).thenReturn(List.of(order));
-        when(productRepository.findByIdForUpdate(product.getProductId())).thenReturn(Optional.of(product));
 
         subOrderService.customerCancelOrder(customerId, orderId, "เปลี่ยนใจไม่ต้องการสินค้า");
 
@@ -421,7 +406,7 @@ public class SubOrderServiceTest {
         assertEquals("เปลี่ยนใจไม่ต้องการสินค้า", order.getRejectionReason());
         assertEquals(7, product.getStock()); // 5 + 2 = 7
         verify(productRepository, times(1)).save(product);
-        verify(paymentService, times(1)).processPartialRefund(eq(orderId), eq(new java.math.BigDecimal("600.00")), contains("Order cancelled by customer"));
+        verify(paymentService, times(1)).processPartialRefund(eq(orderId), eq(new java.math.BigDecimal("600.00")), contains("ลูกค้ายกเลิก"));
         assertEquals(OrderGroupPaymentStatus.REFUNDED, group.getPaymentStatus());
     }
 
@@ -435,7 +420,6 @@ public class SubOrderServiceTest {
         customer.setCustomerId(customerId);
 
         OrderGroup group = new OrderGroup();
-        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setCustomer(customer);
 
         Order order = new Order();
@@ -449,7 +433,7 @@ public class SubOrderServiceTest {
                 subOrderService.customerCancelOrder(customerId, orderId, "ขอยกเลิก")
         );
 
-        assertTrue(ex.getMessage().contains("Cannot cancel the order"));
+        assertTrue(ex.getMessage().contains("ไม่สามารถยกเลิกคำสั่งซื้อได้"));
     }
 
     @Test
@@ -463,7 +447,6 @@ public class SubOrderServiceTest {
         customer.setCustomerId(otherCustomerId);
 
         OrderGroup group = new OrderGroup();
-        group.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         group.setCustomer(customer);
 
         Order order = new Order();
@@ -476,6 +459,6 @@ public class SubOrderServiceTest {
                 subOrderService.customerCancelOrder(customerId, orderId, "ขอยกเลิก")
         );
 
-        assertTrue(ex.getMessage().contains("This order does not belong to customerId"));
+        assertTrue(ex.getMessage().contains("คำสั่งซื้อนี้ไม่ใช่ของลูกค้า"));
     }
 }

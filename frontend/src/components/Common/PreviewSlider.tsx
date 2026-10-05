@@ -3,7 +3,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { useCallback, useRef } from "react";
 import "swiper/css/navigation";
 import "swiper/css";
-import ProductImage from "@/components/Common/ProductImage";
+import Image from "next/image";
 
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { useAppSelector } from "@/redux/store";
@@ -25,46 +25,15 @@ const PreviewSliderModal = () => {
     sliderRef.current.swiper.slideNext();
   }, []);
 
-  const anyData = data as any;
-  const previewImages: string[] = [];
-  if (anyData?.imgs?.previews && Array.isArray(anyData.imgs.previews)) {
-    for (const item of anyData.imgs.previews) {
-      if (typeof item === "string" && item.trim()) previewImages.push(item.trim());
-      else if (item?.src) previewImages.push(item.src);
-      else if (item?.url) previewImages.push(item.url);
-    }
-  }
-  if (anyData?.images && Array.isArray(anyData.images)) {
-    for (const item of anyData.images) {
-      if (typeof item === "string" && item.trim()) previewImages.push(item.trim());
-      else if (item?.imageUrl) previewImages.push(item.imageUrl);
-      else if (item?.url) previewImages.push(item.url);
-    }
-  }
-  if (anyData?.img) {
-    if (typeof anyData.img === "string" && anyData.img.trim()) previewImages.push(anyData.img.trim());
-    else if (anyData.img?.url) previewImages.push(anyData.img.url);
-    else if (anyData.img?.src) previewImages.push(anyData.img.src);
-  }
-  if (anyData?.image && typeof anyData.image === "string" && anyData.image.trim()) {
-    previewImages.push(anyData.image.trim());
-  }
-
-  const images = Array.from(new Set(previewImages)).filter(Boolean);
-  if (images.length === 0) {
-    images.push("/images/products/product-01.png");
-  }
-
   return (
     <div
-      className={`preview-slider w-full h-screen z-999999 inset-0 flex justify-center items-center bg-[#000000F2] bg-opacity-70 ${
-        isModalPreviewOpen ? "fixed" : "hidden"
-      }`}
+      className={`preview-slider w-full h-screen  z-999999 inset-0 flex justify-center items-center bg-[#000000F2] bg-opacity-70 ${isModalPreviewOpen ? "fixed" : "hidden"
+        }`}
     >
       <button
         onClick={() => closePreviewModal()}
         aria-label="button for close modal"
-        className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center justify-center w-10 h-10 rounded-full ease-in duration-150 text-white hover:text-meta-5 z-20"
+        className="absolute top-0 right-0 sm:top-6 sm:right-6 flex items-center justify-center w-10 h-10 rounded-full ease-in duration-150 text-white hover:text-meta-5 z-10"
       >
         <svg
           className="fill-current"
@@ -78,73 +47,75 @@ const PreviewSliderModal = () => {
             fillRule="evenodd"
             clipRule="evenodd"
             d="M14.3108 13L19.2291 8.08167C19.5866 7.72417 19.5866 7.12833 19.2291 6.77083C19.0543 6.59895 18.8189 6.50262 18.5737 6.50262C18.3285 6.50262 18.0932 6.59895 17.9183 6.77083L13 11.6892L8.08164 6.77083C7.90679 6.59895 7.67142 6.50262 7.42623 6.50262C7.18104 6.50262 6.94566 6.59895 6.77081 6.77083C6.41331 7.12833 6.41331 7.72417 6.77081 8.08167L11.6891 13L6.77081 17.9183C6.41331 18.2758 6.41331 18.8717 6.77081 19.2292C7.12831 19.5867 7.72414 19.5867 8.08164 19.2292L13 14.3108L17.9183 19.2292C18.2758 19.5867 18.8716 19.5867 19.2291 19.2292C19.5866 18.8717 19.5866 18.2758 19.2291 17.9183L14.3108 13Z"
-            fill="currentColor"
+            fill=""
           />
         </svg>
       </button>
 
-      {images.length > 1 && (
-        <>
-          <button
-            className="rotate-180 absolute left-4 sm:left-12 p-3 sm:p-5 cursor-pointer z-10 text-white hover:text-blue transition-colors"
-            onClick={handlePrev}
-            aria-label="Previous image"
+      <div>
+        <button
+          className="rotate-180 absolute left-100 p-5 cursor-pointer z-10 "
+          onClick={handlePrev}
+        >
+          <svg
+            width="36"
+            height="36"
+            viewBox="0 0 26 26"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <svg
-              width="36"
-              height="36"
-              viewBox="0 0 26 26"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M14.5918 5.92548C14.9091 5.60817 15.4236 5.60817 15.7409 5.92548L22.2409 12.4255C22.5582 12.7428 22.5582 13.2572 22.2409 13.5745L15.7409 20.0745C15.4236 20.3918 14.9091 20.3918 14.5918 20.0745C14.2745 19.7572 14.2745 19.2428 14.5918 18.9255L19.7048 13.8125H4.33301C3.88428 13.8125 3.52051 13.4487 3.52051 13C3.52051 12.5513 3.88428 12.1875 4.33301 12.1875H19.7048L14.5918 7.07452C14.2745 6.75722 14.2745 6.24278 14.5918 5.92548Z"
-                fill="currentColor"
-              />
-            </svg>
-          </button>
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M14.5918 5.92548C14.9091 5.60817 15.4236 5.60817 15.7409 5.92548L22.2409 12.4255C22.5582 12.7428 22.5582 13.2572 22.2409 13.5745L15.7409 20.0745C15.4236 20.3918 14.9091 20.3918 14.5918 20.0745C14.2745 19.7572 14.2745 19.2428 14.5918 18.9255L19.7048 13.8125H4.33301C3.88428 13.8125 3.52051 13.4487 3.52051 13C3.52051 12.5513 3.88428 12.1875 4.33301 12.1875H19.7048L14.5918 7.07452C14.2745 6.75722 14.2745 6.24278 14.5918 5.92548Z"
+              fill="#FDFDFD"
+            />
+          </svg>
+        </button>
 
-          <button
-            className="absolute right-4 sm:right-12 p-3 sm:p-5 cursor-pointer z-10 text-white hover:text-blue transition-colors"
-            onClick={handleNext}
-            aria-label="Next image"
+        <button
+          className="absolute right-100 p-5 cursor-pointer z-10"
+          onClick={handleNext}
+        >
+          <svg
+            width="36"
+            height="36"
+            viewBox="0 0 26 26"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <svg
-              width="36"
-              height="36"
-              viewBox="0 0 26 26"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M14.5918 5.92548C14.9091 5.60817 15.4236 5.60817 15.7409 5.92548L22.2409 12.4255C22.5582 12.7428 22.5582 13.2572 22.2409 13.5745L15.7409 20.0745C15.4236 20.3918 14.9091 20.3918 14.5918 20.0745C14.2745 19.7572 14.2745 19.2428 14.5918 18.9255L19.7048 13.8125H4.33301C3.88428 13.8125 3.52051 13.4487 3.52051 13C3.52051 12.5513 3.88428 12.1875 4.33301 12.1875H19.7048L14.5918 7.07452C14.2745 6.75722 14.2745 6.24278 14.5918 5.92548Z"
-                fill="currentColor"
-              />
-            </svg>
-          </button>
-        </>
-      )}
-
-      <div className="w-full max-w-[650px] px-4 flex justify-center items-center">
-        <Swiper ref={sliderRef} slidesPerView={1} spaceBetween={20} className="w-full">
-          {images.map((imgSrc, idx) => (
-            <SwiperSlide key={idx}>
-              <div className="flex justify-center items-center h-[520px]">
-                <ProductImage
-                  src={imgSrc}
-                  alt={`${data?.title || "Product"} image ${idx + 1}`}
-                  size="fill"
-                  className="max-h-[500px] max-w-[500px] object-contain rounded-lg"
-                />
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M14.5918 5.92548C14.9091 5.60817 15.4236 5.60817 15.7409 5.92548L22.2409 12.4255C22.5582 12.7428 22.5582 13.2572 22.2409 13.5745L15.7409 20.0745C15.4236 20.3918 14.9091 20.3918 14.5918 20.0745C14.2745 19.7572 14.2745 19.2428 14.5918 18.9255L19.7048 13.8125H4.33301C3.88428 13.8125 3.52051 13.4487 3.52051 13C3.52051 12.5513 3.88428 12.1875 4.33301 12.1875H19.7048L14.5918 7.07452C14.2745 6.75722 14.2745 6.24278 14.5918 5.92548Z"
+              fill="#FDFDFD"
+            />
+          </svg>
+        </button>
       </div>
+
+      <Swiper ref={sliderRef} slidesPerView={1} spaceBetween={20}>
+        <SwiperSlide>
+          <div className="flex justify-center items-center">
+            <Image
+              src={"/images/products/product-2-bg-1.png"}
+              alt={"product image"}
+              width={450}
+              height={450}
+            />
+          </div>
+        </SwiperSlide>
+        <SwiperSlide>
+          <div className="flex justify-center items-center">
+            <Image
+              src={"/images/products/product-2-bg-1.png"}
+              alt={"product image"}
+              width={450}
+              height={450}
+            />
+          </div>
+        </SwiperSlide>
+      </Swiper>
     </div>
   );
 };

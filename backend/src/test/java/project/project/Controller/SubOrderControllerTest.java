@@ -31,8 +31,6 @@ public class SubOrderControllerTest {
 
     @Mock
     private SubOrderService subOrderService;
-    @Mock
-    private project.project.Security.OrderAccess access;
 
     @InjectMocks
     private SubOrderController subOrderController;
@@ -59,7 +57,7 @@ public class SubOrderControllerTest {
         mockMvc.perform(get("/api/sub-orders/{orderId}", orderId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Sub-order retrieved successfully"))
+                .andExpect(jsonPath("$.message").value("ดึงข้อมูลคำสั่งซื้อย่อยสำเร็จ"))
                 .andExpect(jsonPath("$.data.orderId").value(orderId))
                 .andExpect(jsonPath("$.data.subOrderNumber").value("ORD-001"));
     }
@@ -77,7 +75,7 @@ public class SubOrderControllerTest {
         mockMvc.perform(get("/api/sub-orders/order-group/{orderGroupId}", groupId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Order group sub-orders retrieved successfully"))
+                .andExpect(jsonPath("$.message").value("ดึงรายการคำสั่งซื้อย่อยในกลุ่มสำเร็จ"))
                 .andExpect(jsonPath("$.data[0].orderId").value(1L));
     }
 
@@ -93,7 +91,7 @@ public class SubOrderControllerTest {
         mockMvc.perform(get("/api/sub-orders/seller/{sellerId}", sellerId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Shop sub-orders retrieved successfully"));
+                .andExpect(jsonPath("$.message").value("ดึงรายการคำสั่งซื้อย่อยของร้านค้าสำเร็จ"));
     }
 
     @Test
@@ -108,7 +106,7 @@ public class SubOrderControllerTest {
                         .param("sellerId", String.valueOf(sellerId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Order accepted successfully"));
+                .andExpect(jsonPath("$.message").value("ยืนยันรับคำสั่งซื้อสำเร็จ"));
     }
 
     @Test
@@ -128,7 +126,7 @@ public class SubOrderControllerTest {
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Order rejected successfully"));
+                .andExpect(jsonPath("$.message").value("ปฏิเสธคำสั่งซื้อสำเร็จ"));
     }
 
     @Test
@@ -161,7 +159,7 @@ public class SubOrderControllerTest {
                         .param("customerId", String.valueOf(customerId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Delivery receipt confirmed successfully"));
+                .andExpect(jsonPath("$.message").value("ยืนยันการรับสินค้าสำเร็จ"));
     }
 
     @Test
@@ -180,7 +178,7 @@ public class SubOrderControllerTest {
                         .content(json))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Order cancelled successfully"));
+                .andExpect(jsonPath("$.message").value("ยกเลิกคำสั่งซื้อสำเร็จ"));
     }
 
     @Test

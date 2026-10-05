@@ -25,7 +25,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 public class SellerShopControllerTest {
-    @Mock private project.project.Security.OrderAccess access;
 
     private MockMvc mockMvc;
 
@@ -56,7 +55,7 @@ public class SellerShopControllerTest {
         mockMvc.perform(get("/api/seller/shops/{sellerId}", sellerId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Shop retrieved successfully"))
+                .andExpect(jsonPath("$.message").value("ดึงข้อมูลร้านค้าสำเร็จ"))
                 .andExpect(jsonPath("$.data.sellerId").value(sellerId))
                 .andExpect(jsonPath("$.data.shopName").value("Panda Official Shop"));
     }
@@ -66,12 +65,12 @@ public class SellerShopControllerTest {
     void getShopBySellerId_NotFound() throws Exception {
         Long sellerId = 999L;
         when(sellerShopService.getShopBySellerId(sellerId))
-                .thenThrow(new RuntimeException("Shop not found for sellerId: 999"));
+                .thenThrow(new RuntimeException("ไม่พบร้านค้า sellerId: 999"));
 
         mockMvc.perform(get("/api/seller/shops/{sellerId}", sellerId))
-                .andExpect(status().isInternalServerError())
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("An internal error occurred. Please try again later"));
+                .andExpect(jsonPath("$.message").value("ไม่พบร้านค้า sellerId: 999"));
     }
 
     @Test
@@ -99,7 +98,7 @@ public class SellerShopControllerTest {
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Shop updated successfully"))
+                .andExpect(jsonPath("$.message").value("อัปเดตข้อมูลร้านค้าสำเร็จ"))
                 .andExpect(jsonPath("$.data.shopName").value("Updated Shop"));
     }
 
@@ -120,7 +119,7 @@ public class SellerShopControllerTest {
                         .content(invalidJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Invalid request data"))
+                .andExpect(jsonPath("$.message").value("ข้อมูลที่ส่งมาไม่ถูกต้อง"))
                 .andExpect(jsonPath("$.error.shopName").exists())
                 .andExpect(jsonPath("$.error.shopEmail").exists());
     }
@@ -149,7 +148,7 @@ public class SellerShopControllerTest {
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Bank account saved successfully"))
+                .andExpect(jsonPath("$.message").value("บันทึกข้อมูลบัญชีธนาคารสำเร็จ"))
                 .andExpect(jsonPath("$.data.bankName").value("Kasikornbank"));
     }
 }

@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import project.project.Entity.order.Order;
 import project.project.Entity.order.OrderGroup;
-import project.project.Entity.order.OrderGroupPaymentStatus;
 import project.project.Entity.order.OrderStatus;
 import project.project.Entity.order.Shipment;
 import project.project.Entity.order.ShippingStatus;
@@ -42,8 +41,6 @@ public class ShippingServiceTest {
 
     @Mock
     private NotificationService notificationService;
-    @Mock
-    private project.project.Service.implement.OrderStateLock stateLock;
 
     private ShippingFeeStrategyFactory strategyFactory;
 
@@ -65,7 +62,7 @@ public class ShippingServiceTest {
                 orderRepository,
                 shipmentRepository,
                 notificationService,
-                strategyFactory, stateLock
+                strategyFactory
         );
     }
 
@@ -143,7 +140,6 @@ public class ShippingServiceTest {
         customer.setUser(user);
 
         OrderGroup orderGroup = new OrderGroup();
-        orderGroup.setPaymentStatus(OrderGroupPaymentStatus.PAID);
         orderGroup.setCustomer(customer);
 
         Order order = new Order();
@@ -192,7 +188,7 @@ public class ShippingServiceTest {
             shippingService.assignTrackingNumber(sellerId, orderId, "Kerry", "KRY123");
         });
 
-        assertTrue(ex.getMessage().contains("This order does not belong to sellerId"));
+        assertTrue(ex.getMessage().contains("คำสั่งซื้อนี้ไม่ใช่ของร้านค้า"));
         verify(shipmentRepository, never()).save(any());
     }
 
@@ -216,7 +212,7 @@ public class ShippingServiceTest {
             shippingService.assignTrackingNumber(sellerId, orderId, "Kerry", "KRY123");
         });
 
-        assertTrue(ex.getMessage().contains("must be PREPARING"));
+        assertTrue(ex.getMessage().contains("ต้องเป็น PREPARING"));
     }
 
     @Test
@@ -232,17 +228,14 @@ public class ShippingServiceTest {
         order.setOrderId(orderId);
         order.setSeller(seller);
         order.setOrderStatus(OrderStatus.PREPARING);
-        OrderGroup paid = new OrderGroup();
-        paid.setPaymentStatus(OrderGroupPaymentStatus.PAID);
-        order.setOrderGroup(paid);
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(RuntimeException.class, () -> {
             shippingService.assignTrackingNumber(sellerId, orderId, "", "KRY123");
         });
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(RuntimeException.class, () -> {
             shippingService.assignTrackingNumber(sellerId, orderId, "Kerry", null);
         });
     }

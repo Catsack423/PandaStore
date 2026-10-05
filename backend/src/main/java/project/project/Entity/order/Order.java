@@ -33,13 +33,6 @@ public class Order {
     @Column(name = "shipping_fee", nullable = false, precision = 12, scale = 2)
     private BigDecimal shippingFee;
 
-    @Column(name = "shipping_method", length = 100)
-    private String shippingMethod;
-
-    public String getShippingMethod() { return shippingMethod; }
-
-    public void setShippingMethod(String shippingMethod) { this.shippingMethod = shippingMethod; }
-
     @Column(name = "seller_discount", precision = 12, scale = 2)
     private BigDecimal sellerDiscount = BigDecimal.ZERO;
 

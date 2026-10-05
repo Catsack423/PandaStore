@@ -9,7 +9,6 @@ public interface CartService {
    
     Cart createCart(Long customerId);
     Cart getCartByCustomerId(Long customerId);
-    project.project.DTO.cart.CartDtos.StockSyncResponse synchronizeStock(Long customerId);
     CartItem addItemToCart(Long customerId, Long productId, Integer quantity);
     CartItem updateItemQuantity(Long customerId, Long cartItemId, Integer quantity);
     CartItem updateItemSelection(Long customerId, Long cartItemId, Boolean selected);

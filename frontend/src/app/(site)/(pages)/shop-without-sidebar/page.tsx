@@ -1,11 +1,22 @@
-import type { Metadata } from "next";
+import React from "react";
 import ShopWithoutSidebar from "@/components/ShopWithoutSidebar";
-import { getProducts } from "@/ServerAction/products";
-import shopData from "@/components/Shop/shopData";
+import { FilterSidebarContextProvider } from "@/app/context/FilterSidebarContext";
 
-export const metadata: Metadata = { title: "Shop | PandaStore" };
+import { Metadata } from "next";
+export const metadata: Metadata = {
+  title: "Shop Page | NextCommerce Nextjs E-commerce template",
+  description: "This is Shop Page for NextCommerce Template",
+  // other metadata
+};
 
-export default async function ShopWithoutSidebarPage() {
-  const response = await getProducts();
-  return <main><ShopWithoutSidebar products={response.success ? response.data : shopData} preview={!response.success || response.message === "Template products loaded"} /></main>;
-}
+const ShopWithoutSidebarPage = () => {
+  return (
+    <main>
+      <FilterSidebarContextProvider>
+        <ShopWithoutSidebar />
+      </FilterSidebarContextProvider>
+    </main>
+  );
+};
+
+export default ShopWithoutSidebarPage;

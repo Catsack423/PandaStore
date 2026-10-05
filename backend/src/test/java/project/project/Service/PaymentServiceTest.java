@@ -41,8 +41,6 @@ public class PaymentServiceTest {
 
     @Mock
     private NotificationService notificationService;
-    @Mock
-    private project.project.Service.implement.OrderStateLock stateLock;
 
     @InjectMocks
     private PaymentServiceImp paymentService;

@@ -7,56 +7,56 @@ import jakarta.validation.constraints.Size;
 
 public class CreateSellerApplicationRequest {
 
-    @NotBlank(message = "Shop name is required")
-    @Size(max = 100, message = "Shop name must not exceed 100 characters")
+    @NotBlank(message = "ชื่อร้านค้าห้ามว่าง")
+    @Size(max = 100, message = "ชื่อร้านค้าต้องมีความยาวไม่เกิน 100 ตัวอักษร")
     private String shopName;
 
-    @NotBlank(message = "Shop description is required")
+    @NotBlank(message = "รายละเอียดร้านค้าห้ามว่าง")
     private String shopDescription;
 
-    @NotBlank(message = "Shop phone number is required")
-    @Pattern(regexp = "^[0-9]{9,15}$", message = "Phone number must contain 9-15 digits")
+    @NotBlank(message = "เบอร์โทรศัพท์ร้านค้าห้ามว่าง")
+    @Pattern(regexp = "^[0-9]{9,15}$", message = "เบอร์โทรศัพท์ต้องเป็นตัวเลขความยาว 9-15 หลัก")
     private String shopPhone;
 
-    @NotBlank(message = "Shop email is required")
-    @Email(message = "Invalid email format")
-    @Size(max = 100, message = "Email must not exceed 100 characters")
+    @NotBlank(message = "อีเมลร้านค้าห้ามว่าง")
+    @Email(message = "รูปแบบอีเมลไม่ถูกต้อง")
+    @Size(max = 100, message = "อีเมลต้องมีความยาวไม่เกิน 100 ตัวอักษร")
     private String shopEmail;
 
-    @NotBlank(message = "Shop address is required")
-    @Size(max = 255, message = "Shop address must not exceed 255 characters")
+    @NotBlank(message = "ที่อยู่ร้านค้าห้ามว่าง")
+    @Size(max = 255, message = "ที่อยู่ร้านค้าต้องมีความยาวไม่เกิน 255 ตัวอักษร")
     private String shopAddress;
 
-    @NotBlank(message = "Seller first name is required")
-    @Size(max = 100, message = "Seller first name must not exceed 100 characters")
+    @NotBlank(message = "ชื่อผู้ขายห้ามว่าง")
+    @Size(max = 100, message = "ชื่อผู้ขายต้องมีความยาวไม่เกิน 100 ตัวอักษร")
     private String sellerFirstName;
 
-    @NotBlank(message = "Seller last name is required")
-    @Size(max = 100, message = "Seller last name must not exceed 100 characters")
+    @NotBlank(message = "นามสกุลผู้ขายห้ามว่าง")
+    @Size(max = 100, message = "นามสกุลผู้ขายต้องมีความยาวไม่เกิน 100 ตัวอักษร")
     private String sellerLastName;
 
-    @NotBlank(message = "National ID number must contain 13 digits")
-    @Pattern(regexp = "^[0-9]{13}$", message = "National ID number must contain 13 digits")
+    @NotBlank(message = "เลขประจำตัวประชาชนต้องเป็นตัวเลข 13 หลัก")
+    @Pattern(regexp = "^[0-9]{13}$", message = "เลขประจำตัวประชาชนต้องเป็นตัวเลข 13 หลัก")
     private String idCardNumber;
 
-    @NotBlank(message = "National ID card image is required")
-    @Size(max = 255, message = "National ID card image URL must not exceed 255 characters")
+    @NotBlank(message = "รูปภาพบัตรประชาชนห้ามว่าง")
+    @Size(max = 255, message = "URL รูปภาพบัตรประชาชนต้องมีความยาวไม่เกิน 255 ตัวอักษร")
     private String idCardImageUrl;
 
-    @NotBlank(message = "Bank account name is required")
-    @Size(max = 100, message = "Bank account name must not exceed 100 characters")
+    @NotBlank(message = "ชื่อบัญชีธนาคารห้ามว่าง")
+    @Size(max = 100, message = "ชื่อบัญชีธนาคารต้องมีความยาวไม่เกิน 100 ตัวอักษร")
     private String bankAccountName;
 
-    @NotBlank(message = "Bank name is required")
-    @Size(max = 100, message = "Bank name must not exceed 100 characters")
+    @NotBlank(message = "ชื่อธนาคารห้ามว่าง")
+    @Size(max = 100, message = "ชื่อธนาคารต้องมีความยาวไม่เกิน 100 ตัวอักษร")
     private String bankName;
 
-    @NotBlank(message = "Bank account number is required")
-    @Size(max = 30, message = "Bank account number must not exceed 30 characters")
+    @NotBlank(message = "เลขที่บัญชีธนาคารห้ามว่าง")
+    @Size(max = 30, message = "เลขที่บัญชีธนาคารต้องมีความยาวไม่เกิน 30 ตัวอักษร")
     private String bankAccountNumber;
 
-    @NotBlank(message = "Bankbook image is required")
-    @Size(max = 255, message = "Bankbook image URL must not exceed 255 characters")
+    @NotBlank(message = "รูปภาพสมุดบัญชีห้ามว่าง")
+    @Size(max = 255, message = "URL รูปภาพสมุดบัญชีต้องมีความยาวไม่เกิน 255 ตัวอักษร")
     private String bankBookImageUrl;
 
     public CreateSellerApplicationRequest() {

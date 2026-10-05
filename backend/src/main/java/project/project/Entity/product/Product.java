@@ -1,7 +1,6 @@
 package project.project.Entity.product;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.BatchSize;
 import project.project.Entity.seller.Seller;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,7 +24,6 @@ public class Product {
     private Seller seller;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @BatchSize(size = 50)
     @JoinTable(
         name = "product_categories",
         joinColumns = @JoinColumn(name = "product_id"),
@@ -65,8 +63,6 @@ public class Product {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("displayOrder ASC")
-    @BatchSize(size = 50)
     private List<ProductImage> images = new ArrayList<>();
 
     public Product() {

@@ -15,31 +15,25 @@ import project.project.Exception.DuplicateUserException;
 
 @RestControllerAdvice(assignableTypes = {AuthController.class, CartController.class})
 public class AuthCartExceptionHandler {
-    @ExceptionHandler(project.project.Exception.CartAvailabilityException.class)
-    public ResponseEntity<ApiResponse<Void>> unavailable(project.project.Exception.CartAvailabilityException e) {
-        return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage(),
-                java.util.Map.of("code", e.getCode())));
-    }
-
     @ExceptionHandler({IllegalArgumentException.class, ConstraintViolationException.class,
             HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ApiResponse<Void>> badRequest(Exception e) {
-        return error(HttpStatus.BAD_REQUEST, "Invalid data. Please check the item quantities and entered information");
+        return error(HttpStatus.BAD_REQUEST, "ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบจำนวนสินค้าและข้อมูลที่กรอก");
     }
 
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ApiResponse<Void>> notFound(Exception e) {
-        return error(HttpStatus.NOT_FOUND, "Requested information not found");
+        return error(HttpStatus.NOT_FOUND, "ไม่พบข้อมูลที่ต้องการ");
     }
 
     @ExceptionHandler({DuplicateUserException.class, DataIntegrityViolationException.class})
     public ResponseEntity<ApiResponse<Void>> conflict(Exception e) {
-        return error(HttpStatus.CONFLICT, "Duplicate data or unable to save");
+        return error(HttpStatus.CONFLICT, "ข้อมูลซ้ำหรือไม่สามารถบันทึกได้");
     }
 
     @ExceptionHandler(UnsupportedOperationException.class)
     public ResponseEntity<ApiResponse<Void>> notImplemented(Exception e) {
-        return error(HttpStatus.NOT_IMPLEMENTED, "Seller registration is unavailable");
+        return error(HttpStatus.NOT_IMPLEMENTED, "การสมัครผู้ขายยังไม่พร้อมใช้งาน");
     }
 
     @ExceptionHandler(ResponseStatusException.class)
