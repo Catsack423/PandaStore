@@ -60,7 +60,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.HEAD, "/api/products", "/api/products/*",
                                 "/api/categories", "/api/reviews/product/*").permitAll()
                         .requestMatchers("/api/test/**", "/api/admin/**", "/api/customers").hasRole("ADMIN")
-                        // Callback and simulation are administrative until gateway signatures exist.
+                        // This demo lets customers simulate payment for their own order only.
+                        .requestMatchers(HttpMethod.POST, "/api/payments/simulate").hasAnyRole("CUSTOMER", "ADMIN")
+                        // Callbacks and refunds remain administrative.
                         .requestMatchers("/api/payments/callback", "/api/payments/simulate",
                                 "/api/payments/refund/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
