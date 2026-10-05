@@ -1,24 +1,23 @@
 package project.project.Controller;
 
-import java.security.Principal;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
+import project.project.Entity.user.UserStatus;
+import project.project.Repository.UserRepository;
 
-import project.project.Security.CurrentUser;
+import java.security.Principal;
 
 @Component
 public class RequestUserResolver {
 
-    private final CurrentUser currentUser;
+    private final UserRepository userRepository;
 
-    public RequestUserResolver(CurrentUser currentUser) {
-        this.currentUser = currentUser;
+    public RequestUserResolver(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     public Long requireUserId(Principal principal) {
-<<<<<<< HEAD
-        return currentUser.getCurrentUserId();
-=======
         // JWT identity is stored in SecurityContext by the servlet filter;
         // it is not necessarily exposed as HttpServletRequest.getUserPrincipal().
         var authentication = org.springframework.security.core.context.SecurityContextHolder
@@ -26,7 +25,8 @@ public class RequestUserResolver {
         if (authentication != null && authentication.isAuthenticated()
                 && authentication.getPrincipal() instanceof project.project.Security.AuthenticatedUser identity) {
             var user = userRepository.findById(identity.userId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Logged-in user not found"));
+                    .orElseThrow(
+                            () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Logged-in user not found"));
             if (user.getStatus() != UserStatus.ACTIVE) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This account is unavailable");
             }
@@ -50,6 +50,5 @@ public class RequestUserResolver {
         }
 
         return user.getUserId();
->>>>>>> develop
     }
 }
