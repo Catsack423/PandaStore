@@ -105,7 +105,7 @@ export default function AdminCategories() {
         {error && <p role="alert" className="mx-5 mt-5 rounded-lg border border-red/20 bg-red-light-6 px-4 py-3 text-sm text-red sm:mx-7">{error}</p>}
 
         <div className="grid lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="order-2 min-w-0 lg:order-1">
+          <div className="min-w-0">
             <div className="border-b border-gray-3 px-5 py-4 sm:px-7">
               <h3 className="font-semibold text-dark">All categories</h3>
             </div>
@@ -137,7 +137,7 @@ export default function AdminCategories() {
             ) : null}
           </div>
 
-          <aside aria-labelledby="add-category-heading" className="order-1 border-b border-gray-3 p-5 sm:p-7 lg:order-2 lg:border-b-0 lg:border-l">
+          <aside aria-labelledby="add-category-heading" className="border-t border-gray-3 p-5 sm:p-7 lg:border-t-0 lg:border-l">
             <h3 id="add-category-heading" className="font-semibold text-dark">Add a category</h3>
             <p className="mt-1 text-sm leading-6 text-dark-4">Give shoppers a clear name for this group of products.</p>
             <form onSubmit={(event) => void add(event)} className="mt-6 space-y-5">
