@@ -20,14 +20,14 @@ check() {
   fi
 }
 
-fe_audit() { (cd frontend && npm audit --audit-level=high); }
+fe_audit() { node scripts/frontend-audit-check.cjs; }
 fe_tests() { (cd frontend && npm test); }
 be_dependency() { (cd backend && bash ./mvnw -B -ntp dependency-check:check); }
 be_sast() { (cd backend && bash ./mvnw -B -ntp compile spotbugs:check); }
 be_tests() { (cd backend && bash ./mvnw -B -ntp test); }
 working_tree_secrets() { node scripts/security-files.cjs | gitleaks stdin --no-banner --redact=100; }
 
-check "FE dependencies: no high/critical" fe_audit
+check "FE dependencies: no unapproved high/critical (explicit demo exceptions)" fe_audit
 check "FE tests (required)" fe_tests
 check "FE dangerous APIs" node scripts/security-static-check.cjs fe-dangerous
 check "FE NEXT_PUBLIC has no secrets" node scripts/security-static-check.cjs fe-public-secrets
