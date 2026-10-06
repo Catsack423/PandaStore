@@ -345,7 +345,7 @@ export default function OrderHistory({ showBackToAccount = false }: { showBackTo
         <Card className="overflow-hidden rounded-xl border-gray-3 shadow-1">
           <div className="flex flex-col gap-4 border-b border-gray-3 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
             <div className="flex items-center gap-3"><h3 className="font-medium text-dark">Order history</h3>
-              {customer && <Button variant="outline" size="sm" onClick={() => void history.refetch()} disabled={history.isFetching} aria-label="Refresh orders"><RefreshCw className={`size-4 ${history.isFetching ? "animate-spin" : ""}`} />Refresh</Button>}
+              {customer && <Button variant="outline" className="h-9 rounded-lg border-gray-3 bg-white px-3 text-dark hover:bg-gray-1" onClick={() => void history.refetch()} disabled={history.isFetching} aria-label="Refresh orders"><RefreshCw className={`size-4 ${history.isFetching ? "animate-spin" : ""}`} />Refresh</Button>}
             </div>
             <label className="flex items-center gap-2 text-sm text-dark"><span>Status</span><select value={status} onChange={(event) => setStatus(event.target.value)} className="h-9 rounded-lg border border-gray-3 bg-white px-3 outline-none focus:ring-2 focus:ring-blue/30"><option value="all">All orders</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           </div>
