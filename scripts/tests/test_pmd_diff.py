@@ -22,7 +22,11 @@ class PmdDiffTest(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.output = self.root / "backend/target/pmd-diff"
-        self.env = patch.dict(os.environ, {"GITHUB_OUTPUT": "", "GITHUB_STEP_SUMMARY": "", "PMD_GITHUB_TOKEN": ""})
+        # A temporary test repo is not the repository hosting this Actions run.
+        # Tests that need Actions context supply it explicitly instead.
+        self.env = patch.dict(os.environ, {"GITHUB_OUTPUT": "", "GITHUB_STEP_SUMMARY": "", "PMD_GITHUB_TOKEN": "",
+                                          "GITHUB_REPOSITORY": "", "GITHUB_ACTIONS": "", "GITHUB_RUN_ID": "", "GITHUB_RUN_ATTEMPT": "",
+                                          "PMD_TEST_OUTCOME": "", "PMD_PREPARE_OUTCOME": "", "PMD_SCAN_OUTCOME": ""})
         self.env.start()
         self.addCleanup(self.env.stop)
         self.git("init", "-b", "main")
@@ -510,6 +514,39 @@ class PmdDiffTest(unittest.TestCase):
         self.assertEqual(result["author"], "owner")
         self.assertNotIn("token", result)
         self.assertNotIn("body", result)
+
+    def test_explicit_actions_context_is_recorded_for_production_links(self):
+        head = self.changed()
+        with patch.dict(os.environ, {"GITHUB_REPOSITORY": "fixture/PandaStore", "GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "2"}):
+            metadata = self.prepare(head)
+        self.assertEqual(metadata["run"]["github_repository"], "fixture/PandaStore")
+        self.assertEqual(metadata["run"]["github_run_id"], "123")
+        self.assertEqual(metadata["run"]["github_run_attempt"], "2")
+        location = pmd.finding_location(metadata, {"file": "backend/src/main/java/Modified.java", "beginline": 2})
+        self.assertIn(f"https://github.com/fixture/PandaStore/blob/{head}/", location)
+
+    def test_missing_metadata_after_failed_tests_reports_no_measurement(self):
+        with patch.dict(os.environ, {"PMD_TEST_OUTCOME": "failure", "PMD_PREPARE_OUTCOME": "skipped", "PMD_SCAN_OUTCOME": "skipped"}):
+            self.assertEqual(pmd.finalize(self.root, self.output), 1)
+        status = self.read("status.json")
+        self.assertEqual(status["status"], "error")
+        self.assertEqual(status["workflow_steps"], {"tests": "failure", "prepare": "skipped", "scan": "skipped"})
+        summary = (self.output / "summary.md").read_text(encoding="utf-8")
+        self.assertIn("Test diff selection and report handling", summary)
+        self.assertIn("ยังไม่มีผลตรวจ PMD ที่ยืนยันได้", summary)
+        self.assertIn("ยังไม่ทราบจำนวน violation", summary)
+        self.assertNotIn("None ไฟล์", summary)
+        self.assertNotIn("ต้องแก้ในโค้ด **0**", summary)
+        self.assertNotIn("<details>", summary)
+        self.assertNotIn("Attribution on changed lines", summary)
+        self.assertEqual(self.read("attribution.json")["warnings"], [])
+
+    def test_missing_metadata_without_actions_context_still_reports_error(self):
+        self.assertEqual(pmd.finalize(self.root, self.output), 1)
+        summary = (self.output / "summary.md").read_text(encoding="utf-8")
+        self.assertIn("metadata.json", summary)
+        self.assertIn("ยังไม่ทราบจำนวน violation", summary)
+        self.assertNotIn("None ไฟล์", summary)
 
 
 if __name__ == "__main__":

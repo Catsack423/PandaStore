@@ -316,7 +316,7 @@ def summarize_attribution(findings):
 
 
 def attribute_violations(root, metadata, changes, violations):
-    history = AttributionHistory(root, metadata.get("comparison", {}))
+    history = AttributionHistory(root, metadata.get("comparison", {})) if any(v["overlaps_changed_lines"] for v in violations) else None
     ranges = {item["path"]: item.get("changed_line_ranges", []) for item in changes if item.get("scanned")}
     findings = []
     for index, violation in enumerate(violations):
@@ -359,7 +359,7 @@ def attribute_violations(root, metadata, changes, violations):
             "repository": metadata.get("run", {}).get("github_repository") or metadata.get("pull_request", {}).get("base_repository"),
             "pull_request": metadata.get("pull_request", {}), "run": metadata.get("run", {}),
             "comparison": metadata.get("comparison", {}), "started_at": metadata.get("started_at"),
-            "warnings": sorted(set(history.warnings)), "findings": findings, "summary": summarize_attribution(findings)}
+            "warnings": sorted(set(history.warnings)) if history else [], "findings": findings, "summary": summarize_attribution(findings)}
 
 
 def attribution_markdown(summary):
@@ -415,6 +415,14 @@ def render_summary(metadata, result, attribution, errors):
         lines.extend([f"PR **#{pr['number']}** · ผู้เปิด PR **{markdown(pr.get('author') or 'ไม่ทราบ')}** · Status: **{status}**", ""])
     else:
         lines.extend([f"Status: **{status}**", ""])
+    if status == "error":
+        steps = result.get("workflow_steps", {})
+        names = {"tests": "Test diff selection and report handling", "prepare": "Record PR context and changed Java files",
+                 "scan": "Run PMD on the recorded file list"}
+        failed = next((name for name in names if steps.get(name) == "failure"), None)
+        if failed:
+            lines.extend([f"**ขั้นที่ล้มก่อน Finalize: {names[failed]}**", "",
+                          f"เปิด log ของขั้น **{names[failed]}** เพื่อแก้สาเหตุแรก แล้วรัน workflow ใหม่", ""])
     if errors:
         lines.extend(["### แก้ข้อผิดพลาดของการตรวจก่อน", "",
                       "ผลตรวจยังไม่สมบูรณ์ ต้องแก้ข้อผิดพลาดด้านล่างแล้วรันใหม่ก่อนยืนยันว่าโค้ดผ่าน", ""])
@@ -422,6 +430,12 @@ def render_summary(metadata, result, attribution, errors):
         if len(errors) > 20:
             lines.append(f"- ยังมีข้อผิดพลาดอีก {len(errors) - 20} รายการ ดูทั้งหมดใน errors.json")
         lines.append("")
+    if status == "error" and result["file_count"] is None and not findings:
+        lines.extend(["**ยังไม่มีผลตรวจ PMD ที่ยืนยันได้**", "",
+                      "ยังไม่ทราบจำนวน violation หรือจำนวนไฟล์ที่ตรวจ ยอดรายการว่างใน Artifact ไม่ได้หมายความว่าโค้ดผ่าน", "",
+                      "ขั้นเตรียมข้อมูลยังไม่ได้สร้าง metadata.json หรือหลักฐานการเตรียมข้อมูลไม่ครบ ให้ตรวจขั้นที่แดงก่อน Finalize และ log ของขั้น Record PR context and changed Java files", "",
+                      "ดาวน์โหลด Artifact เพื่อดู errors.json / status.json และดู log ของ workflow สำหรับสาเหตุจากขั้นก่อนหน้า"])
+        return "\n".join(lines) + "\n"
     if gating:
         lines.extend([f"### จุดที่ต้องแก้ในโค้ด {len(gating)} รายการ", "",
                       f"พบใน **{len({item['file'] for item in gating})} ไฟล์** แต่ละรายการทับบรรทัดที่ PR เปลี่ยนและมีผลต่อ check", ""])
@@ -440,7 +454,9 @@ def render_summary(metadata, result, attribution, errors):
         lines.extend(["ไม่มี violation ตรงบรรทัดที่ PR เปลี่ยน และไม่มีข้อผิดพลาดของเครื่องมือ", ""])
     elif status == "no_java_changes":
         lines.extend(["ไม่ได้เรียก PMD เพราะไม่มี production Java ที่เพิ่ม แก้ไข หรือเปลี่ยนชื่อในขอบเขต", ""])
-    lines.extend([f"**ภาพรวม:** ต้องแก้ในโค้ด **{counts['gating_violations']}** · ข้อผิดพลาดการตรวจ **{counts['errors']}** · นอกบรรทัดเปลี่ยน **{counts['outside_changed_lines']}** · ตรวจ **{result['file_count']} ไฟล์** · ผลดิบ **{counts['raw_violations']}**", "",
+    if status == "error":
+        lines.extend(["**ข้อมูลด้านล่างเป็นผลบางส่วน ยังใช้ยืนยันว่าตรวจครบหรือโค้ดผ่านไม่ได้**", ""])
+    lines.extend([f"**ภาพรวม:** {'พบในบรรทัดเปลี่ยนแล้ว' if status == 'error' else 'ต้องแก้ในโค้ด'} **{counts['gating_violations']}** · ข้อผิดพลาดการตรวจ **{counts['errors']}** · นอกบรรทัดเปลี่ยน **{counts['outside_changed_lines']}** · เลือกตรวจ **{result['file_count']} ไฟล์** · {'ผลดิบที่อ่านได้' if status == 'error' else 'ผลดิบ'} **{counts['raw_violations']}**", "",
                   f"อีก **{len(outside)} รายการนอกบรรทัดเปลี่ยนไม่มีผลต่อ check** เก็บไว้เป็นข้อมูลประกอบด้านล่าง", "",
                   "<details>", f"<summary>ข้อมูลประกอบนอกขอบเขต {len(outside)} รายการ ไม่มีผลต่อ check</summary>", "",
                   "รายการนี้เป็น not_in_scope ไม่แจกให้ผู้เขียนและไม่นับ confidence", ""])
@@ -535,12 +551,14 @@ def finalize(root, output):
               "raw_by_file": dict(sorted(Counter(v["file"] for v in violations).items())),
               "gating_by_rule": dict(sorted(Counter(v["rule"] for v in gating).items()))}
     duration = (datetime.fromisoformat(completed) - datetime.fromisoformat(metadata["started_at"])).total_seconds() if metadata else None
-    result = {"schema_version": SCHEMA_VERSION, "status": status, "gate_scope": CHECK_SCOPE, "gate_scope_description": CHECK_SCOPE_DESCRIPTION, "started_at": metadata.get("started_at"), "completed_at": completed, "duration_seconds": duration, "exit_codes": exit_codes, "file_count": metadata.get("scope", {}).get("file_count"), "counts": counts}
+    outcomes = ("success", "failure", "cancelled", "skipped")
+    steps = {name: os.environ[key] for name, key in (("tests", "PMD_TEST_OUTCOME"), ("prepare", "PMD_PREPARE_OUTCOME"), ("scan", "PMD_SCAN_OUTCOME")) if os.environ.get(key) in outcomes}
+    result = {"schema_version": SCHEMA_VERSION, "status": status, "gate_scope": CHECK_SCOPE, "gate_scope_description": CHECK_SCOPE_DESCRIPTION, "started_at": metadata.get("started_at"), "completed_at": completed, "duration_seconds": duration, "exit_codes": exit_codes, "file_count": metadata.get("scope", {}).get("file_count"), "counts": counts, "workflow_steps": steps}
     write_json(output / "status.json", result)
     write_json(output / "violations.json", violations)
     write_json(output / "errors.json", errors)
     write_json(output / "suppressed.json", suppressed)
-    attribution.update({"check_status": status, "check_scope": result["gate_scope"], "check_scope_description": CHECK_SCOPE_DESCRIPTION, "check_counts": counts, "completed_at": completed})
+    attribution.update({"check_status": status, "check_scope": result["gate_scope"], "check_scope_description": CHECK_SCOPE_DESCRIPTION, "check_counts": counts, "completed_at": completed, "workflow_steps": steps})
     write_json(output / "attribution.json", attribution)
     columns = ("file", "beginline", "endline", "begincolumn", "endcolumn", "rule", "ruleset", "priority", "description", "package", "class", "method", "variable", "externalInfoUrl", "overlaps_changed_lines")
     with (output / "violations.csv").open("w", encoding="utf-8-sig", newline="") as handle:

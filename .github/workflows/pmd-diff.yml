@@ -42,6 +42,7 @@ jobs:
           python-version: '3.12'
 
       - name: Test diff selection and report handling
+        id: tests
         run: python -m unittest discover -s scripts/tests -p 'test_pmd*.py' -v
 
       - name: Record PR context and changed Java files
@@ -74,6 +75,7 @@ jobs:
           printf 'PMD_BIN=%s/pmd-bin-%s/bin/pmd\n' "$tool_dir" "$PMD_VERSION" >> "$GITHUB_ENV"
 
       - name: Run PMD on the recorded file list
+        id: scan
         if: steps.changed.outputs.file_count != '0'
         run: bash scripts/pmd-scan.sh
 
@@ -81,6 +83,9 @@ jobs:
         if: always()
         env:
           PMD_GITHUB_TOKEN: ${{ github.token }} # Read-only contents permission; never archived.
+          PMD_TEST_OUTCOME: ${{ steps.tests.outcome }}
+          PMD_PREPARE_OUTCOME: ${{ steps.changed.outcome }}
+          PMD_SCAN_OUTCOME: ${{ steps.scan.outcome }}
         run: python scripts/pmd_diff.py finalize --output "$PMD_REPORT_DIR"
 
       - name: Upload all PMD evidence even when the check fails
