@@ -45,14 +45,14 @@ export default function ProductDetail({ product, categoryNames, reviews, sample 
     <Breadcrumb title="Product Details" pages={["Product Details"]} />
     <div className="bg-gray-2 pb-16 pt-6 sm:pb-20 sm:pt-10">
       <div className="mx-auto w-full max-w-[1170px] px-4 sm:px-8 xl:px-0">
-        <section className="grid gap-5 rounded-xl bg-white p-4 shadow-1 sm:gap-8 sm:p-8 lg:grid-cols-2 lg:gap-12" aria-labelledby="product-title">
+        <section className="grid gap-5 rounded-xl bg-white p-4 shadow-1 sm:gap-8 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-12" aria-labelledby="product-title">
           <ProductImageGallery images={images} activeImageId={activeImageId} onActiveImageChange={setActiveImageId} alt={product.title} />
 
           <div className="flex min-w-0 flex-col justify-center py-2">
             {product.sellerShopName && (product.sellerId != null && product.sellerId > 0
               ? <Link href={`/shop/${product.sellerId}`} className="mb-4 inline-flex min-h-[44px] max-w-full self-start items-center gap-2 rounded-lg py-2 text-sm font-medium text-blue hover:text-blue-dark hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">{shopLabel}</Link>
               : <div className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-blue">{shopLabel}</div>)}
-            <h1 id="product-title" className="text-2xl font-semibold leading-tight text-dark sm:text-3xl lg:text-[34px]">{product.title}</h1>
+            <h1 id="product-title" className="min-w-0 break-words [overflow-wrap:anywhere] text-2xl font-semibold leading-tight text-dark sm:text-3xl lg:text-[34px]">{product.title}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-2.5 text-sm text-dark-4">
               {rating > 0 && <><Rating value={rating} label={`${rating.toFixed(1)} out of 5 stars`} /><span className="font-medium text-dark">{rating.toFixed(1)}</span><span aria-hidden="true">·</span></>}
               <a href="#reviews" className="hover:text-blue focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue">{reviewCount} {reviewCount === 1 ? "review" : "reviews"}</a>
@@ -79,7 +79,7 @@ export default function ProductDetail({ product, categoryNames, reviews, sample 
         <section className="mt-7 rounded-xl bg-white p-5 shadow-1 sm:p-8" aria-labelledby="description-title">
           <h2 id="description-title" className="text-xl font-semibold text-dark sm:text-2xl">Product information</h2>
           <div className="mt-6 grid gap-6 border-t border-gray-3 pt-6 md:grid-cols-[minmax(0,2fr)_minmax(200px,1fr)] md:gap-10">
-            <div><h3 className="font-medium text-dark">Description</h3><p className="mt-3 whitespace-pre-line leading-7 text-dark-4">{product.description?.trim() || "The seller has not added a description for this product yet."}</p></div>
+            <div><h3 className="font-medium text-dark">Description</h3><p className="mt-3 whitespace-pre-line break-words [overflow-wrap:anywhere] leading-7 text-dark-4">{product.description?.trim() || "The seller has not added a description for this product yet."}</p></div>
             <div><h3 className="font-medium text-dark">Categories</h3><div className="mt-3 flex flex-wrap gap-2">{categoryNames.length ? categoryNames.map((name, index) => <span key={`${name}-${index}`} className="rounded-full bg-blue/10 px-3 py-1.5 text-sm font-medium text-blue">{name}</span>) : <p className="text-sm text-dark-4">No category assigned</p>}</div></div>
           </div>
         </section>

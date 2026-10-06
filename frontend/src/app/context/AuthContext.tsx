@@ -89,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!response.ok || !data?.success)
         return { success: false, error: data?.message || "Sign in failed" };
       setUser(data.user);
+      await refreshUser();
       return { success: true, user: data.user };
     } catch {
       return { success: false, error: "Could not reach the server" };

@@ -128,6 +128,7 @@ const MainLayout = ({ mode = "main", adminNavItems = [] }: {
 
   return (
     <header
+      id="site-header"
       className={`fixed left-0 top-0 w-full z-9999 bg-white transition-all ease-in-out duration-300 ${
         stickyMenu && "shadow"
       }`}
