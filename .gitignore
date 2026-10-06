@@ -45,20 +45,20 @@ nbbuild/
 dist/
 nbdist/
 .nb-gradle/
-
+aco-testgen
 # General editor backups
 *.swp
 *.swo
 *~
 *.bak
-
+scripts
 # ------------------------------------------
 # Environment Variables & Secrets
 # ------------------------------------------
 .env
 .env.*
 !.env.example
-
+.agents
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
@@ -73,7 +73,7 @@ nbdist/
 /.next/
 .next/
 /out/
-
+skills-lock.json
 # production
 /build
 

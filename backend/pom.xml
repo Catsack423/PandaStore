@@ -17,6 +17,7 @@
 
 	<properties>
 		<java.version>21</java.version>
+		<aco.jacoco.reportDirectory>${project.reporting.outputDirectory}/jacoco</aco.jacoco.reportDirectory>
 		<!-- Security patch within Tomcat 11; Spring Boot/Tailwind versions stay unchanged. -->
 		<tomcat.version>11.0.26</tomcat.version>
 	</properties>
@@ -106,6 +107,19 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.15</version>
+				<configuration>
+					<append>false</append>
+					<outputDirectory>${aco.jacoco.reportDirectory}</outputDirectory>
+				</configuration>
+				<executions>
+					<execution><goals><goal>prepare-agent</goal></goals></execution>
+					<execution><id>coverage-report</id><phase>verify</phase><goals><goal>report</goal></goals></execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
