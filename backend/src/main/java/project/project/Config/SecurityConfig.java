@@ -51,6 +51,7 @@ public class SecurityConfig {
                             response.getWriter().write("{\"success\":false,\"message\":\"Access denied\"}");
                         }))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/status", "/favicon.ico").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register/customer",
                                 "/api/auth/register/seller", "/api/sellers/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/token").permitAll()
