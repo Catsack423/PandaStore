@@ -34,8 +34,8 @@ public class CategoryServiceImp implements CategoryService {
         }
 
         String name = categoryName.trim();
-        if (name.length() > 100) {
-            throw new IllegalArgumentException("Category name must not exceed 100 characters");
+        if (name.length() > 20) {
+            throw new IllegalArgumentException("Category name must not exceed 20 characters");
         }
         if (categories.existsByCategoryNameIgnoreCase(name)) {
             throw new IllegalStateException("Category already exists");

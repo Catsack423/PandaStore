@@ -7,7 +7,7 @@ import { templateCategories } from "@/lib/templateCategories";
 import { catalogCategories } from "@/components/ShopWithSidebar/catalog";
 import type { ProductSort } from "@/components/ShopWithSidebar/catalog";
 
-export const metadata: Metadata = { title: "Shop | NextMerce" };
+export const metadata: Metadata = { title: "Shop | PandaStore" };
 
 type Search = Record<string, string | string[] | undefined>;
 const sorts = new Set(["latest", "oldest", "reviews", "price-asc", "price-desc"]);

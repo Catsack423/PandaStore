@@ -45,7 +45,7 @@ export default function AdminCategories() {
   async function add(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const categoryName = name.trim();
-    if (!categoryName || saving) return;
+    if (!categoryName || categoryName.length > 20 || saving) return;
     setSaving(true);
     setError("");
     try {
@@ -107,12 +107,14 @@ export default function AdminCategories() {
                   <Input
                     id="category-name"
                     required
-                    maxLength={100}
+                    maxLength={20}
                     value={name}
                     onChange={(event) => setName(event.target.value)}
                     placeholder="e.g. Home office"
+                    aria-describedby="category-name-limit"
                     className="border-gray-3"
                   />
+                  <p id="category-name-limit" className="text-right text-xs text-dark-4">{name.length}/20 characters</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category-description">
@@ -171,7 +173,7 @@ export default function AdminCategories() {
                       className="flex flex-col gap-3 px-2 py-4 sm:flex-row sm:items-start sm:justify-between"
                     >
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-dark">{category.categoryName}</h3>
+                        <h3 className="break-words font-semibold text-dark">{category.categoryName}</h3>
                         <p className="mt-1 break-words text-sm leading-5 text-dark-4">
                           {category.description || "No description"}
                         </p>
