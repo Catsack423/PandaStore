@@ -30,6 +30,10 @@ export default function Checkout() {
   const [reload, setReload] = useState(0);
 
   useEffect(() => {
+    if (placedOrder) window.scrollTo({ top: 0, behavior: "auto" });
+  }, [placedOrder]);
+
+  useEffect(() => {
     if (authLoading) return;
     if (!user || user.role !== "CUSTOMER") { setLoading(false); return; }
     let active = true;
