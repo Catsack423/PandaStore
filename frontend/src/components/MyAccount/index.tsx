@@ -123,7 +123,7 @@ export default function MyAccount() {
                     <p className="truncate font-semibold text-dark" title={user?.name}>{user?.name || "Guest customer"}</p>
                     <p className="flex min-w-0 items-center gap-1.5 text-sm text-dark-3">
                       <Mail size={14} className="shrink-0 text-blue" aria-hidden="true" />
-                      <span className="min-w-0 break-all" title={user?.email}>{user?.email || "Account preview"}</span>
+                      <span className="min-w-0 break-words" title={user?.email}>{user?.email ? <>{user.email.split("@")[0]}@<wbr />{user.email.split("@").slice(1).join("@")}</> : "Account preview"}</span>
                     </p>
                     {user?.phone ? (
                       <p className="flex min-w-0 items-center gap-1.5 text-sm text-dark-3">

@@ -206,7 +206,7 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           {order.status === "PENDING_PAYMENT" && order.paymentStatus === "PENDING" && <Link href={`/payment/${order.orderGroupId}`} aria-label={`Pay now for order group ${order.orderGroupId}`} className="inline-flex h-9 items-center justify-center rounded-lg bg-blue px-3 text-sm text-white hover:bg-blue-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">Pay now</Link>}
           {(order.status === "PENDING_PAYMENT" || order.status === "WAITING_SELLER_CONFIRM" || order.status === "PREPARING") && (
-            <Button variant="outline" size="sm" className="h-9 px-3 text-red border-red/30 hover:bg-red/10" disabled={actionLoading} onClick={() => setShowCancelOrder(true)}>
+            <Button variant="outline" className="h-9 min-w-[112px] rounded-lg border-red/30 bg-white px-3 text-red hover:border-red/50 hover:bg-red/5 hover:text-red" disabled={actionLoading} onClick={() => setShowCancelOrder(true)}>
               Cancel
             </Button>
           )}
@@ -233,7 +233,7 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
               />
             )
           )}
-          <Button variant="outline" className="h-9 px-3" aria-expanded={expanded} aria-controls={`order-${order.id}`} onClick={() => setExpanded(!expanded)}>
+          <Button variant="outline" className="h-9 min-w-[112px] rounded-lg px-3" aria-expanded={expanded} aria-controls={`order-${order.id}`} onClick={() => setExpanded(!expanded)}>
             Details <ChevronDown className={`ml-1 h-4 w-4 transition-transform motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`} />
           </Button>
         </div>
@@ -345,7 +345,7 @@ export default function OrderHistory({ showBackToAccount = false }: { showBackTo
         <Card className="overflow-hidden rounded-xl border-gray-3 shadow-1">
           <div className="flex flex-col gap-4 border-b border-gray-3 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
             <div className="flex items-center gap-3"><h3 className="font-medium text-dark">Order history</h3>
-              {customer && <Button variant="outline" size="sm" onClick={() => void history.refetch()} disabled={history.isFetching} aria-label="Refresh orders"><RefreshCw className={`size-4 ${history.isFetching ? "animate-spin" : ""}`} />Refresh</Button>}
+              {customer && <Button variant="outline" className="h-9 rounded-lg border-gray-3 bg-white px-3 text-dark hover:bg-gray-1" onClick={() => void history.refetch()} disabled={history.isFetching} aria-label="Refresh orders"><RefreshCw className={`size-4 ${history.isFetching ? "animate-spin" : ""}`} />Refresh</Button>}
             </div>
             <label className="flex items-center gap-2 text-sm text-dark"><span>Status</span><select value={status} onChange={(event) => setStatus(event.target.value)} className="h-9 rounded-lg border border-gray-3 bg-white px-3 outline-none focus:ring-2 focus:ring-blue/30"><option value="all">All orders</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           </div>
