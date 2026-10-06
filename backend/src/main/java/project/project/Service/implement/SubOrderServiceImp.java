@@ -1,0 +1,400 @@
+package project.project.Service.implement;
+
+import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
+
+import project.project.Entity.order.Order;
+import project.project.Entity.order.OrderItem;
+import project.project.Entity.order.OrderStatus;
+import project.project.Entity.order.OrderGroup;
+import project.project.Entity.order.OrderGroupPaymentStatus;
+import project.project.Entity.product.Product;
+import project.project.Repository.OrderRepository;
+import project.project.Repository.ProductRepository;
+import project.project.Service.api.NotificationService;
+import project.project.Service.api.PaymentService;
+import project.project.Service.api.SubOrderService;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+public class SubOrderServiceImp implements SubOrderService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SubOrderServiceImp.class);
+
+    private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
+    private final PaymentService paymentService;
+    private final NotificationService notificationService;
+    private final OrderStateLock stateLock;
+
+    // Constructor Injection (SOLID - Dependency Inversion Principle)
+    public SubOrderServiceImp(OrderRepository orderRepository,
+            ProductRepository productRepository,
+            PaymentService paymentService,
+            NotificationService notificationService, OrderStateLock stateLock) {
+        this.orderRepository = orderRepository;
+        this.productRepository = productRepository;
+        this.paymentService = paymentService;
+        this.notificationService = notificationService;
+        this.stateLock = stateLock;
+    }
+
+    /**
+     * ค้นหา Sub-Order ด้วย orderId
+     * 
+     * @param orderId รหัสคำสั่งซื้อย่อย
+     * @return Order entity
+     * @throws RuntimeException ถ้าไม่พบ
+     */
+    
+    @Override
+    public Order getSubOrderById(Long orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
+                        "Order not found for orderId: " + orderId));
+    }
+
+    /**
+     * ค้นหา Sub-Order ทั้งหมดที่อยู่ใน OrderGroup เดียวกัน
+     * 
+     * @param orderGroupId รหัส OrderGroup (Master Order)
+     * @return รายการ Sub-Order
+     */
+
+    //[Fix] add throw Exception to Controller
+    @Override
+    public List<Order> getSubOrdersByOrderGroup(Long orderGroupId) {
+        return orderRepository.findByOrderGroup_OrderGroupId(orderGroupId);
+    }
+
+    /**
+     * ค้นหา Sub-Order ทั้งหมดของร้านค้า
+     * 
+     * @param sellerId รหัสร้านค้า
+     * @return รายการ Sub-Order ของร้าน
+     */
+    @Override
+    public List<Order> getSubOrdersBySeller(Long sellerId) {
+            // [Fix] add throw Exception to Controller
+        return orderRepository.findBySeller_SellerId(sellerId);
+    }
+
+    /**
+     * ร้านค้ากดรับคำสั่งซื้อ
+     * - ตรวจว่า Order เป็นของ Seller นี้
+     * - สถานะต้องเป็น WAITING_SELLER_CONFIRM
+     * - เปลี่ยนสถานะเป็น PREPARING
+     *
+     * @param sellerId รหัสร้านค้า
+     * @param orderId  รหัส Sub-Order
+     */
+    @Override
+    @Transactional
+    public void sellerAcceptOrder(Long sellerId, Long orderId) {
+        Order order = findAndValidateSellerOrder(sellerId, orderId);
+        requirePaid(order);
+
+        // ตรวจสถานะ — ต้อง WAITING_SELLER_CONFIRM
+        if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM) {
+            throw new IllegalStateException(
+                    "Cannot accept the order with current status: " + order.getOrderStatus()
+                            + " (must be WAITING_SELLER_CONFIRM)");
+        }
+
+        // เปลี่ยนสถานะเป็น PREPARING
+        order.setOrderStatus(OrderStatus.PREPARING);
+        orderRepository.save(order);
+
+        // แจ้งเตือนลูกค้า
+        try {
+            Long customerId = order.getOrderGroup().getCustomer().getCustomerId();
+            notificationService.sendNotification(
+                    order.getOrderGroup().getCustomer().getUser().getUserId(),
+                    "Shop accepted your order",
+                    "Order " + order.getSubOrderNumber() + " has been accepted by the shop and is being prepared",
+                    project.project.Entity.notification.NotificationType.NEW_ORDER_FOR_SELLER);
+        } catch (Exception e) {
+            // ไม่ให้ Notification error กระทบ business logic หลัก
+            log.warn("Order notification could not be delivered", e);
+        }
+    }
+
+    /**
+     * ร้านค้าปฏิเสธคำสั่งซื้อ (UC1-37A)
+     *
+     * Business Logic:
+     * 1. ตรวจ ownership (Order ต้องเป็นของ Seller นี้)
+     * 2. ตรวจสถานะ WAITING_SELLER_CONFIRM
+     * 3. บันทึกเหตุผลการปฏิเสธ
+     * 4. เปลี่ยนสถานะ Sub-Order เป็น CANCELLED
+     * 5. คืนสต็อกสินค้าเฉพาะของร้านนี้
+     * 6. Partial Refund — คืนเงินเฉพาะยอดของร้านนี้
+     * 7. อัปเดตสถานะ OrderGroup เป็น PARTIALLY_REFUNDED
+     * (ถ้ายังมีร้านอื่นที่ดำเนินอยู่)
+     * 8. แจ้งเตือนลูกค้า
+     *
+     * ร้านอื่นๆ ใน OrderGroup เดียวกัน ยังคงดำเนินการต่อตามปกติ
+     *
+     * @param sellerId รหัสร้านค้า
+     * @param orderId  รหัส Sub-Order
+     * @param reason   เหตุผลที่ปฏิเสธ (เช่น สินค้าหมด, เสียหาย)
+     */
+    @Override
+    @Transactional
+    public void sellerRejectOrder(Long sellerId, Long orderId, String reason) {
+        Order order = findAndValidateSellerOrder(sellerId, orderId);
+        requirePaid(order);
+        if (reason == null || reason.isBlank() || reason.trim().length() > 255) throw new IllegalArgumentException("Enter a rejection reason up to 255 characters");
+
+        // ตรวจสถานะ
+        if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM) {
+            throw new IllegalStateException(
+                    "Cannot reject the order with current status: " + order.getOrderStatus()
+                            + " (must be WAITING_SELLER_CONFIRM)");
+        }
+
+        // 1. บันทึกเหตุผลการปฏิเสธ
+        order.setRejectionReason(reason);
+
+        // 2. เปลี่ยนสถานะ Sub-Order เป็น CANCELLED
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+
+        // 3. คืนสต็อกสินค้าเฉพาะของร้านนี้
+        restoreStock(order);
+
+        // 4. Partial Refund — คืนเงินเฉพาะยอดของร้านนี้ให้ลูกค้า
+        paymentService.processPartialRefund(orderId, order.getTotalAmount(), "Order rejected by shop: " + reason.trim());
+        order.setRejectionReason(reason.trim());
+
+        // 5. อัปเดตสถานะ OrderGroup
+        updateOrderGroupPaymentStatus(order.getOrderGroup());
+
+        // 6. แจ้งเตือนลูกค้า
+        try {
+            notificationService.sendNotification(
+                    order.getOrderGroup().getCustomer().getUser().getUserId(),
+                    "Shop rejected your order",
+                    "Order " + order.getSubOrderNumber()
+                            + " was rejected by the shop. Reason: " + reason
+                            + " Refund amount: " + order.getTotalAmount() + " THB will be refunded to you",
+                    project.project.Entity.notification.NotificationType.PAYMENT_SUCCESS);
+        } catch (Exception e) {
+            // ไม่ให้ Notification error กระทบ business logic หลัก
+            log.warn("Order notification could not be delivered", e);
+        }
+    }
+
+    /**
+     * ลูกค้ากดยืนยันรับสินค้า
+     * - ตรวจว่า Order เป็นของลูกค้าจริง (ผ่าน OrderGroup → Customer)
+     * - สถานะต้อง SHIPPED
+     * - เปลี่ยนเป็น COMPLETED + บันทึก completedAt
+     *
+     * @param customerId รหัสลูกค้า
+     * @param orderId    รหัส Sub-Order
+     */
+    @Override
+    @Transactional
+    public void confirmOrderDelivered(Long customerId, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Order not found for orderId: " + orderId));
+
+        stateLock.lock(order);
+        // ตรวจว่า Order เป็นของลูกค้าจริง
+        Long orderCustomerId = order.getOrderGroup().getCustomer().getCustomerId();
+        if (!orderCustomerId.equals(customerId)) {
+            throw new IllegalStateException(
+                    "This order does not belong to customerId: " + customerId);
+        }
+
+        // ตรวจสถานะ — ต้อง SHIPPED หรือถ้า COMPLETED อยู่แล้ว (idempotent)
+        if (order.getOrderStatus() == OrderStatus.COMPLETED) {
+            return;
+        }
+        if (order.getOrderStatus() != OrderStatus.SHIPPED) {
+            throw new IllegalStateException(
+                    "Cannot confirm delivery receipt with current status: " + order.getOrderStatus()
+                            + " (must be SHIPPED)");
+        }
+
+        // เปลี่ยนสถานะเป็น COMPLETED
+        completeOrder(order);
+    }
+
+    /**
+     * Auto-confirm การรับสินค้าเมื่อครบ 7 วัน (UC1-45A)
+     * ใช้โดย OrderSchedulerService (Scheduled Cron Job)
+     *
+     * @param orderId รหัส Sub-Order
+     */
+    @Override
+    @Transactional
+    public void autoConfirmDelivered(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Order not found for orderId: " + orderId));
+
+        stateLock.lock(order);
+        // ตรวจสถานะ — ต้อง SHIPPED
+        if (order.getOrderStatus() != OrderStatus.SHIPPED) {
+            return; // สถานะไม่ตรง ข้ามไป (อาจถูก manual confirm ไปแล้ว)
+        }
+
+        // เปลี่ยนสถานะเป็น COMPLETED
+        completeOrder(order);
+    }
+
+    /**
+     * ลูกค้าขอยกเลิกคำสั่งซื้อ
+     * - ตรวจสอบความเป็นเจ้าของของ Customer
+     * - ตรวจสถานะ: ต้องเป็น WAITING_SELLER_CONFIRM หรือ PREPARING เท่านั้น (ยังไม่จัดส่ง)
+     * - บันทึกเหตุผลการยกเลิก
+     * - เปลี่ยนสถานะเป็น CANCELLED
+     * - คืนสต็อกสินค้า (restoreStock)
+     * - เรียก PaymentService คืนเงิน (processPartialRefund)
+     * - อัปเดตสถานะ OrderGroup PaymentStatus
+     * - แจ้งเตือนร้านค้า (NotificationService)
+     */
+    @Override
+    @Transactional
+    public void customerCancelOrder(Long customerId, Long orderId, String reason) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalStateException("Order not found for orderId: " + orderId));
+
+        stateLock.lock(order);
+        Long orderCustomerId = order.getOrderGroup().getCustomer().getCustomerId();
+        if (!orderCustomerId.equals(customerId)) {
+            throw new IllegalStateException("This order does not belong to customerId: " + customerId);
+        }
+
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new IllegalArgumentException("Please provide a reason for cancelling the order");
+        }
+
+        if (order.getOrderStatus() == OrderStatus.CANCELLED) {
+            return;
+        }
+        if (order.getOrderStatus() != OrderStatus.WAITING_SELLER_CONFIRM &&
+            order.getOrderStatus() != OrderStatus.PREPARING &&
+            order.getOrderStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new IllegalStateException(
+                    "Cannot cancel the order with status: " + order.getOrderStatus()
+                            + " (only WAITING_SELLER_CONFIRM or PREPARING orders can be cancelled)");
+        }
+
+        order.setRejectionReason(reason.trim());
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+
+        restoreStock(order);
+
+        boolean wasPaid = order.getOrderGroup() != null &&
+                (order.getOrderGroup().getPaymentStatus() == OrderGroupPaymentStatus.PAID ||
+                 order.getOrderGroup().getPaymentStatus() == OrderGroupPaymentStatus.PARTIALLY_REFUNDED);
+
+        if (wasPaid) {
+            paymentService.processPartialRefund(orderId, order.getTotalAmount(), "Order cancelled by customer: " + reason.trim());
+            updateOrderGroupPaymentStatus(order.getOrderGroup());
+        } else if (order.getOrderGroup() != null) {
+            List<Order> allSubOrders = orderRepository.findByOrderGroup_OrderGroupId(order.getOrderGroup().getOrderGroupId());
+            boolean allCancelled = allSubOrders.stream().allMatch(o -> o.getOrderStatus() == OrderStatus.CANCELLED);
+            if (allCancelled) {
+                order.getOrderGroup().setPaymentStatus(OrderGroupPaymentStatus.FAILED);
+            }
+        }
+
+        try {
+            notificationService.sendNotification(
+                    order.getSeller().getUser().getUserId(),
+                    "Order cancelled by customer",
+                    "Order " + order.getSubOrderNumber() + " was cancelled by the customer. Reason: " + reason,
+                    project.project.Entity.notification.NotificationType.NEW_ORDER_FOR_SELLER);
+        } catch (Exception e) {
+            // Notification error does not block transaction
+            log.warn("Order notification could not be delivered", e);
+        }
+    }
+
+    // ==================== Private Helper Methods ====================
+
+    /**
+     * ค้นหา Order และตรวจว่าเป็นของ Seller จริง
+     */
+    private Order findAndValidateSellerOrder(Long sellerId, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Order not found for orderId: " + orderId));
+
+        stateLock.lock(order);
+        if (!order.getSeller().getSellerId().equals(sellerId)) {
+            throw new IllegalStateException(
+                    "Order " + orderId + " does not belong to sellerId: " + sellerId);
+        }
+
+        return order;
+    }
+
+    private void requirePaid(Order order) {
+        var status = order.getOrderGroup() == null ? null : order.getOrderGroup().getPaymentStatus();
+        if (status != OrderGroupPaymentStatus.PAID && status != OrderGroupPaymentStatus.PARTIALLY_REFUNDED)
+            throw new IllegalStateException("This order has not been paid");
+    }
+
+    /**
+     * เปลี่ยนสถานะ Order เป็น COMPLETED พร้อมบันทึก completedAt
+     * ใช้ร่วมกันระหว่าง confirmOrderDelivered และ autoConfirmDelivered
+     */
+    private void completeOrder(Order order) {
+        order.setOrderStatus(OrderStatus.COMPLETED);
+        order.setCompletedAt(LocalDateTime.now());
+        orderRepository.save(order);
+    }
+
+    /**
+     * คืนสต็อกสินค้าเมื่อร้านค้าปฏิเสธคำสั่งซื้อ (UC1-37A)
+     * วนลูป OrderItem แต่ละรายการ เพิ่ม stock กลับเข้าสินค้า
+     */
+    private void restoreStock(Order order) {
+        List<OrderItem> items = order.getOrderItems();
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+
+        for (OrderItem item : items.stream().filter(i -> i.getProduct() != null).sorted(java.util.Comparator.comparing(i -> i.getProduct().getProductId())).toList()) {
+            Product product = item.getProduct();
+            if (product != null) {
+                product = productRepository.findByIdForUpdate(product.getProductId())
+                        .orElseThrow(() -> new IllegalStateException("Order product is missing"));
+                stateLock.refreshLockedProduct(product);
+                product.setStock(product.getStock() + item.getQuantity());
+                productRepository.save(product);
+            }
+        }
+    }
+
+    /**
+     * อัปเดตสถานะ OrderGroup หลังจากมี Sub-Order ถูก CANCELLED
+     * - ถ้าทุก Sub-Order ถูก CANCELLED → REFUNDED
+     * - ถ้ามีบาง Sub-Order ถูก CANCELLED → PARTIALLY_REFUNDED
+     */
+    private void updateOrderGroupPaymentStatus(OrderGroup orderGroup) {
+        List<Order> allSubOrders = orderRepository.findByOrderGroup_OrderGroupId(
+                orderGroup.getOrderGroupId());
+
+        long cancelledCount = allSubOrders.stream()
+                .filter(o -> o.getOrderStatus() == OrderStatus.CANCELLED)
+                .count();
+
+        if (cancelledCount == allSubOrders.size()) {
+            // ทุก Sub-Order ถูก CANCELLED → REFUNDED ทั้งหมด
+            orderGroup.setPaymentStatus(OrderGroupPaymentStatus.REFUNDED);
+        } else if (cancelledCount > 0) {
+            // มีบาง Sub-Order ถูก CANCELLED → PARTIALLY_REFUNDED
+            orderGroup.setPaymentStatus(OrderGroupPaymentStatus.PARTIALLY_REFUNDED);
+        }
+        // ถ้าไม่มี CANCELLED ไม่ต้องเปลี่ยน
+    }
+}

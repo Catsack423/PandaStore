@@ -1,0 +1,111 @@
+package project.project.Service.implement;
+
+import java.util.List;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+
+import jakarta.transaction.Transactional;
+import project.project.DTO.customer.CreateCustomerRequest;
+import project.project.DTO.customer.CustomerResponse;
+import project.project.DTO.customer.UpdateCustomerRequest;
+import project.project.Entity.user.Customer;
+import project.project.Entity.user.User;
+import project.project.Entity.user.UserRole;
+import project.project.Entity.user.UserStatus;
+import project.project.Exception.DuplicateUserException;
+import project.project.Exception.UserCreationException;
+import project.project.Repository.CustomerRepository;
+import project.project.Repository.UserRepository;
+import project.project.Service.api.CustomerService;
+
+@Service
+public class CustomerServiceImp implements CustomerService {
+
+    private final UserRepository userRepository;
+    private final CustomerRepository customerRepository;
+    private final PasswordService passwords;
+
+    public CustomerServiceImp(UserRepository userRepository, CustomerRepository customerRepository, PasswordService passwords) {
+        this.userRepository = userRepository;
+        this.customerRepository = customerRepository;
+        this.passwords = passwords;
+    }
+
+    @Override
+    @Transactional
+    public long createCustomer(CreateCustomerRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new DuplicateUserException("Username '" + request.getUsername() + "' is already in use");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateUserException("Email '" + request.getEmail() + "' is already in use");
+        }
+
+        User user = new User(
+                request.getUsername(),
+                request.getEmail(),
+                passwords.hash(request.getPassword()),
+                UserRole.CUSTOMER,
+                UserStatus.ACTIVE);
+
+        User savedUser;
+        try {
+            savedUser = userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateUserException("Username or email is already in use");
+        } catch (DataAccessException e) {
+            throw new UserCreationException("Unable to save user", e);
+        }
+        Customer savedCustomer;
+        try {
+            Customer customer = new Customer(savedUser, request.getFullName(), request.getPhoneNumber());
+            savedCustomer = customerRepository.save(customer);
+            return savedCustomer.getCustomerId();
+
+        } catch (DataAccessException e) {
+            throw new UserCreationException("Unable to save customer", e);
+        }
+
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteCustomer(long id) {
+        if (customerRepository.existsById(id)) {
+            customerRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    @Transactional
+    public boolean updateCustomer(long id, UpdateCustomerRequest request) {
+        return customerRepository.findById(id).map(existing -> {
+            if (request.getFullName() != null && !request.getFullName().isBlank()) {
+                existing.setFullName(request.getFullName());
+            }
+            if (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank()) {
+                existing.setPhoneNumber(request.getPhoneNumber());
+            }
+            customerRepository.save(existing);
+            return true;
+        }).orElse(false);
+    }
+
+    @Override
+    public CustomerResponse getCustomer(long id) {
+        return customerRepository.findById(id)
+                .map(CustomerResponse::fromEntity)
+                .orElse(null);
+    }
+
+    @Override
+    public List<CustomerResponse> getAllCustomer() {
+        return customerRepository.findAll().stream()
+                .map(CustomerResponse::fromEntity)
+                .toList();
+    }
+}

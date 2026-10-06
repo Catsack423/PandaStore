@@ -1,0 +1,185 @@
+package project.project.Service.implement;
+
+import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
+
+import project.project.Entity.order.Order;
+import project.project.Entity.order.OrderStatus;
+import project.project.Entity.order.Shipment;
+import project.project.Entity.order.ShippingStatus;
+import project.project.Repository.OrderRepository;
+import project.project.Repository.ShipmentRepository;
+import project.project.Service.api.NotificationService;
+import project.project.Service.api.ShippingService;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Map;
+
+@Service
+public class ShippingServiceImp implements ShippingService {
+
+    private final OrderRepository orderRepository;
+    private final ShipmentRepository shipmentRepository;
+    private final NotificationService notificationService;
+    private final OrderStateLock stateLock;
+    private final project.project.Service.strategy.shipping.ShippingFeeStrategyFactory shippingFeeStrategyFactory;
+
+    // Constructor Injection (SOLID - Dependency Inversion Principle)
+    public ShippingServiceImp(OrderRepository orderRepository,
+            ShipmentRepository shipmentRepository,
+            NotificationService notificationService,
+            project.project.Service.strategy.shipping.ShippingFeeStrategyFactory shippingFeeStrategyFactory, OrderStateLock stateLock) {
+        this.orderRepository = orderRepository;
+        this.shipmentRepository = shipmentRepository;
+        this.notificationService = notificationService;
+        this.stateLock = stateLock;
+        this.shippingFeeStrategyFactory = shippingFeeStrategyFactory;
+    }
+
+    /**
+     * คำนวณค่าจัดส่งสำหรับร้านค้า โดยใช้ shipping method ที่ลูกค้าเลือก
+     * (UC1 Step 8: ลูกค้าเลือกวิธีจัดส่งแยกตามร้าน)
+     * ใช้ Strategy Pattern ในการคำนวณตามผู้ให้บริการขนส่ง
+     *
+     * @param sellerId       รหัสร้านค้า
+     * @param shippingMethod วิธีจัดส่ง เช่น "KERRY", "FLASH", "STANDARD"
+     * @param addressId      รหัสที่อยู่จัดส่ง (สำหรับคำนวณระยะทางในอนาคต)
+     * @return ค่าจัดส่ง (BigDecimal)
+     */
+    @Override
+    public BigDecimal calculateShippingFee(Long sellerId, String shippingMethod, Long addressId) {
+        // Strategy Pattern: ดึงและคำนวณค่าส่งผ่าน ShippingFeeStrategy
+        return shippingFeeStrategyFactory.getStrategy(shippingMethod)
+                .calculateFee(sellerId, addressId);
+    }
+
+    /**
+     * ร้านค้ากรอก Tracking Number (UC1 Step 41 & 41A)
+     * - ตรวจว่า Order เป็นของร้านค้านี้
+     * - ตรวจว่าสถานะ Order คือ PREPARING (ร้านค้ากดรับแล้ว)
+     * - สร้าง/อัปเดต Shipment พร้อม courierName และ trackingNumber
+     * - เปลี่ยนสถานะ Order เป็น SHIPPED พร้อมบันทึก shippedAt
+     * - แจ้งเตือนลูกค้าว่าพัสดุถูกส่งแล้ว
+     *
+     * @param sellerId       รหัสร้านค้า
+     * @param orderId        รหัส Sub-Order
+     * @param courierName    ชื่อบริษัทขนส่ง
+     * @param trackingNumber หมายเลข Tracking
+     * @return Shipment ที่สร้าง/อัปเดตแล้ว
+     */
+    @Override
+    @Transactional
+    public Shipment assignTrackingNumber(Long sellerId, Long orderId,
+            String courierName, String trackingNumber) {
+        // 1. ค้นหา Order
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Order not found for orderId: " + orderId));
+
+        stateLock.lock(order);
+        // 2. ตรวจว่า Order เป็นของ Seller นี้
+        if (!order.getSeller().getSellerId().equals(sellerId)) {
+            throw new IllegalStateException(
+                    "This order does not belong to sellerId: " + sellerId);
+        }
+
+        // 3. ตรวจสถานะ — ต้อง PREPARING เท่านั้น
+        if (order.getOrderStatus() != OrderStatus.PREPARING) {
+            throw new IllegalStateException(
+                    "Cannot assign tracking information with current status: " + order.getOrderStatus()
+                            + " (must be PREPARING)");
+        }
+
+        var paymentStatus = order.getOrderGroup().getPaymentStatus();
+        if (paymentStatus != project.project.Entity.order.OrderGroupPaymentStatus.PAID
+                && paymentStatus != project.project.Entity.order.OrderGroupPaymentStatus.PARTIALLY_REFUNDED)
+            throw new IllegalStateException("This order has not been paid");
+        // 4. ตรวจว่า courierName และ trackingNumber ไม่ว่าง (UC1-41A)
+        if (courierName == null || courierName.isBlank() || courierName.trim().length() > 100) {
+            throw new IllegalArgumentException("Please provide a courier name (courierName) of no more than 100 characters");
+        }
+        if (trackingNumber == null || trackingNumber.isBlank() || trackingNumber.trim().length() > 100) {
+            throw new IllegalArgumentException("Please provide a tracking number (trackingNumber) of no more than 100 characters");
+        }
+
+        // 5. สร้างหรืออัปเดต Shipment
+        Shipment shipment = shipmentRepository.findByOrder_OrderId(orderId)
+                .orElse(new Shipment());
+
+        shipment.setOrder(order);
+        shipment.setCourierName(courierName.trim());
+        shipment.setTrackingNumber(trackingNumber.trim());
+        shipment.setShippingStatus(ShippingStatus.SHIPPED);
+        shipment.setShippedAt(LocalDateTime.now());
+
+        Shipment savedShipment = shipmentRepository.save(shipment);
+
+        // 6. อัปเดตสถานะ Order เป็น SHIPPED
+        order.setOrderStatus(OrderStatus.SHIPPED);
+        order.setShippedAt(LocalDateTime.now());
+        orderRepository.save(order);
+
+        // 7. แจ้งเตือนลูกค้าว่าพัสดุถูกส่งแล้ว (พร้อม Tracking Number)
+        try {
+            Long customerId = order.getOrderGroup().getCustomer().getCustomerId();
+            notificationService.notifyCustomerOrderShipped(
+                    customerId, orderId, trackingNumber);
+        } catch (Exception e) {
+            // ไม่ให้ Notification error กระทบ business logic หลัก
+            // Log error ในระบบจริง
+        }
+
+        return savedShipment;
+    }
+
+    /**
+     * ค้นหา Shipment จาก orderId
+     * 
+     * @param orderId รหัส Sub-Order
+     * @return Shipment entity
+     * @throws RuntimeException ถ้าไม่พบ Shipment
+     */
+    @Override
+    public Shipment getShipmentByOrderId(Long orderId) {
+        return shipmentRepository.findByOrder_OrderId(orderId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Shipping information not found for orderId: " + orderId));
+    }
+
+    /**
+     * อัปเดตสถานะ Shipment (เช่น SHIPPED → DELIVERED)
+     * 
+     * @param shipmentId รหัส Shipment
+     * @param status     สถานะใหม่ ("SHIPPED" / "DELIVERED")
+     */
+    @Override
+    @Transactional
+    public void updateShippingStatus(Long shipmentId, String status) {
+        Shipment shipment = shipmentRepository.findById(shipmentId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Shipment not found for shipmentId: " + shipmentId));
+
+        stateLock.lock(shipment.getOrder());
+
+        ShippingStatus newStatus;
+        try {
+            newStatus = ShippingStatus.valueOf(status.toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException(
+                    "Invalid status: " + status
+                            + " (must be PENDING, SHIPPED, or DELIVERED)");
+        }
+
+        shipment.setShippingStatus(newStatus);
+
+        // บันทึก timestamp ตามสถานะ
+        if (newStatus == ShippingStatus.SHIPPED && shipment.getShippedAt() == null) {
+            shipment.setShippedAt(LocalDateTime.now());
+        } else if (newStatus == ShippingStatus.DELIVERED) {
+            shipment.setDeliveredAt(LocalDateTime.now());
+        }
+
+        shipmentRepository.save(shipment);
+    }
+}

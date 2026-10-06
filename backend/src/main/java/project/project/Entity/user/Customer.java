@@ -24,6 +24,12 @@ public class Customer {
     public Customer() {
     }
 
+    public Customer(User user, String fullName, String phoneNumber) {
+        this.user = user;
+        this.fullName = fullName;
+        this.phoneNumber = phoneNumber;
+    }
+
     public Customer(Long customerId, User user, String fullName, String phoneNumber) {
         this.customerId = customerId;
         this.user = user;

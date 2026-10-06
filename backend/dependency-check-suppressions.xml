@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.4.xsd">
+    <suppress>
+        <notes><![CDATA[
+        User explicitly approved this exact exception on 2026-10-06.
+        CVE-2022-31691 affects Spring Tools IDE extensions according to
+        https://spring.io/security/cve-2022-31691/ . The detected Maven dependency
+        is Spring Boot DevTools 4.1.1, a different product. This appears to be a
+        CPE/name-matching false positive. This exception matches only this exact
+        Maven package/version and CVE; all other dependency checks remain active.
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.boot/spring-boot-devtools@4.1.1</packageUrl>
+        <cve>CVE-2022-31691</cve>
+    </suppress>
+</suppressions>

@@ -1,1 +1,131 @@
-Front End Section for PandaStore
+
+
+### ขั้นตอนที่ 4: ตั้งค่าและรัน Frontend
+
+1. เปิด Terminal ใหม่แล้วเข้าไปยังโฟลเดอร์ `frontend`:
+   ```bash
+   cd frontend
+   ```
+2. คัดลอกไฟล์ `.env.example` เป็น `.env.local` หรือ `.env`:
+   - บน Windows (PowerShell):
+     ```powershell
+     Copy-Item .env.example .env.local
+     ```
+   - บน Linux / macOS:
+     ```bash
+     cp .env.example .env.local
+     ```
+3. เปิดไฟล์ `frontend/.env.local` แล้วตั้งค่าตัวแปร:
+   ```env
+   # ชี้ไปยัง URL ของ Backend API
+   BACKEND_API_URL=http://localhost:8080
+
+   # Origin ที่อนุญาตให้ส่งคำขอ (ไม่มี slash ปิดท้าย)
+   ALLOWED_REQUEST_ORIGINS=http://localhost:3000
+
+   # UploadThing Token สำหรับอัปโหลดรูปภาพสินค้าและเอกสารร้านค้า
+   UPLOADTHING_TOKEN=your_uploadthing_token_here
+   ```
+
+   > [!IMPORTANT]
+   > **การขอรับ `UPLOADTHING_TOKEN`:**
+   > 1. สมัครและเข้าสู่ระบบที่ [https://uploadthing.com/](https://uploadthing.com/)
+   > 2. สร้าง App ใหม่
+   > 3. ไปที่เมนู **API Keys** แล้วคัดลอก **V7 Token** มาวางในช่อง `UPLOADTHING_TOKEN`
+   > 4. แนะนำให้ตั้งค่า Default ACL เป็น **public-read** เพื่อให้เข้าถึงไฟล์รูปภาพได้
+
+4. **ติดตั้ง Dependencies:**
+   ```bash
+   npm install
+   ```
+5. **เริ่มรัน Frontend ในโหมด Development:**
+   ```bash
+   npm run dev
+   ```
+6. Frontend จะเปิดทำงานที่: **`http://localhost:3000`**
+
+---
+
+## 👥 บัญชีผู้ใช้ทดสอบเริ่มต้น (Default Demo Accounts)
+
+เมื่อระบบสตาร์ทขึ้นมาเป็นครั้งแรก `TestDataInitializer` จะสร้างบัญชีผู้ใช้เริ่มต้นให้ทันที:
+
+| บทบาท (Role) | Username | Password | รายละเอียด |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin` | `admin1234` | แอดมินหลักของระบบ จัดการร้านค้าและอนุมัติสินค้า |
+| **Admin (Checkout Demo)** | `checkout_admin` | `AdminDemo123!` | แอดมินสำหรับทดสอบ Flow การสั่งซื้อและระบบชำระเงิน |
+| **Seller** | `seller1` | `password123` | ร้านค้า "Panda Official Shop" (มีสินค้าตัวอย่างในร้าน) |
+| **Customer** | `customer1` | `password123` | ลูกค้าทั่วไป (มีที่อยู่จัดส่งและสินค้าตัวอย่างในตะกร้า) |
+
+---
+
+## 📜 สคริปต์เสริมและการทดสอบ (Scripts & Testing)
+
+### 1. สคริปต์เพิ่มสินค้าตัวอย่าง (Seed Demo Products)
+หากต้องการเพิ่มสินค้าชุดทดสอบเข้าไปในร้านค้า สามารถรันสคริปต์ PowerShell ได้ดังนี้ (ขณะที่ Backend กำลังทำงาน):
+```powershell
+cd backend/scripts
+.\seed-demo-products.ps1 -Username "seller1" -Password "password123"
+```
+
+### 2. สคริปต์ทดสอบ Checkout จำลอง
+จำลองการสั่งซื้อสินค้าและสร้าง Order ที่รอชำระเงิน:
+```powershell
+cd backend/scripts
+.\checkout-demo.ps1 -PlaceOrder
+```
+
+### 3. การรันตรวจสอบโค้ดและทดสอบฝั่ง Frontend
+```bash
+cd frontend
+
+# ตรวจสอบ TypeScript Type
+node node_modules/typescript/bin/tsc --noEmit --incremental false
+
+# ตรวจสอบ Linting
+npm run lint
+
+# รัน Integration / E2E Tests
+node --test --test-isolation=none tests/payment.test.cjs tests/middleware-role.test.cjs
+```
+
+### 4. การ Build สำหรับ Production
+- **Backend:**
+  ```bash
+  cd backend
+  ./mvnw clean package -DskipTests
+  # ไฟล์ JAR จะอยู่ที่ target/project-0.0.1-SNAPSHOT.jar
+  java -jar target/project-0.0.1-SNAPSHOT.jar
+  ```
+- **Frontend:**
+  ```bash
+  cd frontend
+  npm run build
+  npm run start
+  ```
+
+---
+
+## ❓ การแก้ไขปัญหาที่พบบ่อย (Troubleshooting)
+
+### 1. Backend เชื่อมต่อฐานข้อมูลไม่สำเร็จ (`Connection refused` หรือ `database "pandastore" does not exist`)
+- ตรวจสอบว่า PostgreSQL service กำลังทำงานอยู่ (เช่น บน Windows เช็คผ่าน `services.msc`)
+- ตรวจสอบว่าได้สร้าง database ชื่อ `pandastore` แล้วหรือยัง
+- ตรวจสอบ port, username และ password ใน `backend/.env` ว่าถูกต้องตรงกับเครื่องของคุณหรือไม่
+
+### 2. Backend เกิดข้อผิดพลาดเกี่ยวกับ `JWT_SECRET`
+- `JWT_SECRET` ต้องมีความยาวอย่างน้อย 256 bits (64 hex characters) หากสั้นเกินไป JJWT จะโยน `WeakKeyException`
+- ให้สร้าง key ใหม่ด้วยคำสั่ง:
+  ```bash
+  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  ```
+
+### 3. Frontend แสดงข้อผิดพลาดเกี่ยวกับ `UploadThing` หรืออัปโหลดรูปไม่ผ่าน
+- ตรวจสอบว่าใส่ `UPLOADTHING_TOKEN` ใน `frontend/.env.local` หรือ `frontend/.env` แล้วหรือไม่
+- ตรวจสอบว่าได้ Restart Next.js dev server หลังแก้ไขไฟล์ `.env` แล้ว
+
+### 4. ปัญหา CORS หรือ Forbidden ในการเรียก Action
+- ตรวจสอบค่า `ALLOWED_REQUEST_ORIGINS` ใน `frontend/.env.local`
+- หากมีการใช้ ngrok หรือรันบนพอร์ตอื่น ให้เพิ่ม URL คั่นด้วยจุลภาค เช่น:
+  `ALLOWED_REQUEST_ORIGINS=http://localhost:3000,https://your-domain.ngrok-free.dev`
+create at https://uploadthing.com/
