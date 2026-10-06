@@ -160,6 +160,57 @@ class PmdDiffTest(unittest.TestCase):
         for old in ("violations", "on_changed_lines", "by_rule", "by_priority", "by_file"):
             self.assertNotIn(old, counts)
 
+    def test_summary_shows_every_blocker_before_folded_raw_findings(self):
+        self.prepare(self.changed())
+        outside = [self.finding(1, rule="OutsideRule") for _ in range(120)]
+        blocker = {**self.finding(2, rule="LocalVariableCouldBeFinal"), "variable": "changed"}
+        self.reports(outside + [blocker], code=4)
+        self.assertEqual(pmd.finalize(self.root, self.output), 1)
+        summary = (self.output / "summary.md").read_text(encoding="utf-8")
+        first_details = summary.index("<details>")
+        visible = summary[:first_details]
+        self.assertTrue(summary.startswith("## ❌ PMD ไม่ผ่าน ต้องแก้ 1 รายการ"))
+        self.assertIn("Modified.java", visible)
+        self.assertIn("| 2 | ประกาศตัวแปร changed ด้วย `final`", visible)
+        self.assertIn("LocalVariableCouldBeFinal", visible)
+        self.assertNotIn("OutsideRule", visible)
+        self.assertIn("แสดงข้อมูลนอกขอบเขต 100 จาก 120 รายการ", summary)
+        self.assertEqual(len(self.read("violations.json")), 121)
+        self.assertEqual(self.read("status.json")["counts"]["gating_violations"], 1)
+
+    def test_summary_shows_tool_errors_before_code_findings_and_statistics(self):
+        self.prepare(self.changed())
+        self.reports([self.finding(2)], processing_errors=[{"message": "Parser could not read Java"}], code=5)
+        self.assertEqual(pmd.finalize(self.root, self.output), 1)
+        summary = (self.output / "summary.md").read_text(encoding="utf-8")
+        self.assertTrue(summary.startswith("## ❌ PMD ตรวจไม่สำเร็จ"))
+        self.assertLess(summary.index("Parser could not read Java"), summary.index("จุดที่ต้องแก้ในโค้ด"))
+        self.assertLess(summary.index("จุดที่ต้องแก้ในโค้ด"), summary.index("<details>"))
+
+    def test_summary_links_to_scanned_commit_and_safely_escapes_messages(self):
+        head = self.changed()
+        metadata = pmd.prepare(self.root, self.output, self.base, head, {"pull_request": {
+            "number": 17, "user": {"login": "opener"}, "head": {"repo": {"full_name": "team/PandaStore"}}}})
+        self.reports([{**self.finding(2), "description": "unsafe <script> | message\nnext"}], code=4)
+        self.assertEqual(pmd.finalize(self.root, self.output), 1)
+        summary = (self.output / "summary.md").read_text(encoding="utf-8")
+        self.assertIn(f"https://github.com/team/PandaStore/blob/{head}/backend/src/main/java/Modified.java#L2", summary)
+        self.assertIn("unsafe &lt;script&gt; \\| message next", summary)
+        self.assertNotIn("unsafe <script>", summary)
+        location = pmd.finding_location(metadata, {"file": "backend/src/main/java/A File.java", "beginline": 7})
+        self.assertIn("A%20File.java#L7", location)
+
+    def test_summary_passed_with_outside_findings_does_not_ask_for_code_fixes(self):
+        self.prepare(self.changed())
+        self.reports([self.finding(1)], code=4)
+        self.assertEqual(pmd.finalize(self.root, self.output), 0)
+        summary = (self.output / "summary.md").read_text(encoding="utf-8")
+        visible = summary.split("<details>", 1)[0]
+        self.assertTrue(summary.startswith("## ✅ PMD ผ่าน"))
+        self.assertNotIn("จุดที่ต้องแก้ในโค้ด", visible)
+        self.assertIn("1 รายการนอกบรรทัดเปลี่ยนไม่มีผลต่อ check", visible)
+        self.assertEqual(self.read("status.json")["status"], "passed")
+
     def finding(self, line, end=None, rule="ExampleRule"):
         return {"beginline": line, "endline": end or line, "rule": rule, "ruleset": "Code Style", "priority": 3, "description": "example"}
 
@@ -214,7 +265,7 @@ class PmdDiffTest(unittest.TestCase):
         self.assertEqual(attribution["summary"]["by_category"], {"own": 1, "imported": 1, "unknown": 0, "not_in_scope": 0})
         self.assertEqual(attribution["summary"]["by_confidence"], {"high": 2, "low": 0})
         self.assertEqual(len(attribution["summary"]["people"]), 2)
-        self.assertIn("Other person", (self.output / "summary.md").read_text())
+        self.assertIn("Other person", (self.output / "summary.md").read_text(encoding="utf-8"))
         self.assertEqual((self.output / "pmd.json").read_bytes(), original_json)
         self.assertEqual((self.output / "pmd.xml").read_bytes(), original_xml)
 

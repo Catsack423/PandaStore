@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+from urllib.parse import quote
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -379,6 +380,90 @@ def attribution_markdown(summary):
     return lines
 
 
+def finding_location(metadata, finding):
+    """Link to the immutable scanned revision, including paths with spaces."""
+    line = str(finding["beginline"])
+    repository = metadata.get("run", {}).get("github_repository") or metadata.get("pull_request", {}).get("head_repository")
+    head = metadata.get("comparison", {}).get("head_sha")
+    if repository and re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository) and head and re.fullmatch(r"[0-9a-f]{40}", head):
+        return f"[{line}](https://github.com/{repository}/blob/{head}/{quote(finding['file'], safe='/')}#L{line})"
+    return line
+
+
+def finding_action(finding):
+    variable = finding.get("variable")
+    if finding["rule"] == "LocalVariableCouldBeFinal" and variable:
+        return f"ประกาศตัวแปร {markdown(variable)} ด้วย `final`"
+    return markdown(finding.get("description") or "ดูรายละเอียดกฎในรายงาน PMD")
+
+
+def render_summary(metadata, result, attribution, errors):
+    """Put check blockers first; keep informational findings in folded details."""
+    counts = result["counts"]
+    findings = attribution["findings"]
+    gating = sorted((item for item in findings if item["overlaps_changed_lines"]),
+                    key=lambda item: (item["file"], int(item["beginline"]), int(item.get("priority", 5)), item["rule"]))
+    outside = [item for item in findings if not item["overlaps_changed_lines"]]
+    status = result["status"]
+    titles = {"failed": f"❌ PMD ไม่ผ่าน ต้องแก้ {len(gating)} รายการ",
+              "error": "❌ PMD ตรวจไม่สำเร็จ ต้องแก้ข้อผิดพลาดของการตรวจ",
+              "passed": "✅ PMD ผ่าน ไม่มีรายการที่ต้องแก้ในบรรทัดเปลี่ยน",
+              "no_java_changes": "✅ ไม่มีไฟล์ Java ที่ต้องตรวจใน PR นี้"}
+    lines = [f"## {titles[status]}", ""]
+    pr = metadata.get("pull_request", {})
+    if pr.get("number"):
+        lines.extend([f"PR **#{pr['number']}** · ผู้เปิด PR **{markdown(pr.get('author') or 'ไม่ทราบ')}** · Status: **{status}**", ""])
+    else:
+        lines.extend([f"Status: **{status}**", ""])
+    if errors:
+        lines.extend(["### แก้ข้อผิดพลาดของการตรวจก่อน", "",
+                      "ผลตรวจยังไม่สมบูรณ์ ต้องแก้ข้อผิดพลาดด้านล่างแล้วรันใหม่ก่อนยืนยันว่าโค้ดผ่าน", ""])
+        lines.extend(f"- {markdown(error.get('message', error))}" for error in errors[:20])
+        if len(errors) > 20:
+            lines.append(f"- ยังมีข้อผิดพลาดอีก {len(errors) - 20} รายการ ดูทั้งหมดใน errors.json")
+        lines.append("")
+    if gating:
+        lines.extend([f"### จุดที่ต้องแก้ในโค้ด {len(gating)} รายการ", "",
+                      f"พบใน **{len({item['file'] for item in gating})} ไฟล์** แต่ละรายการทับบรรทัดที่ PR เปลี่ยนและมีผลต่อ check", ""])
+        for filename in sorted({item["file"] for item in gating}):
+            lines.extend([f"#### {markdown(Path(filename).name)}", "", f"เส้นทาง: {markdown(filename)}", "",
+                          "| บรรทัด | สิ่งที่ต้องแก้ | กฎ PMD | ผู้เขียนตาม Git |",
+                          "| ---: | --- | --- | --- |"])
+            for item in (item for item in gating if item["file"] == filename):
+                author = item.get("author") or {}
+                person = author.get("github_login") or author.get("name") or "ระบุไม่ได้"
+                confidence = "สูง" if item["confidence"] == "high" else "ต่ำ ต้องตรวจเจ้าของเพิ่ม"
+                lines.append(f"| {finding_location(metadata, item)} | {finding_action(item)} | {markdown(item['rule'])} | {markdown(person)} · {item['category']} · ความมั่นใจ{confidence} |")
+            lines.append("")
+        lines.extend(["แก้รายการข้างบนแล้ว push เข้า branch ของ PR เพื่อรัน check ใหม่ ทุกประเภทและทุกระดับความมั่นใจยังมีผลต่อ check เมื่อทับบรรทัดเปลี่ยน", ""])
+    elif not errors and status == "passed":
+        lines.extend(["ไม่มี violation ตรงบรรทัดที่ PR เปลี่ยน และไม่มีข้อผิดพลาดของเครื่องมือ", ""])
+    elif status == "no_java_changes":
+        lines.extend(["ไม่ได้เรียก PMD เพราะไม่มี production Java ที่เพิ่ม แก้ไข หรือเปลี่ยนชื่อในขอบเขต", ""])
+    lines.extend([f"**ภาพรวม:** ต้องแก้ในโค้ด **{counts['gating_violations']}** · ข้อผิดพลาดการตรวจ **{counts['errors']}** · นอกบรรทัดเปลี่ยน **{counts['outside_changed_lines']}** · ตรวจ **{result['file_count']} ไฟล์** · ผลดิบ **{counts['raw_violations']}**", "",
+                  f"อีก **{len(outside)} รายการนอกบรรทัดเปลี่ยนไม่มีผลต่อ check** เก็บไว้เป็นข้อมูลประกอบด้านล่าง", "",
+                  "<details>", f"<summary>ข้อมูลประกอบนอกขอบเขต {len(outside)} รายการ ไม่มีผลต่อ check</summary>", "",
+                  "รายการนี้เป็น not_in_scope ไม่แจกให้ผู้เขียนและไม่นับ confidence", ""])
+    if outside:
+        lines.extend(["| ไฟล์ | บรรทัด | ข้อความ PMD | กฎ |", "| --- | ---: | --- | --- |"])
+        lines.extend(f"| {markdown(item['file'])} | {finding_location(metadata, item)} | {markdown(item.get('description', ''))} | {markdown(item['rule'])} |" for item in outside[:100])
+        if len(outside) > 100:
+            lines.append(f"\nแสดงข้อมูลนอกขอบเขต 100 จาก {len(outside)} รายการ รายงาน JSON/XML/CSV เก็บครบ")
+    else:
+        lines.append("ไม่มีรายการนอกขอบเขต")
+    lines.extend(["", "</details>", "", "<details>", "<summary>สถิติตามกฎและผู้เขียน</summary>", "",
+                  "| กฎ PMD | มีผลต่อ check | ผลดิบทั้งหมด |", "| --- | ---: | ---: |"])
+    rules = sorted(counts["raw_by_rule"], key=lambda rule: (-counts["gating_by_rule"].get(rule, 0), rule))
+    lines.extend(f"| {markdown(rule)} | {counts['gating_by_rule'].get(rule, 0)} | {counts['raw_by_rule'][rule]} |" for rule in rules)
+    lines.extend(attribution_markdown(attribution["summary"]))
+    if attribution["warnings"]:
+        lines.extend(["", "Attribution warnings:", ""] + [f"- {markdown(warning)}" for warning in attribution["warnings"]])
+    lines.extend(["", "</details>", "", "### เปิดรายงานฉบับเต็ม", "",
+                  "ดาวน์โหลด Artifact ของ run นี้: summary.md อ่านสรุป, attribution.json ดูผู้เขียน/เหตุผล, errors.json ดูข้อผิดพลาด และ pmd.json / pmd.xml / violations.csv ดูผลดิบครบ", "",
+                  "หลักฐานแยกตาม PR/run/attempt เก็บใน Actions 90 วัน ชื่อไฟล์และเกณฑ์ check คงเดิม"])
+    return "\n".join(lines) + "\n"
+
+
 def finalize(root, output):
     output.mkdir(parents=True, exist_ok=True)
     errors, violations, suppressed, exit_codes = [], [], [], {}
@@ -462,19 +547,7 @@ def finalize(root, output):
         writer = csv.writer(handle)
         writer.writerow(columns)
         writer.writerows([csv_cell(v.get(key)) for key in columns] for v in violations)
-    lines = ["## PMD PR quality", "", f"Status: **{status}**", "", f"Java files: **{result['file_count']}** | Raw violations: **{len(violations)}** | Errors: **{len(errors)}**", "", f"Gating violations: **{counts['gating_violations']}** | Outside changed lines (informational): **{counts['outside_changed_lines']}**.", "", "The check applies to every unsuppressed finding overlapping changed lines, regardless of attribution or confidence. Findings outside changed lines remain in the reports.", "", "| Rule | Raw count | Gating count |", "| --- | ---: | ---: |"]
-    lines.extend(f"| {markdown(rule)} | {count} | {counts['gating_by_rule'].get(rule, 0)} |" for rule, count in counts["raw_by_rule"].items())
-    lines.extend(["", "| File | Line | Rule | Priority | Changed lines |", "| --- | ---: | --- | ---: | --- |"])
-    lines.extend(f"| {markdown(v['file'])} | {v['beginline']} | {markdown(v['rule'])} | {v['priority']} | {v['overlaps_changed_lines']} |" for v in violations[:100])
-    if len(violations) > 100:
-        lines.append("\nOnly the first 100 findings are shown here; the artifacts contain every finding.")
-    lines.extend(["", "Full metadata, diff, rules, PMD JSON/XML, CSV and logs are archived per PR/run/attempt for 90 days. No Java changes means no PMD invocation."])
-    if errors:
-        lines.extend(["", "Errors:", ""] + [f"- {markdown(error.get('message', error))}" for error in errors[:20]])
-    lines.extend(attribution_markdown(attribution["summary"]))
-    if attribution["warnings"]:
-        lines.extend(["", "Attribution warnings:", ""] + [f"- {markdown(warning)}" for warning in attribution["warnings"]])
-    summary = "\n".join(lines) + "\n"
+    summary = render_summary(metadata, result, attribution, errors)
     (output / "summary.md").write_text(summary, encoding="utf-8")
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:

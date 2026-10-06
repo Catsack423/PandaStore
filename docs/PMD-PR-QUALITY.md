@@ -39,6 +39,10 @@ pmd-pr-<PR number>-run-<run ID>-attempt-<attempt number>
 
 เปิด PR → Checks → `pmd-scan` → Details → ดู Summary และลิงก์ดาวน์โหลด หรือเปิด Actions → workflow run → Artifacts แต่ละ run/attempt มี artifact ของตัวเอง ไม่มีการเขียนทับรายงานของคนอื่น ใช้ concurrency `pmd-<PR number>` และ `cancel-in-progress: true` เมื่อ push ซ้ำ run เก่าที่ยังทำงานจะถูกยกเลิก Run ที่ยกเลิกอาจมีหลักฐานไม่ครบหรือยังไม่ได้อัปโหลด ต้องใช้ผล run ล่าสุดที่เสร็จจริง ไม่ถือว่า run ที่ถูกยกเลิกผ่าน
 
+Summary แสดงสิ่งที่ทำให้ check ไม่ผ่านก่อน: หากการตรวจมีข้อผิดพลาดจะแสดง error และสิ่งที่ต้องตรวจจาก `errors.json` ก่อน จากนั้นแสดงทุก finding ที่ทับบรรทัดเปลี่ยน แยกตามไฟล์ พร้อมบรรทัด ข้อความ/คำแนะนำ กฎ และผู้เขียน/ประเภท/ความมั่นใจ บน GitHub.com คลิกเลขบรรทัดไปยัง commit SHA ที่ตรวจจริงได้ ไม่ลิงก์ไปยัง branch ที่อาจเปลี่ยนไปแล้ว
+
+Findings นอกขอบเขตและสถิติตามกฎ/ผู้เขียนพับไว้ใน `<details>` เพื่อไม่ต้องไล่หาสาเหตุจากตารางผลดิบ ข้อมูลนอกขอบเขตแสดงสูงสุด 100 รายการพร้อมแจ้งจำนวนที่เหลือ ส่วนรายการที่มีผลต่อ check แสดงครบก่อนข้อมูลที่พับ JSON/XML/CSV และเกณฑ์ผ่าน/ไม่ผ่านคงเดิม สำหรับกฎ `LocalVariableCouldBeFinal` ที่มี variable context จะแสดงคำแนะนำให้ประกาศตัวแปรนั้นด้วย `final`; กฎอื่นใช้ข้อความ PMD เดิม
+
 กำหนด retention **90 วัน** ซึ่งต้องอยู่ภายในนโยบาย retention ของ repository/organization Artifact เป็นหลักฐานชั่วคราว ไม่ใช่ที่เก็บถาวร หากต้องเก็บเกินกำหนด ให้ดาวน์โหลด archive ก่อนหมดอายุไปยังคลังของทีมที่มีสิทธิ์เข้าถึงเทียบเท่า repository ขณะนี้ยังไม่ได้เชื่อมคลังภายนอก
 
 ## ข้อมูลที่เก็บ
@@ -57,7 +61,7 @@ pmd-pr-<PR number>-run-<run ID>-attempt-<attempt number>
 | `violations.csv` | ตารางสำหรับ Excel/Sheets: file, line/column, rule/ruleset/priority/description, package/class/method/variable, rule URL และ diff overlap; ป้องกันข้อความใน source ถูกเปิดเป็น spreadsheet formula |
 | `errors.json`, `suppressed.json` | ข้อผิดพลาดและ suppression ที่ PMD รายงาน |
 | `status.json` | ผ่าน/ไม่ผ่าน/ไม่มี Java/error, exit codes, จำนวนไฟล์, เวลาเริ่ม–จบ UTC/ระยะเวลา, counts แยก rule/priority/file/diff overlap |
-| `summary.md` | สรุปสถานะและสถิติ พร้อมตารางรายคนแยก own/imported/unknown, high/low และกฎ; ตาราง finding แสดงสูงสุด 100 รายการ แต่รายงานอื่นเก็บครบ |
+| `summary.md` | แสดง errors และ findings ที่ทำให้ check ไม่ผ่านก่อน พร้อมไฟล์/บรรทัด/สิ่งที่ต้องแก้/ผู้เขียน; สถิติและข้อมูลนอกขอบเขตพับไว้ด้านล่าง แสดงนอกขอบเขตสูงสุด 100 รายการ แต่รายงานดิบเก็บครบ |
 | `pmd-version.txt`, `java-version.txt` | เวอร์ชันเครื่องมือที่รันจริง |
 | `command-json.txt`, `command-xml.txt` | คำสั่งและ flags ที่ใช้จริง |
 | `pmd-json.log`, `pmd-xml.log` | stdout/stderr ของ PMD และ benchmark |
