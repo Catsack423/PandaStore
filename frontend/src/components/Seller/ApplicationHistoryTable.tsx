@@ -50,7 +50,21 @@ export default function ApplicationHistoryTable({ applications, emptyMessage, on
     .sort((a, b) => a - b);
 
   const content = <>
-      <div className="overflow-x-auto">
+      {embedded && onView && <div className="divide-y divide-gray-3 lg:hidden">
+        {visibleApplications.map((item) => <div key={item.applicationId} className="space-y-3 px-5 py-5">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs text-dark-4">Application #{item.applicationId}</p>
+              <p className="mt-1 break-words font-medium text-dark">{item.shopName}</p>
+            </div>
+            <span className={`inline-flex shrink-0 rounded-full px-3 py-1 text-xs ${statusColors[item.status]}`}>{statusLabels[item.status]}</span>
+          </div>
+          <p className="text-xs text-dark-4">Submitted {new Date(item.createdAt).toLocaleDateString("en-US")}</p>
+          <Button type="button" disabled={viewDisabled} onClick={() => onView(item)} aria-label={getViewLabel ? `${getViewLabel(item)} ${item.applicationId}` : `View application ${item.applicationId}`} className="h-10 w-full gap-2 rounded-lg bg-blue px-4 text-sm font-medium text-white hover:bg-blue-dark focus-visible:ring-blue/30"><Eye className="size-4" /> {getViewLabel ? getViewLabel(item) : "View application"}</Button>
+        </div>)}
+        {applications.length === 0 && emptyMessage && <p className="px-5 py-10 text-center text-sm text-dark-4">{emptyMessage}</p>}
+      </div>}
+      <div className={embedded && onView ? "hidden overflow-x-auto lg:block" : "overflow-x-auto"}>
         <table className={`w-full text-left text-sm ${embedded ? "min-w-[960px]" : onView ? "min-w-[780px]" : "min-w-[660px]"}`}>
           <thead className="bg-gray-1 text-dark-4"><tr>
             <th className="px-6 py-4">Application</th>
