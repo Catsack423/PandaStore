@@ -262,10 +262,10 @@ export default function AdminApplications() {
         {viewing.status === "PENDING" && <section aria-labelledby="review-decision-heading" className="border-t border-gray-3 pt-5">
           <h3 id="review-decision-heading" className="text-sm font-semibold text-dark">Review decision</h3>
           <p className="mt-1 text-sm text-dark-4">Choose an action, then confirm it below.</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button type="button" disabled={submitting} aria-pressed={decision === "approve"} onClick={() => chooseDecision("approve")} className="h-10 bg-blue px-4 text-white hover:bg-blue-dark"><Check className="size-4" /> Approve</Button>
-            <Button type="button" variant="outline" disabled={submitting} aria-pressed={decision === "request-docs"} onClick={() => chooseDecision("request-docs")} className="h-10 border-gray-3 px-4 text-dark"><FileText className="size-4" /> Request documents</Button>
-            <Button type="button" variant="outline" disabled={submitting} aria-pressed={decision === "reject"} onClick={() => chooseDecision("reject")} className="h-10 border-red/20 px-4 text-red hover:bg-red-light-6"><X className="size-4" /> Reject</Button>
+          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <Button type="button" disabled={submitting} aria-pressed={decision === "approve"} onClick={() => chooseDecision("approve")} className="h-10 w-full justify-center bg-blue px-4 text-white hover:bg-blue-dark"><Check className="size-4" /> Approve</Button>
+            <Button type="button" variant="outline" disabled={submitting} aria-pressed={decision === "request-docs"} onClick={() => chooseDecision("request-docs")} className="h-10 w-full justify-center border-gray-3 px-4 text-dark"><FileText className="size-4" /> Request documents</Button>
+            <Button type="button" variant="outline" disabled={submitting} aria-pressed={decision === "reject"} onClick={() => chooseDecision("reject")} className="h-10 w-full justify-center border-red/20 px-4 text-red hover:bg-red-light-6"><X className="size-4" /> Reject</Button>
           </div>
           {decision && <div className="mt-5 rounded-lg border border-gray-3 bg-gray-1 p-4">
             <p className="text-sm font-semibold text-dark">{decision === "approve" ? "Approve " + viewing.shopName + "?" : decision === "reject" ? "Reason for rejection" : "Documents needed"}</p>

@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import AdminShell from "./AdminShell";
 import { adminRequest } from "./api";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -87,118 +86,78 @@ export default function AdminCategories() {
 
   return (
     <AdminShell title="Categories">
-      <div className="space-y-5">
-        {error && (
-          <p role="alert" className="rounded-lg border border-red/20 bg-red-light-6 px-4 py-3 text-sm text-red">
-            {error}
-          </p>
-        )}
-        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-          <Card className="min-w-0 border-gray-3 bg-white shadow-1 xl:order-2">
-            <CardHeader className="border-b border-gray-3 p-5 sm:p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue">Catalog setup</p>
-              <CardTitle className="mt-1 text-lg text-dark">Add a category</CardTitle>
-              <p className="text-sm text-dark-4">Names and descriptions come from the catalog API.</p>
-            </CardHeader>
-            <CardContent className="p-5 sm:p-6">
-              <form onSubmit={(event) => void add(event)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="category-name">Category name</Label>
-                  <Input
-                    id="category-name"
-                    required
-                    maxLength={20}
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    placeholder="e.g. Home office"
-                    aria-describedby="category-name-limit"
-                    className="border-gray-3"
-                  />
-                  <p id="category-name-limit" className="text-right text-xs text-dark-4">{name.length}/20 characters</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category-description">
-                    Description <span className="font-normal text-dark-4">(optional)</span>
-                  </Label>
-                  <Textarea
-                    id="category-description"
-                    maxLength={255}
-                    value={description}
-                    onChange={(event) => setDescription(event.target.value)}
-                    placeholder="Help shoppers understand this category"
-                    className="min-h-24 border-gray-3"
-                  />
-                  <p className="text-right text-xs text-dark-4">{description.length}/255</p>
-                </div>
-                <Button
-                  type="submit"
-                  disabled={saving || !name.trim()}
-                  className="h-10 w-full bg-blue text-white hover:bg-blue-dark"
-                >
-                  <Plus className="size-4" /> {saving ? "Adding…" : "Add category"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-          <Card className="min-w-0 border-gray-3 bg-white shadow-1 xl:order-1">
-            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 border-b border-gray-3 p-5 sm:p-6">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue">Marketplace catalog</p>
-                <CardTitle className="mt-1 text-lg text-dark">
-                  {loading ? "Loading categories…" : `${categories.length} ${categories.length === 1 ? "category" : "categories"}`}
-                </CardTitle>
+      <section aria-labelledby="categories-heading" className="overflow-hidden rounded-2xl border border-gray-3 bg-white shadow-1">
+        <header className="flex flex-col gap-4 border-b border-gray-3 px-5 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 id="categories-heading" className="text-xl font-semibold text-dark">Product categories</h2>
+              <span aria-live="polite" className="rounded-full bg-blue/10 px-3 py-1 text-xs font-semibold text-blue">
+                {loading ? "Loading…" : `${categories.length} total`}
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-dark-4">Organize products so shoppers can find what they need.</p>
+          </div>
+          <Button type="button" variant="outline" onClick={() => void reload()} disabled={loading || deletingId !== null} className="h-10 shrink-0 border-gray-3 bg-white px-3 text-dark hover:bg-gray-1">
+            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </Button>
+        </header>
+
+        {error && <p role="alert" className="mx-5 mt-5 rounded-lg border border-red/20 bg-red-light-6 px-4 py-3 text-sm text-red sm:mx-7">{error}</p>}
+
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="min-w-0">
+            <div className="border-b border-gray-3 px-5 py-4 sm:px-7">
+              <h3 className="font-semibold text-dark">All categories</h3>
+            </div>
+            {loading && categories.length === 0 ? (
+              <p role="status" className="px-5 py-14 text-center text-sm text-dark-4">Loading categories…</p>
+            ) : categories.length === 0 && !error ? (
+              <div className="px-5 py-14 text-center">
+                <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-blue/10 text-blue"><Tags className="size-6" /></div>
+                <p className="mt-4 font-medium text-dark">No categories yet</p>
+                <p className="mt-1 text-sm text-dark-4">Add the first category using the form.</p>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => void reload()}
-                disabled={loading || deletingId !== null}
-                className="border-gray-3 text-dark"
-              >
-                <RefreshCw className="size-4" /> Refresh
+            ) : categories.length > 0 ? (
+              <ul className="divide-y divide-gray-3">
+                {categories.map((category) => (
+                  <li key={category.categoryId} className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <h4 className="break-words font-semibold text-dark">{category.categoryName}</h4>
+                        <span className="text-xs text-dark-4">#{category.categoryId}</span>
+                      </div>
+                      <p className="mt-1 break-words text-sm leading-6 text-dark-4">{category.description || "No description"}</p>
+                    </div>
+                    <Button type="button" variant="outline" onClick={() => setCategoryToDelete(category)} disabled={deletingId !== null} aria-label={`Delete ${category.categoryName}`} className="h-9 shrink-0 self-start rounded-lg border-red/20 bg-white px-3 text-red hover:border-red/40 hover:bg-red/5 hover:text-red sm:self-auto">
+                      <Trash2 className="size-4" /> Delete
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+
+          <aside aria-labelledby="add-category-heading" className="border-t border-gray-3 p-5 sm:p-7 lg:border-t-0 lg:border-l">
+            <h3 id="add-category-heading" className="font-semibold text-dark">Add a category</h3>
+            <p className="mt-1 text-sm leading-6 text-dark-4">Give shoppers a clear name for this group of products.</p>
+            <form onSubmit={(event) => void add(event)} className="mt-6 space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="category-name">Category name</Label>
+                <Input id="category-name" required maxLength={20} value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Home office" aria-describedby="category-name-limit" className="border-gray-3 bg-white" />
+                <p id="category-name-limit" className="text-right text-xs text-dark-4">{name.length}/20 characters</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category-description">Description <span className="font-normal text-dark-4">(optional)</span></Label>
+                <Textarea id="category-description" maxLength={255} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="What belongs in this category?" className="min-h-24 border-gray-3 bg-white" />
+                <p className="text-right text-xs text-dark-4">{description.length}/255</p>
+              </div>
+              <Button type="submit" disabled={saving || !name.trim()} className="h-10 w-full bg-blue text-white hover:bg-blue-dark">
+                <Plus className="size-4" /> {saving ? "Adding…" : "Add category"}
               </Button>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              {!loading && categories.length === 0 ? (
-                <div className="py-14 text-center">
-                  <Tags className="mx-auto size-8 text-blue" />
-                  <p className="mt-3 font-medium text-dark">No categories yet</p>
-                  <p className="mt-1 text-sm text-dark-4">Add the first one with the form.</p>
-                </div>
-              ) : (
-                <ul className="divide-y divide-gray-3">
-                  {categories.map((category) => (
-                    <li
-                      key={category.categoryId}
-                      className="flex flex-col gap-3 px-2 py-4 sm:flex-row sm:items-start sm:justify-between"
-                    >
-                      <div className="min-w-0">
-                        <h3 className="break-words font-semibold text-dark">{category.categoryName}</h3>
-                        <p className="mt-1 break-words text-sm leading-5 text-dark-4">
-                          {category.description || "No description"}
-                        </p>
-                        <p className="mt-2 text-xs text-dark-4">ID {category.categoryId}</p>
-                      </div>
-                      <div className="shrink-0">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setCategoryToDelete(category)}
-                          disabled={deletingId !== null}
-                          className="border-gray-3 text-dark-4 hover:border-red/40 hover:bg-red/5 hover:text-red transition-colors"
-                        >
-                          <Trash2 className="size-4" /> Delete
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+            </form>
+          </aside>
         </div>
-      </div>
+      </section>
 
       <ConfirmDialog
         isOpen={Boolean(categoryToDelete)}
