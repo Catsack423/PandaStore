@@ -53,6 +53,7 @@ Spring Security authenticates every route by default. The backend accepts explic
 
 | Method | Public routes |
 | --- | --- |
+| GET | `/status` (application liveness only; returns `{"status":"UP"}` without database checks), `/favicon.ico` (copied from the frontend favicon) |
 | POST | `/api/auth/login`, `/api/auth/register/customer`, `/api/auth/register/seller`, `/api/sellers/register` |
 | GET | `/api/auth/token` (the controller validates the provided Bearer token) |
 | GET | `/api/products`, `/api/products/*`, `/api/products/seller/*` |
