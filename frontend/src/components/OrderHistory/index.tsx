@@ -206,7 +206,7 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           {order.status === "PENDING_PAYMENT" && order.paymentStatus === "PENDING" && <Link href={`/payment/${order.orderGroupId}`} aria-label={`Pay now for order group ${order.orderGroupId}`} className="inline-flex h-9 items-center justify-center rounded-lg bg-blue px-3 text-sm text-white hover:bg-blue-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue">Pay now</Link>}
           {(order.status === "PENDING_PAYMENT" || order.status === "WAITING_SELLER_CONFIRM" || order.status === "PREPARING") && (
-            <Button variant="outline" size="sm" className="h-9 px-3 text-red border-red/30 hover:bg-red/10" disabled={actionLoading} onClick={() => setShowCancelOrder(true)}>
+            <Button variant="outline" className="h-9 min-w-[112px] rounded-lg border-red/30 bg-white px-3 text-red hover:border-red/50 hover:bg-red/5 hover:text-red" disabled={actionLoading} onClick={() => setShowCancelOrder(true)}>
               Cancel
             </Button>
           )}
@@ -233,7 +233,7 @@ function OrderRow({ order, onRefresh }: { order: CustomerOrder; onRefresh: () =>
               />
             )
           )}
-          <Button variant="outline" className="h-9 px-3" aria-expanded={expanded} aria-controls={`order-${order.id}`} onClick={() => setExpanded(!expanded)}>
+          <Button variant="outline" className="h-9 min-w-[112px] rounded-lg px-3" aria-expanded={expanded} aria-controls={`order-${order.id}`} onClick={() => setExpanded(!expanded)}>
             Details <ChevronDown className={`ml-1 h-4 w-4 transition-transform motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`} />
           </Button>
         </div>
