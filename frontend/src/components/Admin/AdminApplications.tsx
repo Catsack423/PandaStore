@@ -80,6 +80,7 @@ function ApplicationFields({ application }: { application: SellerApplicationReco
 
 export default function AdminApplications() {
   const dialogTitleRef = useRef<HTMLHeadingElement>(null);
+  const dialogContentRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const filterRef = useRef<HTMLSelectElement>(null);
   const submitLock = useRef(false);
@@ -114,6 +115,15 @@ export default function AdminApplications() {
   }, []);
 
   useEffect(() => { void reload(); }, [reload]);
+
+  useEffect(() => {
+    if (!decision) return;
+    const frame = window.requestAnimationFrame(() => {
+      const content = dialogContentRef.current;
+      content?.scrollTo({ top: content.scrollHeight, behavior: "smooth" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [decision]);
 
   function openApplication(application: SellerApplicationRecord) {
     returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -234,6 +244,7 @@ export default function AdminApplications() {
 
     <Dialog open={viewing !== null} onOpenChange={(open) => { if (!open) closeApplication(); }}>
       {viewing && <DialogContent
+        ref={dialogContentRef}
         initialFocus={dialogTitleRef}
         finalFocus={() => returnFocusRef.current?.isConnected && !returnFocusRef.current.matches(":disabled") ? returnFocusRef.current : filterRef.current}
         showCloseButton={!submitting}
