@@ -15,6 +15,7 @@ import project.project.Service.api.ProductService;
 
 @Service
 public class CategoryServiceImp implements CategoryService {
+    private static final int MAX_CATEGORY_NAME_LENGTH = 20;
     private final CategoryRepository categories;
     private final ProductService products;
     private final ProductRepository productRepository;
@@ -34,8 +35,8 @@ public class CategoryServiceImp implements CategoryService {
         }
 
         String name = categoryName.trim();
-        if (name.length() > 100) {
-            throw new IllegalArgumentException("Category name must not exceed 100 characters");
+        if (name.length() > MAX_CATEGORY_NAME_LENGTH) {
+            throw new IllegalArgumentException("Category name must not exceed 20 characters");
         }
         if (categories.existsByCategoryNameIgnoreCase(name)) {
             throw new IllegalStateException("Category already exists");

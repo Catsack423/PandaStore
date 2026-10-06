@@ -40,7 +40,7 @@ const SingleItem = ({ item }: { item: Product }) => {
         <div className="text-center px-4 py-7.5">
           <RatingStars rating={item.averageRating} reviews={item.reviews} className="justify-center mb-2" />
 
-          <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
+          <h3 className="mb-1.5 min-w-0 line-clamp-2 break-all font-medium text-dark transition-colors hover:text-blue">
             <Link href={productUrl(item)}> {item.title} </Link>
           </h3>
 

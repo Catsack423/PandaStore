@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import Payment from "@/components/Payment";
 import type { PaymentOrder } from "@/components/Payment/api";
 
-export const metadata: Metadata = { title: "Payment | Panda Store" };
+export const metadata: Metadata = { title: "Payment | PandaStore" };
 
 export default async function PaymentPage({ params }: { params: Promise<{ orderGroupId: string }> }) {
   const { orderGroupId } = await params;

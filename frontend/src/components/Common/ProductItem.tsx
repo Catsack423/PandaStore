@@ -41,7 +41,7 @@ const ProductItem = ({ item }: { item: Product }) => {
   };
 
   return (
-    <div className="group">
+    <div className="group min-w-0">
       <div className="relative mb-4 overflow-hidden rounded-lg bg-white border border-gray-3 shadow-1">
         <Link href={productUrl(item)} aria-label={`View ${item.title}`} className="block w-full"><ProductImage src={item.imgs?.previews?.[0]} alt={item.title} size="fill" surface="white" /></Link>
 
@@ -90,7 +90,7 @@ const ProductItem = ({ item }: { item: Product }) => {
       <RatingStars rating={item.averageRating} reviews={item.reviews} className="mb-2" />
 
       <h3
-        className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5"
+        className="mb-1.5 min-w-0 line-clamp-2 break-all font-medium text-dark transition-colors hover:text-blue"
         onClick={() => handleProductDetails()}
       >
         <Link href={productUrl(item)}> {item.title} </Link>

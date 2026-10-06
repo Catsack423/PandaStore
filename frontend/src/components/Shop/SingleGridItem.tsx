@@ -84,7 +84,7 @@ const SingleGridItem = ({ item, readOnly = false, showImageSkeleton = false }: {
   };
 
   return (
-    <div className="group">
+    <div className="group min-w-0">
       <div className="relative mb-4 overflow-hidden rounded-lg bg-white shadow-1">
         {currentProduct.status === "INACTIVE" && (
           <div className="absolute top-2.5 left-2.5 z-10 rounded bg-red px-2 py-0.5 text-xs font-semibold text-white shadow">
@@ -142,7 +142,7 @@ const SingleGridItem = ({ item, readOnly = false, showImageSkeleton = false }: {
 
       <RatingStars rating={currentProduct.averageRating} reviews={currentProduct.reviews} className="mb-2" />
 
-      <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
+      <h3 className="mb-1.5 min-w-0 line-clamp-2 break-all font-medium text-dark transition-colors hover:text-blue">
         <Link href={productUrl(currentProduct)}> {currentProduct.title} </Link>
       </h3>
 

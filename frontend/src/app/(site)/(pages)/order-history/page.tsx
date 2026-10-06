@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import OrderHistory from "@/components/OrderHistory";
 
 export const metadata: Metadata = {
-  title: "Order History | NextMerce",
+  title: "Order History | PandaStore",
   description: "View your orders and delivery progress.",
 };
 

@@ -94,7 +94,7 @@ export default function MyAccount() {
     <main>
       <Breadcrumb title="My Account" pages={["My Account"]} />
       <section className="bg-gray-2 py-12 sm:py-16">
-        <div className="mx-auto w-full max-w-[1170px] px-4 sm:px-8 xl:px-0">
+        <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-8 xl:px-10">
           {!isLoading && !user && (
             <div className="mb-7 flex flex-col gap-4 rounded-xl border border-blue/20 bg-blue/5 p-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -112,7 +112,7 @@ export default function MyAccount() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-7 lg:grid-cols-[260px_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
             <aside className="min-w-0 space-y-4">
               <Card>
                 <CardContent className="flex items-start gap-3 p-5">

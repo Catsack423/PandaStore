@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 
 const Breadcrumb = ({ title, pages, rootLabel = "Home", rootHref }: {
@@ -11,9 +11,19 @@ const Breadcrumb = ({ title, pages, rootLabel = "Home", rootHref }: {
   rootHref?: string;
 }) => {
   const { user } = useAuth();
+  const [headerHeight, setHeaderHeight] = useState<number | null>(null);
+  useEffect(() => {
+    const header = document.getElementById("site-header");
+    if (!header) return;
+    const measure = () => setHeaderHeight(header.getBoundingClientRect().height);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
   const homeHref = rootHref ?? (user?.role === "SELLER" && user.status === "ACTIVE" ? "/seller-dashboard" : "/");
   return (
-    <div className="overflow-hidden shadow-breadcrumb pt-[209px] sm:pt-[155px] xl:pt-[165px]">
+    <div className="overflow-hidden shadow-breadcrumb pt-[209px] sm:pt-[155px] xl:pt-[165px]" style={headerHeight === null ? undefined : { paddingTop: headerHeight }}>
       <div className="border-t border-gray-3">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0 py-5 xl:py-10">
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
