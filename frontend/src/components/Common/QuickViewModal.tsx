@@ -141,7 +141,7 @@ const QuickViewModal = () => {
               </div>
             </div>
 
-            <div className="min-w-0 w-full">
+            <div className="min-w-0 w-full lg:pt-14">
               {product?.price > product?.discountedPrice && (
                 <span className="inline-block text-custom-xs font-medium text-white py-1 px-3 bg-green mb-6.5 rounded">
                   SALE {Math.round(((product.price - product.discountedPrice) / product.price) * 100)}% OFF
