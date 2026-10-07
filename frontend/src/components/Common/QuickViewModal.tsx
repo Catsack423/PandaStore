@@ -68,10 +68,10 @@ const QuickViewModal = () => {
   return (
     <div
       className={`${isModalOpen ? "z-99999" : "hidden"
-        } fixed top-0 left-0 overflow-y-auto no-scrollbar w-full h-screen sm:py-20 xl:py-25 2xl:py-[230px] bg-dark/70 sm:px-8 px-4 py-5`}
+        } fixed top-0 left-0 overflow-x-hidden overflow-y-auto no-scrollbar w-full h-screen sm:py-20 xl:py-25 2xl:py-[230px] bg-dark/70 sm:px-8 px-4 py-5`}
     >
-      <div className="flex items-center justify-center ">
-        <div className="w-full max-w-[1100px] rounded-xl shadow-3 bg-white p-7.5 relative modal-content">
+      <div className="flex min-w-0 items-center justify-center">
+        <div className="w-full min-w-0 max-w-[1100px] rounded-xl shadow-3 bg-white p-7.5 relative modal-content">
           <button
             onClick={() => closeModal()}
             aria-label="button for close modal"
@@ -94,10 +94,10 @@ const QuickViewModal = () => {
             </svg>
           </button>
 
-          <div className="flex flex-wrap items-center gap-12.5">
-            <div className="max-w-[526px] w-full">
-              <div className="flex gap-5">
-                <div className="flex flex-col gap-5">
+          <div className="grid min-w-0 grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,526px)_minmax(0,445px)] lg:gap-12.5">
+            <div className="min-w-0 w-full">
+              <div className="flex min-w-0 gap-3 sm:gap-5">
+                <div className="flex shrink-0 flex-col gap-5">
                   {product.imgs.thumbnails?.map((img, key) => (
                     <button
                       onClick={() => setActivePreview(key)}
@@ -110,7 +110,7 @@ const QuickViewModal = () => {
                   ))}
                 </div>
 
-                <div className="relative z-1 overflow-hidden flex items-center justify-center w-full sm:min-h-[508px] bg-white rounded-lg border border-gray-3">
+                <div className="relative z-1 min-w-0 flex-1 overflow-hidden flex items-center justify-center sm:min-h-[508px] bg-white rounded-lg border border-gray-3">
                   <div className="w-full">
                     <button
                       onClick={handlePreviewSlider}
@@ -141,14 +141,14 @@ const QuickViewModal = () => {
               </div>
             </div>
 
-            <div className="max-w-[445px] w-full">
+            <div className="min-w-0 w-full">
               {product?.price > product?.discountedPrice && (
                 <span className="inline-block text-custom-xs font-medium text-white py-1 px-3 bg-green mb-6.5 rounded">
                   SALE {Math.round(((product.price - product.discountedPrice) / product.price) * 100)}% OFF
                 </span>
               )}
 
-              <h3 className="font-semibold text-xl xl:text-heading-5 text-dark mb-4">
+              <h3 className="font-semibold text-xl xl:text-heading-5 text-dark mb-4 break-words [overflow-wrap:anywhere]">
                 {product.title}
               </h3>
 
