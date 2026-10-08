@@ -1,0 +1,152 @@
+@startuml domain-model
+!include _style.puml
+title PandaStore - Domain Model
+top to bottom direction
+hide methods
+hide circle
+
+package "Accounts and selling" {
+  class "User Account" as User {
+    username
+    email
+    role
+    status
+  }
+  class "Customer" as Customer {
+    fullName
+    phoneNumber
+  }
+  class "Delivery Address" as Address {
+    receiverName
+    addressLine
+    district
+    province
+    postalCode
+    isDefault
+  }
+  class "Seller / Shop" as Seller {
+    shopName
+    shopDescription
+    status
+    rating
+  }
+  class "Seller Application" as Application {
+    shopDetails
+    identityDocuments
+    bankDetails
+    status
+    adminNote
+  }
+  class "Seller Bank Account" as Bank {
+    bankName
+    accountName
+    accountNumber
+    proofImage
+  }
+}
+package "Catalog and feedback" {
+  class "Product" as Product {
+    name
+    description
+    price
+    stock
+    status
+  }
+  class "Category" as Category {
+    categoryName
+    description
+  }
+  class "Product Image" as Image {
+    imageUrl
+    isPrimary
+    displayOrder
+  }
+  class "Review" as Review {
+    rating
+    comment
+    isAutoReview
+  }
+  class "Seller Review Reply" as Reply {
+    replyMessage
+  }
+}
+package "Shopping and fulfillment" {
+  class "Cart" as Cart
+  class "Cart Item" as CartItem {
+    quantity
+    isSelected
+  }
+  class "Order Group" as Group {
+    groupNumber
+    grandTotal
+    paymentStatus
+  }
+  class "Seller Order" as Order {
+    subOrderNumber
+    subtotal
+    shippingFee
+    shippingMethod
+    totalAmount
+    orderStatus
+  }
+  class "Order Item" as OrderItem {
+    productName
+    unitPrice
+    quantity
+    totalPrice
+    isReviewed
+  }
+  class "Payment" as Payment {
+    paymentMethod
+    amount
+    refundedAmount
+    status
+  }
+  class "Shipment" as Shipment {
+    courierName
+    trackingNumber
+    shippingStatus
+  }
+  class "Notification" as Notification {
+    title
+    message
+    type
+    isRead
+  }
+}
+
+User "1" -- "0..1" Customer : customer profile
+User "1" -- "0..1" Seller : seller profile
+User "1" -- "0..*" Application : submits
+User "0..1" -- "0..*" Application : reviews as admin
+Customer "1" -- "0..*" Address : maintains
+Seller "1" -- "0..*" Bank : payout details
+Seller "1" -- "0..*" Product : lists
+Product "0..*" -- "0..*" Category : categorized by
+Product "1" *-- "0..*" Image : artwork
+Customer "1" -- "0..1" Cart : shops with
+Cart "1" *-- "0..*" CartItem : contains
+Product "1" -- "0..*" CartItem : selected product
+Customer "1" -- "0..*" Group : places
+Address "1" -- "0..*" Group : delivery destination
+Group "1" *-- "1..*" Order : one order per seller
+Seller "1" -- "0..*" Order : fulfills
+Order "1" *-- "1..*" OrderItem : purchased lines
+Product "1" -- "0..*" OrderItem : source product
+Group "1" *-- "1" Payment : checkout payment
+Order "1" -- "0..1" Shipment : tracked shipment
+OrderItem "1" -- "0..1" Review : purchase feedback
+Customer "1" -- "0..*" Review : writes
+Product "1" -- "0..*" Review : rated product
+Review "1" *-- "0..1" Reply : response
+Seller "1" -- "0..*" Reply : replies
+User "1" -- "0..*" Notification : receives
+
+legend bottom
+  Conceptual business model; no database keys or framework classes.
+  Multiplicity describes stored profiles and valid checkout aggregates.
+  Approval creates an active seller profile and changes the account role to SELLER.
+  Payment methods are simulated; shipment tracking is entered by a seller.
+  Sources: Entity/*, OrderDraftFactoryImp, SellerApplicationServiceImp.
+endlegend
+@enduml

@@ -1,0 +1,60 @@
+@startuml
+!include _style.puml
+title Checkout Activity: All Cart Items, Split by Seller
+start
+:Customer opens Checkout;
+if (Authenticated CUSTOMER?) then (yes)
+  :Load cart context, owned addresses,\nshipping methods and payment methods;
+else (no)
+  :Require customer sign-in / redirect by role;
+  stop
+endif
+:Choose/add owned shipping address;
+:Calculate quotes per shop and available method;
+if (Every selected quote ready\nand cart updates complete?) then (yes)
+  :Choose one shipping method per shop\nand payment method;
+else (no)
+  :Disable Place order; show quote error\nor await pending requests;
+  stop
+endif
+:POST /api/checkout/orders;
+:Origin check, cookie-to-Bearer proxy,\nBean Validation and session identity;
+if (Address owned, cart nonempty,\nexactly all seller methods supported?) then (yes)
+  :Select every cart item; validate stock;
+else (no)
+  :Return error; show checkout message;
+  stop
+endif
+partition "Transactional order creation" {
+  :Lock cart; load/verify address;\naggregate selected product quantities;
+  :Lock products in ascending ID order;
+  if (Products and shops ACTIVE\nand sufficient stock?) then (yes)
+    :Reserve stock by decrementing quantities;
+  else (no)
+    :Throw; transaction rolls back;\nno saved order or stock deduction;
+    stop
+  endif
+  :OrderDraftFactory creates one Order per seller;
+  :Snapshot item name/price/quantity;\ncalculate shipping through selected strategy;
+  if (Prices, quantities and shipping fees valid?) then (yes)
+    :Set Orders=PENDING_PAYMENT;\nPayment=PENDING; OrderGroup=PENDING;
+    :Calculate seller totals and grand total;
+    :Cascade-save group, orders, items and payment;
+    :Remove selected cart items via orphan removal;
+  else (no)
+    :Throw; transaction rolls back including stock;
+    stop
+  endif
+}
+:Return 201 OrderGroupResponse; refresh cart;
+:Display saved order and pending payment;\ncustomer may open Payment page;
+stop
+note right
+Payment is a separate action; checkout does not collect money.
+Facade rejects an empty cart and selects every item, avoiding
+the lower-level orchestration's default-product fallback.
+end note
+' Sources: frontend/src/components/Checkout/index.tsx; frontend/src/middleware.ts
+' Sources: backend/src/main/java/project/project/Service/implement/CustomerCheckoutService.java
+' Sources: backend/src/main/java/project/project/Service/implement/OrderOrchestrationServiceImp.java; InventoryServiceImp.java; OrderDraftFactoryImp.java
+@enduml

@@ -1,0 +1,97 @@
+@startuml component
+!include _style.puml
+title PandaStore - Component Architecture
+top to bottom direction
+
+actor "Guest / Customer / Seller / Admin" as Person
+node "Web browser" as BrowserNode {
+  component "React pages and components\nStorefront, checkout, payment,\nseller workspace, admin workspace" as UI
+  component "AuthContext / CartContext\nReact Query / Redux view state" as State
+  UI -- State
+}
+package "Next.js application" as FrontendNode {
+  component "Middleware\nOrigin checks and verified-role redirects" as Middleware
+  component "Route handlers /api/*\nAuth, cart, checkout, payment,\norders, reviews, shops, admin" as Proxies
+  component "Server Actions\nServerAction/products.ts" as Actions
+  component "UploadThing route handler\nProduct image / seller document\nauthorization and metadata" as UploadRoute
+  component "next.config.js\nSecurity headers / image configuration" as NextConfig
+  Middleware --> Proxies : guards mutations
+  NextConfig ..> UI : response headers
+}
+package "Spring Boot backend" as BackendNode {
+  component "Spring SecurityFilterChain\nLoginRateLimitFilter\nJwtAuthenticationFilter\nSellerApplicationAdminFilter" as Security
+  component "REST controllers\nBean Validation / ownership checks\nApiResponse and exception handlers" as Controllers
+  component "AuthServiceImp / JwtTokenService\nPasswordService\nCurrentUser / RequestUserResolver" as Auth
+  component "Catalog, customer, cart,\naddress and review services" as Commerce
+  component "CustomerCheckoutService\nOrderOrchestrationServiceImp\nOrderDraftFactoryImp / InventoryServiceImp" as Checkout
+  component "PaymentServiceImp\nSimulated payment and refunds" as PaymentService
+  component "SubOrderServiceImp\nShippingServiceImp / strategies\nOrderStateLock / OrderSchedulerService" as Fulfillment
+  component "SellerApplicationServiceImp\nSellerServiceImp / SellerShopServiceImp" as Sellers
+  component "OrderPaidEvent\nOrderPaidNotificationObserver" as Events
+  component "NotificationServiceImp" as Notifications
+  component "Spring Data JPA repositories\nHibernate persistence" as Persistence
+  Security --> Controllers : authenticated /\nauthorized request
+  Security --> Auth : token / stored session checks
+  Controllers --> Auth
+  Controllers --> Commerce
+  Controllers --> Checkout
+  Controllers --> PaymentService
+  Controllers --> Fulfillment
+  Controllers --> Sellers
+  Controllers --> Notifications
+  Checkout --> Events : synchronous\npublishEvent
+  Events --> Notifications : paid-order observer
+  PaymentService --> Notifications : direct paid-order calls
+  Fulfillment --> Notifications : shipped notification
+  Sellers --> Notifications : application / approval
+  Commerce --> Notifications : review notification
+  Auth --> Persistence
+  Commerce --> Persistence
+  Checkout --> Persistence
+  PaymentService --> Persistence
+  Fulfillment --> Persistence
+  Sellers --> Persistence
+  Notifications --> Persistence
+}
+database "PostgreSQL\nSupabase-compatible public schema\n21 tables" as Database
+cloud "UploadThing\nRemote upload and image delivery" as UploadCloud
+component "Optional json-server\nfrontend/db.json template catalog" as Template
+
+Person --> UI
+UI --> Middleware : same-origin HTTP(S)
+UI --> Actions : Next.js Server Action request
+UI --> UploadRoute : /api/uploadthing
+Proxies --> Security : JSON HTTP(S)\nAuthorization: Bearer
+Actions --> Security : catalog / seller product HTTP(S)
+Middleware --> Security : /api/auth/me\nverified identity
+UploadRoute --> Security : verify account / active shop
+UploadRoute --> UploadCloud : HTTPS SDK control / callbacks
+UI --> UploadCloud : HTTPS upload / image URLs
+Actions --> UploadCloud : UTApi.deleteFiles()
+Persistence --> Database : JDBC PostgreSQL
+Actions ..> Template : HTTP :5000\ngetProducts() fallback only
+
+BrowserNode -[hidden]down-> FrontendNode
+FrontendNode -[hidden]down-> BackendNode
+
+note bottom of Proxies
+  Server reads auth_token HttpOnly cookie and forwards Bearer JWT.
+  Cookie: SameSite=Lax, Secure in production, 24-hour max-age.
+  Browser receives user data, not the JWT in the login JSON body.
+end note
+note bottom of Database
+  Schema script grants access to pandastore_backend with RLS policies.
+  Application users use Spring authentication; Supabase Auth and
+  direct browser Data API access are not part of this implementation.
+end note
+note bottom of PaymentService
+  Payment callbacks/simulation update application records.
+  No external payment provider or courier API is configured.
+end note
+legend bottom
+  Runtime component dependencies, not an exhaustive class inventory.
+  Sources: frontend/src/app/api/*, middleware.ts, ServerAction/products.ts,
+  backend Config/SecurityConfig, Controller/*, Service/*, Repository/*,
+  backend/db/supabase-schema.sql, frontend/src/app/api/uploadthing/*.
+endlegend
+@enduml

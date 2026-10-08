@@ -1,0 +1,57 @@
+@startuml
+!include _style.puml
+title Payment and OrderGroup Payment Status
+hide empty description
+state "Payment: PENDING\nOrderGroup: PENDING" as Pending
+state "Payment: SUCCESS\nOrderGroup: PAID" as Paid
+state "Payment: FAILED\nOrderGroup: FAILED" as Failed
+state "Payment: PARTIALLY_REFUNDED\nOrderGroup: PARTIALLY_REFUNDED" as Partial
+state "Payment: REFUNDED\nOrderGroup: REFUNDED" as Refunded
+state "Payment: PENDING\nOrderGroup: FAILED\n(all unpaid orders cancelled)" as CancelledUnpaid
+
+[*] --> Pending : OrderDraftFactory.create()\nno gateway transaction ID yet
+Pending --> Pending : initiatePayment() / GW-TXN-UUID\nor restart existing nonprocessed payment
+Pending --> Paid : successful callback/simulation\nor internal orchestration success
+Pending --> Failed : unsuccessful callback/simulation\nor internal orchestration failure
+Failed --> Pending : initiatePayment()\n[valid positive total and method]
+Failed --> Paid : PaymentService successful callback\n[transaction unchanged; not refunded]
+Failed --> Failed : failed callback\nor duplicate orchestration failure
+Paid --> Paid : repeated successful callback / no-op
+Paid --> Partial : processPartialRefund()\n[0 < accumulated refund < payment.amount]
+Partial --> Partial : processPartialRefund()\n[accumulated refund < payment.amount]
+Paid --> Refunded : partial refund reaches full amount\nor processFullRefund()
+Partial --> Refunded : remaining amount refunded
+Pending --> CancelledUnpaid : customerCancelOrder()\n[all unpaid sub-orders CANCELLED]
+CancelledUnpaid --> Pending : direct initiatePayment()\n[no sub-order-state check]
+CancelledUnpaid --> Paid : direct successful callback\n[cancelled sub-orders remain cancelled]
+CancelledUnpaid --> Failed : direct failed callback
+
+note right of Partial
+Partial refunds require SUCCESS/PARTIALLY_REFUNDED,
+positive amount <= order total and remaining payment balance,
+and a nonblank reason. They set the target Order=CANCELLED.
+Full refund refunds the remaining amount and cancels
+non-COMPLETED sub-orders. Refunds are bookkeeping,
+without an external payment gateway integration.
+SubOrderService also derives group refund status from
+cancelled order counts; it can differ from monetary status
+if direct Admin partial refunds use arbitrary amounts.
+end note
+note left of Failed
+PaymentService failure sets Payment/Group=FAILED only.
+Orchestration failure requires pending group/payment/orders,
+releases stock and cancels all sub-orders.
+Orchestration success has the same pending guards and publishes
+OrderPaidEvent; PaymentService sends notifications directly.
+end note
+note right of Refunded
+initiatePayment rejects SUCCESS and refunded states.
+Callbacks reject refunded states and attempts to fail SUCCESS.
+Frontend payment proxy requires all sub-orders pending
+and both group and payment PENDING before simulation.
+Group-only cancellation does not change Payment status.
+end note
+' Sources: backend/src/main/java/project/project/Entity/order/PaymentStatus.java; OrderGroupPaymentStatus.java
+' Sources: backend/src/main/java/project/project/Service/implement/PaymentServiceImp.java; OrderOrchestrationServiceImp.java; SubOrderServiceImp.java
+' Sources: frontend/src/app/api/payment/[orderGroupId]/route.ts; frontend/src/components/Payment/api.ts
+@enduml

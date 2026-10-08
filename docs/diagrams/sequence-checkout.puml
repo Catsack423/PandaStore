@@ -1,0 +1,68 @@
+@startuml
+!include _style.puml
+title Multi-Seller Checkout and Stock Reservation
+autonumber
+actor "Customer" as Customer
+participant "Next.js\ncheckout proxy" as Next
+participant "CustomerCheckoutController /\nCustomerCheckoutService" as Checkout
+participant "OrderOrchestrationServiceImp" as Orders
+participant "InventoryServiceImp" as Inventory
+participant "OrderDraftFactoryImp" as Factory
+participant "ShippingFeeCalculator /\nShippingFeeStrategyFactory" as Shipping
+database "JPA repositories" as DB
+
+Customer -> Next : GET /api/checkout
+Next -> Checkout : Bearer token; requireCustomerId()
+Checkout -> DB : read cart, owned addresses, address usage
+Checkout --> Next : items, addresses, shippingMethods, paymentMethods
+Next --> Customer : Checkout context
+loop Each shop and available shipping method (UI requests in parallel)
+  Customer -> Next : POST /api/checkout/quote\n{sellerId, shippingMethod, addressId}
+  Next -> Checkout : quote(sessionCustomerId, request)
+  Checkout -> Checkout : require owned address; shop in cart; supported method
+  Checkout -> Shipping : calculateShippingFee(sellerId, method, addressId)
+  Shipping --> Checkout : calculated fee
+  Checkout --> Next : ShippingFeeResponse
+  Next --> Customer : shipping quote
+end
+Customer -> Next : POST /api/checkout/orders\n{shippingAddressId, sellerShippingMethods, paymentMethod}
+Next -> Checkout : @Valid request; session customer identity
+Checkout -> Checkout : require owned address and nonempty cart\nrequire exactly one supported method per cart seller
+Checkout -> DB : select every cart item\nCartService validates current stock
+Checkout -> Orders : createOrderGroupFromCart(...)
+Orders -> DB : findByCustomerIdForUpdate(customerId)\nload and verify Address ownership
+Orders -> Orders : collect selected items; merge product quantities
+Orders -> Inventory : reserve(quantities)
+Inventory -> DB : lock products in ascending ID order
+alt Inactive product/shop, insufficient stock, or invalid quantity
+  Inventory --> Orders : exception
+  Orders --> Checkout : transaction rolls back
+  Checkout --> Next : error ApiResponse
+  Next --> Customer : display error; order not created
+else Reservation valid
+  Inventory -> Inventory : decrement stock; return reserved products
+  Orders -> Factory : create(customer, address, products, quantities,\nshippingMethods, paymentMethod)
+  loop One sub-order per seller
+    Factory -> Shipping : calculateShippingFee(sellerId, method, addressId)
+    Shipping --> Factory : fee
+    Factory -> Factory : snapshot product name, price and quantity\nOrder=PENDING_PAYMENT; calculate seller total
+  end
+  Factory -> Factory : aggregate totals; Payment=PENDING\nOrderGroup.paymentStatus=PENDING
+  Factory --> Orders : OrderGroup with sub-orders/items/payment
+  Orders -> DB : save(group), cascade child records
+  Orders -> Orders : remove selected cart items (orphan removal)
+  Orders --> Checkout : saved OrderGroup
+  Checkout --> Next : 201 OrderGroupResponse
+  Next --> Customer : show saved order; payment pending
+end
+note over Orders, Inventory
+Checkout selects all cart items; reserve uses database locks.
+The lower-level orchestration method has a fallback that inserts
+quantity 2 of a first ACTIVE in-stock product if nothing is selected.
+The customer checkout facade rejects an empty cart before this path.
+end note
+' Sources: frontend/src/components/Checkout/index.tsx; frontend/src/app/api/checkout/[[...path]]/route.ts
+' Sources: backend/src/main/java/project/project/Controller/CustomerCheckoutController.java
+' Sources: backend/src/main/java/project/project/Service/implement/CustomerCheckoutService.java; OrderOrchestrationServiceImp.java
+' Sources: backend/src/main/java/project/project/Service/implement/InventoryServiceImp.java; OrderDraftFactoryImp.java
+@enduml

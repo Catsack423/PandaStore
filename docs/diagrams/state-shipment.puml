@@ -1,0 +1,34 @@
+@startuml
+!include _style.puml
+title Shipment State: ShippingStatus Is Independently Managed
+hide empty description
+[*] --> PENDING : entity default / @PrePersist\n[not normally saved by tracking API]
+[*] --> SHIPPED : assignTrackingNumber() creates shipment\n[owned PREPARING order; paid group; valid tracking]
+PENDING --> SHIPPED : assignTrackingNumber()\nor Admin updateShippingStatus("SHIPPED")
+SHIPPED --> DELIVERED : Admin updateShippingStatus("DELIVERED")\n/ deliveredAt=now
+DELIVERED --> SHIPPED : Admin updateShippingStatus("SHIPPED")
+SHIPPED --> PENDING : Admin updateShippingStatus("PENDING")
+DELIVERED --> PENDING : Admin updateShippingStatus("PENDING")
+PENDING --> DELIVERED : Admin updateShippingStatus("DELIVERED")\n/ deliveredAt=now
+PENDING --> PENDING : Admin updateShippingStatus("PENDING")
+SHIPPED --> SHIPPED : Admin updateShippingStatus("SHIPPED")
+DELIVERED --> DELIVERED : Admin updateShippingStatus("DELIVERED")\n/ replace deliveredAt
+
+note bottom of PENDING
+Assign tracking sets courierName, trackingNumber,
+Shipment.shippingStatus=SHIPPED and shippedAt;
+it also sets Order=SHIPPED and Order.shippedAt.
+Admin updates accept any valid ShippingStatus without
+checking the previous state or changing Order status.
+SHIPPED adds shippedAt only if missing.
+Changing to PENDING/SHIPPED does not clear deliveredAt.
+end note
+note left of DELIVERED
+Customer confirmation and auto-confirm change Order
+to COMPLETED only; Shipment can remain SHIPPED.
+No courier callback or automatic tracking integration exists.
+end note
+' Sources: backend/src/main/java/project/project/Entity/order/Shipment.java; ShippingStatus.java
+' Sources: backend/src/main/java/project/project/Service/implement/ShippingServiceImp.java; SubOrderServiceImp.java
+' Sources: backend/src/main/java/project/project/Controller/ShippingController.java
+@enduml

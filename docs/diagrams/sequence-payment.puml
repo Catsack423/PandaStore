@@ -1,0 +1,74 @@
+@startuml
+!include _style.puml
+title Payment Simulation: Current Frontend Path
+autonumber
+actor "Customer" as Customer
+participant "Next.js\npayment/{orderGroupId}" as Next
+participant "Checkout / Payment\ncontrollers + OrderAccess" as API
+participant "PaymentServiceImp" as Payment
+database "Payment / OrderGroup /\nOrder repositories" as DB
+participant "NotificationService" as Notifications
+
+Customer -> Next : POST /api/payment/{orderGroupId}
+Next -> Next : validate numeric ID and auth_token
+Next -> API : GET /api/checkout/orders/{id}\nAuthorization: Bearer
+API --> Next : owned OrderGroupResponse
+Next -> Next : require group PENDING and all orders PENDING_PAYMENT
+Next -> API : GET /api/payments/order-group/{id}
+API -> Payment : getPaymentByOrderGroupId(id)
+Payment -> DB : findByOrderGroup_OrderGroupId(id)
+DB --> Payment : Payment
+Payment --> API : Payment
+API --> Next : PaymentResponse
+Next -> Next : require Payment.status=PENDING
+alt Group/order/payment no longer pending
+  Next --> Customer : 409; refresh current order status
+else Pending payment
+  opt Gateway transaction ID absent (normal checkout draft)
+    Next -> API : POST /api/payments/initiate\n{orderGroupId, persisted paymentMethod, grandTotal}
+    API -> API : requireGroupRead(orderGroupId)
+    API -> Payment : initiatePayment(id, method, amount)
+    Payment -> DB : load group and existing payment
+    Payment -> Payment : validate positive amount equals persisted grandTotal\nreject SUCCESS/REFUNDED/PARTIALLY_REFUNDED
+    Payment -> DB : save PENDING payment with GW-TXN-UUID\nsave group.paymentStatus=PENDING
+    Payment --> Next : 201 PaymentResponse (through controller)
+  end
+  Next -> API : POST /api/payments/simulate\n{orderGroupId, isSuccess:true}
+  API -> Payment : resolve stored gatewayTransactionId; load target payment
+  API -> API : requireGroupRead(targetGroupId)\nreject conflicting supplied group ID
+  API -> Payment : handleGatewayCallback(txnId, true)
+  Payment -> DB : findByGatewayTransactionId(txnId)\nOrderStateLock.lock(payment)
+  alt Already SUCCESS and same successful callback
+    Payment --> API : return without duplicate notifications
+  else Current payment not refunded and transaction unchanged
+    Payment -> DB : Payment=SUCCESS, paidAt=now\nGroup=PAID; pending/null/waiting orders=WAITING_SELLER_CONFIRM
+    opt NotificationService is present
+      Payment -> Notifications : notifyCustomerOrderPaid(customerId, groupId)
+      loop Each seller sub-order
+        Payment -> Notifications : notifySellerNewOrder(sellerId, orderId)
+      end
+    end
+    Payment -> DB : save payment
+    Payment --> API : processed
+  end
+  API --> Next : 200 PaymentResponse
+  Next -> API : GET /api/checkout/orders/{id}
+  API --> Next : refreshed owned order group
+  Next --> Customer : Payment successful (simulated); updated order
+end
+note over Payment, Notifications
+This path calls NotificationService directly; it does not publish OrderPaidEvent.
+Separate internal OrderOrchestrationServiceImp.handlePaymentSuccess publishes
+OrderPaidEvent to OrderPaidNotificationObserver in the existing transaction.
+No current controller maps that orchestration success/failure entry point.
+end note
+note over API, DB
+Backend simulate also accepts false: Payment/Group become FAILED;
+stock and order states remain unchanged in PaymentServiceImp.
+Refund APIs and /callback require Admin; simulation is not a real payment gateway.
+end note
+' Sources: frontend/src/app/api/payment/[orderGroupId]/route.ts; frontend/src/components/Payment/api.ts
+' Sources: backend/src/main/java/project/project/Controller/PaymentController.java
+' Sources: backend/src/main/java/project/project/Service/implement/PaymentServiceImp.java; OrderOrchestrationServiceImp.java
+' Sources: backend/src/main/java/project/project/Observer/OrderPaidNotificationObserver.java; Security/OrderAccess.java
+@enduml
