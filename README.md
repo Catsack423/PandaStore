@@ -21,6 +21,11 @@
 
 
 
+## 🌐 ลิงก์ Deploy
+
+- Frontend (Vercel): https://panda-store-kappa.vercel.app/
+- Backend API (Railway): https://forty-nine-shop-production.up.railway.app/
+
 ## 📁 โครงสร้างโปรเจกต์ (Project Structure)
 
 ```text
