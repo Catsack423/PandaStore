@@ -1,0 +1,78 @@
+@startuml
+!include _style.puml
+title Seller Application Submission and Administrator Review
+autonumber
+actor "Customer" as Customer
+actor "Admin" as Admin
+participant "Next.js\napplication/admin proxies" as Next
+participant "SellerApplicationController /\nSellerApplicationAdminFilter" as API
+participant "SellerApplicationServiceImp" as Service
+database "User / Application / Seller /\nSellerBankAccount repositories" as DB
+participant "NotificationService" as Notifications
+
+Customer -> Next : POST /api/seller-applications\nshop, identity and bank document fields
+Next -> API : Bearer token + @Valid request
+API -> API : requireCustomerId(); session user ID
+API -> Service : submitApplication(userId, request)
+Service -> DB : find user, user's applications and seller record
+alt Existing PENDING/APPROVED application or existing seller
+  Service --> Next : conflict/error (through controller)
+  Next --> Customer : show submission error
+else Eligible customer
+  Service -> DB : save SellerApplication(PENDING, createdAt)
+  opt NotificationService present
+    Service -> Notifications : notifyAdminNewSellerApplication(applicationId)
+  end
+  Service --> Next : 201 SellerApplicationResponse
+  Next --> Customer : application submitted
+end
+Admin -> Next : GET /api/admin/applications
+Next -> API : GET /api/auth/me; then /api/seller-applications/pending
+API -> API : verified ADMIN role for review routes
+API -> Service : getPendingApplicationResponses()
+Service -> DB : findByStatus(PENDING)
+DB --> Service : pending application records
+Service --> API : SellerApplicationResponse list
+API --> Next : pending applications
+Next --> Admin : display pending applications
+alt Approve
+  Admin -> Next : PUT /api/admin/applications/{id}/approve
+  Next -> API : PUT /api/seller-applications/{id}/approve
+  API -> Service : approveApplication(id, sessionAdminId)
+  Service -> DB : load application, admin and existing seller
+  Service -> Service : reject already APPROVED or existing seller
+  Service -> DB : application=APPROVED; reviewedBy/reviewedAt
+  Service -> DB : User.role=SELLER
+  Service -> DB : save Seller(ACTIVE, shop fields, rating=0)
+  Service -> DB : save SellerBankAccount from application
+  opt NotificationService present
+    Service -> Notifications : sendNotification(userId, approval, SELLER_APPROVED)
+  end
+  Service --> Admin : success (through controller/proxy)
+else Request additional documents
+  Admin -> Next : PUT /api/admin/applications/{id}/request-docs\n{message}
+  Next -> API : PUT /api/seller-applications/{id}/request-docs
+  API -> Service : requestMoreDocuments(id, adminId, message)
+  Service -> DB : NEED_MORE_DOC; adminNote; reviewedBy/reviewedAt
+  Service -> Notifications : sendNotification(...) [if present]
+  Service --> Admin : success (through controller/proxy)
+else Reject
+  Admin -> Next : PUT /api/admin/applications/{id}/reject\n{reason}
+  Next -> API : PUT /api/seller-applications/{id}/reject
+  API -> Service : rejectApplication(id, adminId, reason)
+  Service -> DB : REJECTED; adminNote; reviewedBy/reviewedAt
+  Service -> Notifications : sendNotification(...) [if present]
+  Service --> Admin : success (through controller/proxy)
+end
+note over Service, DB
+Review authorization is enforced by the filter and proxy.
+Approval is not restricted to PENDING, except already APPROVED is blocked.
+Reject/request-docs have no current-status guard and do not reverse a Seller record.
+No endpoint edits/resubmits an existing application; eligible customers can submit
+a new application after REJECTED/NEED_MORE_DOC if no PENDING/APPROVED exists.
+end note
+' Sources: frontend/src/app/api/seller-applications/route.ts; frontend/src/app/api/admin/[...path]/route.ts
+' Sources: backend/src/main/java/project/project/Controller/SellerApplicationController.java
+' Sources: backend/src/main/java/project/project/Service/implement/SellerApplicationServiceImp.java
+' Sources: backend/src/main/java/project/project/Filter/SellerApplicationAdminFilter.java
+@enduml

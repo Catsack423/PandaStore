@@ -1,0 +1,60 @@
+@startuml deployment
+!include _style.puml
+title PandaStore - Configuration-Supported Deployment Topology
+left to right direction
+
+node "Client device" as Client {
+  artifact "Web browser\nReact application" as Browser
+}
+node "Frontend runtime\nNode.js / Next.js\nDevelopment :3000" as Frontend {
+  artifact "frontend/\nPages, API route handlers,\nServer Actions, middleware" as FrontendApp
+}
+node "Backend runtime\nJava 21 / Spring Boot\nPORT default :8080" as Backend {
+  artifact "backend JAR\nEmbedded Tomcat / REST API\nSpring Security / JPA" as BackendApp
+}
+node "Configured PostgreSQL endpoint\nSelf-hosted or Supabase database" as DBHost {
+  database "DB_URL-selected database\npublic schema / 21 tables" as DB
+}
+cloud "UploadThing service\nExternal HTTPS endpoints" as Upload {
+  artifact "Upload API / callbacks\nStored product images\nSeller document images" as Files
+}
+node "Optional local template service\njson-server :5000" as Template {
+  artifact "frontend/db.json" as TemplateData
+}
+
+Browser --> FrontendApp : HTTP :3000 in development\nHTTPS at configured public origin in production
+FrontendApp --> BackendApp : HTTP :8080 by default\nBACKEND_API_URL selects HTTP(S) endpoint\nJSON / Bearer JWT
+BackendApp --> DB : JDBC PostgreSQL over TCP\nHost, port and TLS from DB_URL
+FrontendApp --> Files : HTTPS :443\nUploadThing SDK control / deletion
+Browser --> Files : HTTPS :443\nUpload / image delivery
+Files --> FrontendApp : HTTPS callback to configured app URL
+FrontendApp ..> TemplateData : HTTP :5000\ngetProducts() fallback
+
+note bottom of Frontend
+  BACKEND_API_URL defaults to http://localhost:8080.
+  ALLOWED_REQUEST_ORIGINS governs mutation origins.
+  Browser session is an auth_token HttpOnly cookie;
+  Secure flag is enabled when NODE_ENV=production.
+  UploadThing credentials remain server-side.
+end note
+note bottom of Backend
+  server.port=${PORT:8080}; database credentials
+  use DB_URL, DB_USERNAME and DB_PASSWORD.
+  JWT signing secret uses JWT_SECRET.
+  CORS uses exact ALLOWED_REQUEST_ORIGINS
+  (default http://localhost:3000).
+end note
+note bottom of DBHost
+  A Supabase-hosted PostgreSQL database is compatible
+  with backend/db/supabase-schema.sql.
+  Database port/TLS are not hard-coded in the repository.
+  The configured login role is not verified by this diagram.
+end note
+legend bottom
+  Supported topology inferred from code/configuration, not a verified production deployment.
+  Nodes may share one development machine; no actual hostnames, replicas,
+  reverse proxy, container platform, payment gateway or courier integration are asserted.
+  Sources: backend/src/main/resources/application.properties, backend/pom.xml,
+  frontend/package.json, frontend route handlers and UploadThing configuration.
+endlegend
+@enduml

@@ -1,0 +1,65 @@
+@startuml
+!include _style.puml
+title Seller Application and Administrator Review Activity
+start
+partition "Customer submission" {
+  :Fill shop, owner identity, bank account\nand document image URL fields;
+  :POST /api/seller-applications;\norigin, authentication and Bean Validation;
+  if (Session resolves CUSTOMER?) then (yes)
+    :Load User, existing applications and seller record;
+  else (no)
+    :Deny submission;
+    stop
+  endif
+  if (PENDING/APPROVED application\nor existing seller?) then (yes)
+    :Reject duplicate/ineligible application;
+    stop
+  else (no)
+    :Save new application PENDING; createdAt=now;
+    :Notify Admin if NotificationService present;
+  endif
+}
+partition "Administrator review" {
+  :Load pending queue or application history/details;
+  if (Verified ADMIN?) then (yes)
+    :Choose review action;
+  else (no)
+    :Return 401/403;
+    stop
+  endif
+  switch (Review action)
+  case (Approve)
+    if (Already APPROVED or User already seller?) then (yes)
+      :Reject approval;
+      stop
+    else (no)
+      :Set APPROVED; reviewedBy/reviewedAt;
+      :Set User.role=SELLER;
+      :Create ACTIVE Seller from shop details;
+      :Create SellerBankAccount from application;
+      :Notify applicant of approval;
+    endif
+  case (Reject)
+    :Validate reason; set REJECTED;\nadminNote; reviewedBy/reviewedAt;
+    :Notify applicant of rejection;
+  case (Request documents)
+    :Validate message; set NEED_MORE_DOC;\nadminNote; reviewedBy/reviewedAt;
+    :Notify applicant to provide documents;
+  endswitch
+}
+:Return review success;
+stop
+note right
+Notifications are conditional on service presence.
+Review methods run transactionally.
+There is no edit/resubmit endpoint for an existing application.
+REJECTED/NEED_MORE_DOC permits a new submission only while
+the customer has no PENDING/APPROVED application or seller record.
+Reject/request-docs have no prior-status guard; approval may start
+from PENDING, REJECTED or NEED_MORE_DOC.
+end note
+' Sources: backend/src/main/java/project/project/Controller/SellerApplicationController.java
+' Sources: backend/src/main/java/project/project/Filter/SellerApplicationAdminFilter.java
+' Sources: backend/src/main/java/project/project/Service/implement/SellerApplicationServiceImp.java
+' Sources: frontend/src/app/api/seller-applications/route.ts; frontend/src/app/api/admin/[...path]/route.ts
+@enduml

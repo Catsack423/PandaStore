@@ -1,0 +1,55 @@
+@startuml
+!include _style.puml
+title Login and Server-Side Session Cookie
+autonumber
+actor "Guest" as Guest
+participant "Next.js\nauth route" as Next
+participant "Spring Security\nLoginRateLimitFilter" as Security
+participant "AuthController" as API
+participant "AuthServiceImp" as Auth
+participant "PasswordService /\nJwtTokenService" as Credentials
+database "UserRepository /\nAuthSessionRepository" as DB
+
+Guest -> Next : POST /api/auth/login\n{usernameOrEmail, password}
+note over Guest, Next
+Middleware checks the request origin for API mutations.
+Invalid JSON returns 400; upstream failures return 503.
+end note
+Next -> Security : POST /api/auth/login\nJSON credentials
+alt Sixth request from the same backend source within default 60s window
+  Security --> Next : 429 + Retry-After
+  Next --> Guest : Login error; no new cookie
+else Request admitted (default maximum: 5)
+  Security -> API : @Valid Login request
+  API -> Auth : loginWithUser(usernameOrEmail, password)
+  Auth -> DB : findByUsername(identifier)\nfindByEmail(identifier)
+  DB --> Auth : matching User records
+  alt Missing/ambiguous identifier, inactive user, or invalid password
+    Auth -> Credentials : matches(password, passwordHash)\n[only after identifier/status checks]
+    Credentials --> Auth : BCrypt match result
+    Auth --> API : IllegalArgumentException
+    API --> Next : 401 Invalid username or password
+    Next --> Guest : Login error
+  else ACTIVE user and BCrypt password matches
+    Auth -> Credentials : matches(password, passwordHash)
+    Credentials --> Auth : true
+    Auth -> Credentials : issue(userId, now, now + 24h)
+    Credentials --> Auth : signed JWT
+    Auth -> DB : deleteByExpiresAtBefore(now)
+    Auth -> DB : save AuthSession(SHA-256(token), user, expiresAt)
+    Auth --> API : LoginResponse(token, user)
+    API --> Next : 200 ApiResponse<LoginResponse>
+    Next -> Next : validate token and allowed user role
+    Next --> Guest : user data + Set-Cookie: auth_token\nHttpOnly; SameSite=Lax; Path=/; 24h\nSecure in production
+  end
+end
+note over Next, Security
+The browser receives user data, not the JWT in JSON.
+Later proxies read the cookie and forward Authorization: Bearer.
+The rate limiter keys on backend remoteAddr, not forwarded headers.
+end note
+' Sources: frontend/src/app/api/auth/[action]/route.ts; frontend/src/middleware.ts
+' Sources: backend/src/main/java/project/project/Controller/AuthController.java
+' Sources: backend/src/main/java/project/project/Service/implement/AuthServiceImp.java; PasswordService.java; JwtTokenService.java
+' Sources: backend/src/main/java/project/project/Filter/LoginRateLimitFilter.java
+@enduml

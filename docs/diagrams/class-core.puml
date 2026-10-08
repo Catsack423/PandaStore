@@ -1,0 +1,201 @@
+@startuml class-core
+!include _style.puml
+title PandaStore - Core Java Entity Classes
+top to bottom direction
+hide empty methods
+hide circle
+
+package "project.project.Entity.user" {
+  class User <<JPA entity>> {
+    -userId : Long
+    -username : String
+    -email : String
+    -passwordHash : String
+    -role : UserRole
+    -status : UserStatus
+  }
+  class Customer <<JPA entity>> {
+    -customerId : Long
+    -fullName : String
+    -phoneNumber : String
+  }
+  class Address <<JPA entity>> {
+    -addressId : Long
+    -receiverName : String
+    -addressLine : String
+    -district : String
+    -province : String
+    -postalCode : String
+    -isDefault : Boolean
+  }
+  class AuthSession <<JPA entity>> {
+    -tokenHash : String
+    -expiresAt : Instant
+    -credentialHash : String
+  }
+}
+package "project.project.Entity.seller" {
+  class Seller <<JPA entity>> {
+    -sellerId : Long
+    -shopName : String
+    -status : SellerStatus
+    -rating : BigDecimal
+  }
+  class SellerApplication <<JPA entity>> {
+    -applicationId : Long
+    -shopName : String
+    -idCardNumber : String
+    -idCardImageUrl : String
+    -bankBookImageUrl : String
+    -status : SellerApplicationStatus
+    -adminNote : String
+    -reviewedAt : LocalDateTime
+  }
+  class SellerBankAccount <<JPA entity>> {
+    -bankAccountId : Long
+    -bankName : String
+    -accountName : String
+    -accountNumber : String
+    -proofImageUrl : String
+  }
+}
+package "project.project.Entity.product" {
+  class Product <<JPA entity>> {
+    -productId : Long
+    -name : String
+    -price : BigDecimal
+    -stock : Integer
+    -status : ProductStatus
+    -averageRating : BigDecimal
+    -reviewCount : Integer
+    -shippingInfo : String
+  }
+  class Category <<JPA entity>> {
+    -categoryId : Long
+    -categoryName : String
+    -description : String
+  }
+  class ProductImage <<JPA entity>> {
+    -imageId : Long
+    -imageUrl : String
+    -isPrimary : Boolean
+    -displayOrder : Integer
+  }
+}
+package "project.project.Entity.order" {
+  class Cart <<JPA entity>> {
+    -cartId : Long
+  }
+  class CartItem <<JPA entity>> {
+    -cartItemId : Long
+    -quantity : Integer
+    -isSelected : Boolean
+  }
+  class OrderGroup <<JPA entity>> {
+    -orderGroupId : Long
+    -groupNumber : String
+    -totalProductsAmount : BigDecimal
+    -totalShippingFee : BigDecimal
+    -totalDiscount : BigDecimal
+    -grandTotal : BigDecimal
+    -paymentStatus : OrderGroupPaymentStatus
+  }
+  class Order <<JPA entity>> {
+    -orderId : Long
+    -subOrderNumber : String
+    -subtotal : BigDecimal
+    -shippingFee : BigDecimal
+    -shippingMethod : String
+    -sellerDiscount : BigDecimal
+    -totalAmount : BigDecimal
+    -orderStatus : OrderStatus
+    -rejectionReason : String
+    -shippedAt : LocalDateTime
+    -completedAt : LocalDateTime
+  }
+  class OrderItem <<JPA entity>> {
+    -orderItemId : Long
+    -productName : String
+    -unitPrice : BigDecimal
+    -quantity : Integer
+    -totalPrice : BigDecimal
+    -isReviewed : Boolean
+  }
+  class Payment <<JPA entity>> {
+    -paymentId : Long
+    -paymentMethod : PaymentMethod
+    -amount : BigDecimal
+    -refundedAmount : BigDecimal
+    -status : PaymentStatus
+    -gatewayTransactionId : String
+    -paidAt : LocalDateTime
+  }
+  class Shipment <<JPA entity>> {
+    -shipmentId : Long
+    -courierName : String
+    -trackingNumber : String
+    -shippingStatus : ShippingStatus
+    -shippedAt : LocalDateTime
+    -deliveredAt : LocalDateTime
+  }
+}
+package "project.project.Entity.review" {
+  class Review <<JPA entity>> {
+    -reviewId : Long
+    -rating : Integer
+    -comment : String
+    -isAutoReview : Boolean
+  }
+  class ReviewReply <<JPA entity>> {
+    -replyId : Long
+    -replyMessage : String
+    -repliedAt : LocalDateTime
+  }
+}
+package "project.project.Entity.notification" {
+  class Notification <<JPA entity>> {
+    -notificationId : Long
+    -title : String
+    -message : String
+    -type : NotificationType
+    -isRead : Boolean
+  }
+}
+
+Customer "0..1" --> "1" User : user
+Seller "0..1" --> "1" User : user
+AuthSession "0..*" --> "1" User : user
+Address "0..*" --> "1" Customer : customer
+SellerApplication "0..*" --> "1" User : user
+SellerApplication "0..*" --> "0..1" User : reviewedBy
+SellerBankAccount "0..*" --> "1" Seller : seller
+Product "0..*" --> "1" Seller : seller
+Product "0..*" -- "0..*" Category : categories / products
+Product "1" *-- "0..*" ProductImage : images / product
+Cart "0..1" --> "1" Customer : customer
+Cart "1" *-- "0..*" CartItem : items / cart
+CartItem "0..*" --> "1" Product : product
+OrderGroup "0..*" --> "1" Customer : customer
+OrderGroup "0..*" --> "1" Address : shippingAddress
+OrderGroup "1" *-- "0..*" Order : subOrders / orderGroup
+Order "0..*" --> "1" Seller : seller
+Order "1" *-- "0..*" OrderItem : orderItems / order
+OrderItem "0..*" --> "1" Product : product
+OrderGroup "1" *-- "0..1" Payment : payment / orderGroup
+Order "1" *-- "0..1" Shipment : shipment / order
+Review "0..1" --> "1" OrderItem : orderItem
+Review "0..*" --> "1" Customer : customer
+Review "0..*" --> "1" Product : product
+Review "1" *-- "0..1" ReviewReply : reviewReply / review
+ReviewReply "0..*" --> "1" Seller : seller
+Notification "0..*" --> "1" User : recipientUser
+
+legend bottom
+  All 20 JPA entity classes; selected declared fields shown with exact Java names/types.
+  Associations show actual entity references and collection names, not role inheritance.
+  Composition marks JPA CascadeType.ALL; Cart.items and Product.images also remove orphans.
+  Constructors, accessors and routine lifecycle timestamps are omitted for readability.
+  Pattern-bearing services are in class-patterns.puml; every column is in er-schema.puml.
+  Sources: backend/src/main/java/project/project/Entity/**.
+endlegend
+@enduml
