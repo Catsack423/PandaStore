@@ -112,6 +112,15 @@ public class AddressServiceImp implements AddressService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Address getAddress(Long customerId, Long addressId) {
+        requirePositiveId(customerId, "customerId");
+        requirePositiveId(addressId, "addressId");
+        return addressRepository.findByAddressIdAndCustomer_CustomerId(addressId, customerId)
+                .orElseThrow(() -> new EntityNotFoundException("Address not found"));
+    }
+
+    @Override
     public boolean removeAddressCustomerByCustomerIdAndAddressId(Long customerId, Long addressId) {
 
         requirePositiveId(customerId, "customerId");

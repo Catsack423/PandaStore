@@ -16,7 +16,7 @@ import java.security.Principal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/customers/{customerId}/addresses")
+@RequestMapping({"/api/customers/{customerId}/addresses", "/api/v1/customers/{customerId}/addresses"})
 public class AddressController {
 
     private final AddressService addressService;
@@ -79,6 +79,16 @@ public class AddressController {
                 ApiResponse.success("Address retrieved successfully", addresses));
     }
 
+    @GetMapping("/{addressId}")
+    public ResponseEntity<ApiResponse<AddressResponse>> getAddress(
+            @PathVariable("customerId") Long customerId,
+            @PathVariable("addressId") Long addressId,
+            Principal principal) {
+        requireOwner(principal, customerId);
+        return ResponseEntity.ok(ApiResponse.success("Address retrieved successfully",
+                AddressResponse.fromEntity(addressService.getAddress(customerId, addressId))));
+    }
+
     @PutMapping("/{addressId}/default")
     public ResponseEntity<ApiResponse<AddressResponse>> setDefaultAddress(
             @PathVariable("customerId") Long customerId,
@@ -90,7 +100,7 @@ public class AddressController {
     }
 
     @DeleteMapping("/{addressId}")
-    public ResponseEntity<ApiResponse<Void>> deleteAddress(
+    public ResponseEntity<Void> deleteAddress(
             @PathVariable("customerId") Long customerId,
             @PathVariable("addressId") Long addressId,
             Principal principal) {
@@ -104,8 +114,7 @@ public class AddressController {
             throw new EntityNotFoundException("Address not found");
         }
 
-        return ResponseEntity.ok(
-                ApiResponse.<Void>success("Address deleted successfully", null));
+        return ResponseEntity.noContent().build();
     }
 
     private void requireOwner(Principal principal, Long customerId) {

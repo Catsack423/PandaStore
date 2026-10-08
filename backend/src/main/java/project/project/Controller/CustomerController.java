@@ -14,7 +14,7 @@ import project.project.DTO.customer.UpdateCustomerRequest;
 import project.project.Service.api.CustomerService;
 
 @RestController
-@RequestMapping("/api/customers")
+@RequestMapping({"/api/customers", "/api/v1/customers"})
 public class CustomerController {
 
     private final CustomerService customerService;
@@ -60,14 +60,13 @@ public class CustomerController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteCustomer(@PathVariable long id) {
+    public ResponseEntity<Void> deleteCustomer(@PathVariable long id) {
         requireOwner(id);
         boolean deleted = customerService.deleteCustomer(id);
         if (!deleted) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("Customer to delete not found", null));
+            throw new jakarta.persistence.EntityNotFoundException("Customer not found");
         }
-        return ResponseEntity.ok(ApiResponse.success("Customer deleted successfully", null));
+        return ResponseEntity.noContent().build();
     }
 
     private void requireOwner(long customerId) {

@@ -78,7 +78,7 @@ public class SecurityConfig {
                                 "/api/reviews/product/*", "/api/seller/shops/*", "/api/seller/shops/user/*").permitAll()
                         .requestMatchers(HttpMethod.HEAD, "/api/products", "/api/products/*",
                                 "/api/categories", "/api/reviews/product/*").permitAll()
-                        .requestMatchers("/api/test/**", "/api/admin/**", "/api/customers").hasRole("ADMIN")
+                        .requestMatchers("/api/test/**", "/api/admin/**", "/api/customers", "/api/v1/customers").hasRole("ADMIN")
                         // This demo lets customers simulate payment for their own order only.
                         .requestMatchers(HttpMethod.POST, "/api/payments/simulate").hasAnyRole("CUSTOMER", "ADMIN")
                         // Callbacks and refunds remain administrative.

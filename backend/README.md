@@ -1,3 +1,11 @@
+## Versioned REST endpoints
+
+The existing `/api/...` paths remain available for the storefront. The versioned API adds
+`/api/v1/customers`, `/api/v1/customers/{customerId}/addresses`, and
+`/api/v1/customers/{customerId}/orders`. Customer and address DELETE requests return
+`204 No Content` on success; a missing address returns `404`. Search products with
+`GET /api/products/search?page=0&size=20&sort=latest` for pagination and sorting.
+
 ## Swagger UI
 
 Run the backend, then open `http://localhost:8080/swagger-ui.html` to browse and try its API endpoints.

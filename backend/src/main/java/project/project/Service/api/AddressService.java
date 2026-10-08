@@ -16,4 +16,6 @@ public interface AddressService {
     boolean removeAddressCustomerByCustomerIdAndAddressId(Long customerId, Long addressId);
 
     List<Address> getAllAddressesByCustomerId(Long customerId);
+
+    Address getAddress(Long customerId, Long addressId);
 }

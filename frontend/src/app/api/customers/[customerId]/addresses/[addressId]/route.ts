@@ -32,6 +32,9 @@ export async function DELETE(
         signal: AbortSignal.timeout(20000),
       },
     );
+    if (response.status === 204) {
+      return new Response(null, { status: 204 });
+    }
     const data = await response.json().catch(() => null);
     return NextResponse.json(data || { success: response.ok }, {
       status: response.status,

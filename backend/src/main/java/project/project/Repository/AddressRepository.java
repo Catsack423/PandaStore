@@ -12,6 +12,8 @@ import java.util.Optional;
 
 public interface AddressRepository extends JpaRepository<Address, Long> {
 
+    Optional<Address> findByAddressIdAndCustomer_CustomerId(Long addressId, Long customerId);
+
     List<Address> findByCustomer_CustomerIdOrderByIsDefaultDescAddressIdAsc(
             Long customerId);
 

@@ -62,6 +62,15 @@ class SecurityGateTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.role").value("CUSTOMER"));
     }
 
+    @Test void versionedCustomerOrdersRequireOwner() throws Exception {
+        mvc.perform(get("/api/v1/customers/1/orders")).andExpect(status().isUnauthorized());
+        String token = customerToken();
+        mvc.perform(get("/api/v1/customers/999999/orders")
+                .header("Authorization", "Bearer " + token)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/customers")
+                .header("Authorization", "Bearer " + token)).andExpect(status().isForbidden());
+    }
+
     @Test void validJwtInCookieCannotAuthenticateBackend() throws Exception {
         String token = customerToken();
         mvc.perform(get("/api/auth/me").cookie(new Cookie("auth_token", token), new Cookie("token", token)))

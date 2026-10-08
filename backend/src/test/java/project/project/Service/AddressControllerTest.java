@@ -145,6 +145,20 @@ class AddressControllerTest {
     }
 
     @Test
+    void versionedAddressCanBeReadByOwner() throws Exception {
+        when(userResolver.requireUserId(principal)).thenReturn(100L);
+        Address address = new Address();
+        address.setAddressId(10L);
+        address.setReceiverName("Panda");
+        when(addressService.getAddress(1L, 10L)).thenReturn(address);
+
+        mvc.perform(get("/api/v1/customers/1/addresses/10").principal(principal))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.addressId").value(10));
+        verify(ownershipService).requireCustomerOwner(100L, 1L);
+    }
+
+    @Test
     void deleteAddressShouldReturnSuccess() throws Exception {
         when(userResolver.requireUserId(principal)).thenReturn(100L);
 
@@ -154,8 +168,7 @@ class AddressControllerTest {
 
         mvc.perform(delete("/api/customers/1/addresses/10")
                 .principal(principal))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
+                .andExpect(status().isNoContent());
 
         verify(ownershipService).requireCustomerOwner(100L, 1L);
     }
