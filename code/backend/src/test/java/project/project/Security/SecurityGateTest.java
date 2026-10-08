@@ -71,6 +71,19 @@ class SecurityGateTest {
                 .header("Authorization", "Bearer " + token)).andExpect(status().isForbidden());
     }
 
+    @Test void statusAndFaviconArePublicOnlyForGet() throws Exception {
+        mvc.perform(get("/status")).andExpect(status().isOk())
+                .andExpect(content().json("{\"status\":\"UP\"}"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"));
+        mvc.perform(get("/favicon.ico")).andExpect(status().isOk())
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"));
+        for (String path : new String[] {"/status", "/favicon.ico"}) {
+            mvc.perform(post(path)).andExpect(status().isUnauthorized());
+        }
+        mvc.perform(get("/status/private")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/")).andExpect(status().isUnauthorized());
+    }
+
     @Test void validJwtInCookieCannotAuthenticateBackend() throws Exception {
         String token = customerToken();
         mvc.perform(get("/api/auth/me").cookie(new Cookie("auth_token", token), new Cookie("token", token)))
