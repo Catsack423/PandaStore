@@ -1,0 +1,1441 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 7.5 (Python 3.14.8 on win32)" generated="2026-10-09T06:03:32.298169" rpa="false" schemaversion="5">
+<suite id="s1" name="01 User Register" source="C:\Users\Thananchai\Pictures\printi\PandaStore\test\Robot\01_user_register.robot">
+<test id="s1-t1" name="TC_REG_01: Register Customer Successfully With Valid Details" line="11">
+<kw name="Open PandaStore Browser" owner="common_keywords" type="SETUP">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:32.546038" level="INFO">${options} = &lt;selenium.webdriver.chrome.options.Options object at 0x000001DCB7712270&gt;</msg>
+<var>${options}</var>
+<arg>sys.modules['selenium.webdriver'].ChromeOptions()</arg>
+<arg>sys</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:32.543875" elapsed="0.002199"/>
+</kw>
+<if>
+<branch type="IF" condition="'${HEADLESS}' == 'True'">
+<kw name="Evaluate" owner="BuiltIn">
+<var>${_}</var>
+<arg>$options.add_argument('--headless=new')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="NOT RUN" start="2026-10-09T06:03:32.546350" elapsed="0.000023"/>
+</kw>
+<status status="NOT RUN" start="2026-10-09T06:03:32.546183" elapsed="0.000228"/>
+</branch>
+<status status="PASS" start="2026-10-09T06:03:32.546164" elapsed="0.000275"/>
+</if>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:32.546798" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--no-sandbox')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:32.546515" elapsed="0.000306"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:32.547124" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-dev-shm-usage')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:32.546913" elapsed="0.000230"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:32.547428" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-gpu')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:32.547231" elapsed="0.000215"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:32.547728" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--window-size=1440,900')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:32.547530" elapsed="0.000219"/>
+</kw>
+<kw name="Open Browser" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:32.548083" level="INFO">Opening browser 'chrome' to base url 'https://panda-store-kappa.vercel.app/signup'.</msg>
+<arg>${url}</arg>
+<arg>${BROWSER}</arg>
+<arg>options=${options}</arg>
+<doc>Opens a new browser instance to the optional ``url``.</doc>
+<status status="PASS" start="2026-10-09T06:03:32.547927" elapsed="1.508327"/>
+</kw>
+<kw name="Maximize Browser Window" owner="SeleniumLibrary">
+<doc>Maximizes current browser window.</doc>
+<status status="PASS" start="2026-10-09T06:03:34.056431" elapsed="0.017941"/>
+</kw>
+<kw name="Set Selenium Speed" owner="SeleniumLibrary">
+<arg>${DELAY}</arg>
+<doc>Sets the delay that is waited after each Selenium command.</doc>
+<status status="PASS" start="2026-10-09T06:03:34.074544" elapsed="0.000240"/>
+</kw>
+<kw name="Set Selenium Timeout" owner="SeleniumLibrary">
+<arg>${TIMEOUT}</arg>
+<doc>Sets the timeout that is used by various keywords.</doc>
+<status status="PASS" start="2026-10-09T06:03:34.074894" elapsed="0.000689"/>
+</kw>
+<kw name="Set Selenium Implicit Wait" owner="SeleniumLibrary">
+<arg>${IMPLICIT_WAIT}</arg>
+<doc>Sets the implicit wait value used by Selenium.</doc>
+<status status="PASS" start="2026-10-09T06:03:34.075713" elapsed="0.000723"/>
+</kw>
+<arg>${SIGNUP_URL}</arg>
+<status status="PASS" start="2026-10-09T06:03:32.543280" elapsed="1.533240"/>
+</kw>
+<kw name="Generate Random Customer Credentials" owner="common_keywords">
+<kw name="Generate Random String" owner="String">
+<msg time="2026-10-09T06:03:34.077165" level="INFO">${rand_str} = iqshar</msg>
+<var>${rand_str}</var>
+<arg>6</arg>
+<arg>[LOWER]</arg>
+<doc>Generates a string with a desired `length` from the given `chars`.</doc>
+<status status="PASS" start="2026-10-09T06:03:34.076956" elapsed="0.000233"/>
+</kw>
+<kw name="Generate Random String" owner="String">
+<msg time="2026-10-09T06:03:34.077418" level="INFO">${rand_digits} = 71172690</msg>
+<var>${rand_digits}</var>
+<arg>8</arg>
+<arg>[NUMBERS]</arg>
+<doc>Generates a string with a desired `length` from the given `chars`.</doc>
+<status status="PASS" start="2026-10-09T06:03:34.077297" elapsed="0.000141"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:34.077750" level="INFO">${test_username} = user_iqshar</msg>
+<var>${test_username}</var>
+<arg>user_${rand_str}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:34.077526" elapsed="0.000244"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:34.078026" level="INFO">${test_email} = user_iqshar@testpanda.com</msg>
+<var>${test_email}</var>
+<arg>${test_username}@testpanda.com</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:34.077854" elapsed="0.000192"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:34.078300" level="INFO">${test_phone} = 0871172690</msg>
+<var>${test_phone}</var>
+<arg>08${rand_digits}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:34.078134" elapsed="0.000184"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:34.078553" level="INFO">${test_fullname} = Test User iqshar</msg>
+<var>${test_fullname}</var>
+<arg>Test User ${rand_str}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:34.078396" elapsed="0.000175"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:34.078795" level="INFO">${test_password} = PandaPass123!</msg>
+<var>${test_password}</var>
+<arg>PandaPass123!</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:34.078648" elapsed="0.000167"/>
+</kw>
+<return>
+<value>${test_username}</value>
+<value>${test_email}</value>
+<value>${test_phone}</value>
+<value>${test_fullname}</value>
+<value>${test_password}</value>
+<status status="PASS" start="2026-10-09T06:03:34.078862" elapsed="0.000049"/>
+</return>
+<msg time="2026-10-09T06:03:34.079058" level="INFO">${u} = user_iqshar</msg>
+<msg time="2026-10-09T06:03:34.079087" level="INFO">${e} = user_iqshar@testpanda.com</msg>
+<msg time="2026-10-09T06:03:34.079111" level="INFO">${p} = 0871172690</msg>
+<msg time="2026-10-09T06:03:34.079135" level="INFO">${n} = Test User iqshar</msg>
+<msg time="2026-10-09T06:03:34.079158" level="INFO">${pw} = PandaPass123!</msg>
+<var>${u}</var>
+<var>${e}</var>
+<var>${p}</var>
+<var>${n}</var>
+<var>${pw}</var>
+<status status="PASS" start="2026-10-09T06:03:34.076720" elapsed="0.002452"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:34.079555" level="INFO">Typing text 'user_iqshar' into text field 'id:username'.</msg>
+<arg>${SIGNUP_INPUT_USERNAME}</arg>
+<arg>${u}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:34.079276" elapsed="1.113140"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:35.192944" level="INFO">Typing text 'Test User iqshar' into text field 'id:fullName'.</msg>
+<arg>${SIGNUP_INPUT_FULLNAME}</arg>
+<arg>${n}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:35.192697" elapsed="0.048930"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:35.242040" level="INFO">Typing text 'user_iqshar@testpanda.com' into text field 'id:email'.</msg>
+<arg>${SIGNUP_INPUT_EMAIL}</arg>
+<arg>${e}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:35.241809" elapsed="0.047667"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:35.289901" level="INFO">Typing text '0871172690' into text field 'id:phoneNumber'.</msg>
+<arg>${SIGNUP_INPUT_PHONE}</arg>
+<arg>${p}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:35.289661" elapsed="0.041240"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:35.331305" level="INFO">Typing password into text field 'id:password'.</msg>
+<msg time="2026-10-09T06:03:35.346891" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNUP_INPUT_PASSWORD}</arg>
+<arg>${pw}</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:35.331082" elapsed="0.044025"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:35.375718" level="INFO">Typing password into text field 'id:confirmPassword'.</msg>
+<msg time="2026-10-09T06:03:35.391217" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNUP_INPUT_CONFIRM_PW}</arg>
+<arg>${pw}</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:35.375479" elapsed="0.046860"/>
+</kw>
+<kw name="Click Signup Submit Button" owner="common_keywords">
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-09T06:03:35.422801" elapsed="0.013313"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-09T06:03:35.436284" elapsed="0.268941"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:35.709948" level="INFO">${sub_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="ec8b8750caaaa582f55d726507dc2715", element="f.01035A42A388B023160F0639CB62AE11.d.B59DA4C35AB5DBFBC5CA293846FCC35F.e.62")&gt;</msg>
+<var>${sub_btn}</var>
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:35.705396" elapsed="0.004596"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:35.710432" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="ec8b8750caaaa582f55d726507dc2715", element="f.01035A42A388B023160F0639CB62AE11.d.B59DA4C35AB5DBFBC5CA293846FCC35F.e.62")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${sub_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-09T06:03:35.710257" elapsed="0.022275"/>
+</kw>
+<status status="PASS" start="2026-10-09T06:03:35.422547" elapsed="0.310097"/>
+</kw>
+<kw name="Run Keyword And Return Status" owner="BuiltIn">
+<kw name="Wait Until Location Does Not Contain" owner="SeleniumLibrary">
+<arg>/signup</arg>
+<arg>timeout=10s</arg>
+<doc>Waits until the current URL does not contains ``location``.</doc>
+<status status="PASS" start="2026-10-09T06:03:35.733122" elapsed="4.668788"/>
+</kw>
+<msg time="2026-10-09T06:03:40.402028" level="INFO">${redirected} = True</msg>
+<var>${redirected}</var>
+<arg>Wait Until Location Does Not Contain</arg>
+<arg>/signup</arg>
+<arg>timeout=10s</arg>
+<doc>Runs the specified keyword and returns the status as a Boolean value.</doc>
+<status status="PASS" start="2026-10-09T06:03:35.732782" elapsed="4.669267"/>
+</kw>
+<if>
+<branch type="IF" condition="not ${redirected}">
+<kw name="Click Signup Submit Button" owner="common_keywords">
+<status status="NOT RUN" start="2026-10-09T06:03:40.402358" elapsed="0.000026"/>
+</kw>
+<kw name="Wait Until Location Does Not Contain" owner="SeleniumLibrary">
+<arg>/signup</arg>
+<arg>timeout=20s</arg>
+<doc>Waits until the current URL does not contains ``location``.</doc>
+<status status="NOT RUN" start="2026-10-09T06:03:40.402470" elapsed="0.000016"/>
+</kw>
+<status status="NOT RUN" start="2026-10-09T06:03:40.402134" elapsed="0.000379"/>
+</branch>
+<status status="PASS" start="2026-10-09T06:03:40.402109" elapsed="0.000435"/>
+</if>
+<kw name="Teardown With Screenshot" owner="common_keywords" type="TEARDOWN">
+<kw name="Replace String Using Regexp" owner="String">
+<msg time="2026-10-09T06:03:40.403151" level="INFO">${clean_name} = TC_REG_01__Register_Customer_Successfully_With_Valid_Details</msg>
+<var>${clean_name}</var>
+<arg>${TEST NAME}</arg>
+<arg>[^a-zA-Z0-9_-]</arg>
+<arg>_</arg>
+<doc>Replaces `pattern` in the given `string` with `replace_with`.</doc>
+<status status="PASS" start="2026-10-09T06:03:40.402930" elapsed="0.000244"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:40.450828" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/TC_REG_01__Register_Customer_Successfully_With_Valid_Details_1.png"&gt;&lt;img src="img/robot/TC_REG_01__Register_Customer_Successfully_With_Valid_Details_1.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>filename=${SCREENSHOT_DIR}/${clean_name}_{index}.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-09T06:03:40.403534" elapsed="0.047382"/>
+</kw>
+<arg>Capture Page Screenshot</arg>
+<arg>filename=${SCREENSHOT_DIR}/${clean_name}_{index}.png</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible errorw.</doc>
+<status status="PASS" start="2026-10-09T06:03:40.403276" elapsed="0.047702"/>
+</kw>
+<kw name="Close PandaStore Browser" owner="common_keywords">
+<kw name="Close All Browsers" owner="SeleniumLibrary">
+<doc>Closes all open browsers and resets the browser cache.</doc>
+<status status="PASS" start="2026-10-09T06:03:40.451398" elapsed="2.231633"/>
+</kw>
+<status status="PASS" start="2026-10-09T06:03:40.451131" elapsed="2.231994"/>
+</kw>
+<doc>Capture screenshot to img/robot before closing browser.</doc>
+<status status="PASS" start="2026-10-09T06:03:40.402693" elapsed="2.280469"/>
+</kw>
+<doc>Test customer registration with valid, unique information.</doc>
+<tag>positive</tag>
+<tag>register</tag>
+<tag>smoke</tag>
+<status status="PASS" start="2026-10-09T06:03:32.542626" elapsed="10.140573"/>
+</test>
+<test id="s1-t2" name="TC_REG_02: Register Fails When Required Fields Are Empty" line="32">
+<kw name="Open PandaStore Browser" owner="common_keywords" type="SETUP">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:42.684401" level="INFO">${options} = &lt;selenium.webdriver.chrome.options.Options object at 0x000001DCB78B4B90&gt;</msg>
+<var>${options}</var>
+<arg>sys.modules['selenium.webdriver'].ChromeOptions()</arg>
+<arg>sys</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:42.684099" elapsed="0.000324"/>
+</kw>
+<if>
+<branch type="IF" condition="'${HEADLESS}' == 'True'">
+<kw name="Evaluate" owner="BuiltIn">
+<var>${_}</var>
+<arg>$options.add_argument('--headless=new')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="NOT RUN" start="2026-10-09T06:03:42.684622" elapsed="0.000018"/>
+</kw>
+<status status="NOT RUN" start="2026-10-09T06:03:42.684489" elapsed="0.000192"/>
+</branch>
+<status status="PASS" start="2026-10-09T06:03:42.684473" elapsed="0.000232"/>
+</if>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:42.685012" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--no-sandbox')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:42.684771" elapsed="0.000260"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:42.685307" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-dev-shm-usage')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:42.685115" elapsed="0.000209"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:42.685590" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-gpu')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:42.685405" elapsed="0.000202"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:42.685871" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--window-size=1440,900')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:42.685686" elapsed="0.000204"/>
+</kw>
+<kw name="Open Browser" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:42.686205" level="INFO">Opening browser 'chrome' to base url 'https://panda-store-kappa.vercel.app/signup'.</msg>
+<arg>${url}</arg>
+<arg>${BROWSER}</arg>
+<arg>options=${options}</arg>
+<doc>Opens a new browser instance to the optional ``url``.</doc>
+<status status="PASS" start="2026-10-09T06:03:42.686060" elapsed="1.495859"/>
+</kw>
+<kw name="Maximize Browser Window" owner="SeleniumLibrary">
+<doc>Maximizes current browser window.</doc>
+<status status="PASS" start="2026-10-09T06:03:44.182117" elapsed="0.017867"/>
+</kw>
+<kw name="Set Selenium Speed" owner="SeleniumLibrary">
+<arg>${DELAY}</arg>
+<doc>Sets the delay that is waited after each Selenium command.</doc>
+<status status="PASS" start="2026-10-09T06:03:44.200135" elapsed="0.000182"/>
+</kw>
+<kw name="Set Selenium Timeout" owner="SeleniumLibrary">
+<arg>${TIMEOUT}</arg>
+<doc>Sets the timeout that is used by various keywords.</doc>
+<status status="PASS" start="2026-10-09T06:03:44.200407" elapsed="0.000650"/>
+</kw>
+<kw name="Set Selenium Implicit Wait" owner="SeleniumLibrary">
+<arg>${IMPLICIT_WAIT}</arg>
+<doc>Sets the implicit wait value used by Selenium.</doc>
+<status status="PASS" start="2026-10-09T06:03:44.201164" elapsed="0.000754"/>
+</kw>
+<arg>${SIGNUP_URL}</arg>
+<status status="PASS" start="2026-10-09T06:03:42.683850" elapsed="1.518335"/>
+</kw>
+<kw name="Click Signup Submit Button" owner="common_keywords">
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-09T06:03:44.203386" elapsed="1.066233"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-09T06:03:45.269778" elapsed="0.268795"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:45.543267" level="INFO">${sub_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="7cc8301d391b519698a5bc4205c3c7c2", element="f.36045E9C8D195627C4F7CA04719B01FE.d.80157EB68BD4C13A943DCF0A6EC4849C.e.63")&gt;</msg>
+<var>${sub_btn}</var>
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:45.538740" elapsed="0.004570"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:45.543642" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="7cc8301d391b519698a5bc4205c3c7c2", element="f.36045E9C8D195627C4F7CA04719B01FE.d.80157EB68BD4C13A943DCF0A6EC4849C.e.63")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${sub_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-09T06:03:45.543477" elapsed="0.008232"/>
+</kw>
+<status status="PASS" start="2026-10-09T06:03:44.202353" elapsed="1.349466"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${SIGNUP_INPUT_USERNAME}</arg>
+<arg>timeout=5s</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-09T06:03:45.551965" elapsed="0.007372"/>
+</kw>
+<kw name="Location Should Contain" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:45.562781" level="INFO">Current location contains '/signup'.</msg>
+<arg>/signup</arg>
+<doc>Verifies that the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-10-09T06:03:45.559514" elapsed="0.003385"/>
+</kw>
+<kw name="Teardown With Screenshot" owner="common_keywords" type="TEARDOWN">
+<kw name="Replace String Using Regexp" owner="String">
+<msg time="2026-10-09T06:03:45.563656" level="INFO">${clean_name} = TC_REG_02__Register_Fails_When_Required_Fields_Are_Empty</msg>
+<var>${clean_name}</var>
+<arg>${TEST NAME}</arg>
+<arg>[^a-zA-Z0-9_-]</arg>
+<arg>_</arg>
+<doc>Replaces `pattern` in the given `string` with `replace_with`.</doc>
+<status status="PASS" start="2026-10-09T06:03:45.563482" elapsed="0.000198"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:45.618540" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/TC_REG_02__Register_Fails_When_Required_Fields_Are_Empty_1.png"&gt;&lt;img src="img/robot/TC_REG_02__Register_Fails_When_Required_Fields_Are_Empty_1.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>filename=${SCREENSHOT_DIR}/${clean_name}_{index}.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-09T06:03:45.564066" elapsed="0.054700"/>
+</kw>
+<arg>Capture Page Screenshot</arg>
+<arg>filename=${SCREENSHOT_DIR}/${clean_name}_{index}.png</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible errorw.</doc>
+<status status="PASS" start="2026-10-09T06:03:45.563786" elapsed="0.055152"/>
+</kw>
+<kw name="Close PandaStore Browser" owner="common_keywords">
+<kw name="Close All Browsers" owner="SeleniumLibrary">
+<doc>Closes all open browsers and resets the browser cache.</doc>
+<status status="PASS" start="2026-10-09T06:03:45.619379" elapsed="2.156667"/>
+</kw>
+<status status="PASS" start="2026-10-09T06:03:45.619123" elapsed="2.157020"/>
+</kw>
+<doc>Capture screenshot to img/robot before closing browser.</doc>
+<status status="PASS" start="2026-10-09T06:03:45.563200" elapsed="2.212978"/>
+</kw>
+<doc>Test form validation when submitting empty registration fields.</doc>
+<tag>negative</tag>
+<tag>register</tag>
+<status status="PASS" start="2026-10-09T06:03:42.683455" elapsed="5.092760"/>
+</test>
+<test id="s1-t3" name="TC_REG_03: Register Fails When Password Is Too Short" line="40">
+<kw name="Open PandaStore Browser" owner="common_keywords" type="SETUP">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:47.778086" level="INFO">${options} = &lt;selenium.webdriver.chrome.options.Options object at 0x000001DCB77FFB10&gt;</msg>
+<var>${options}</var>
+<arg>sys.modules['selenium.webdriver'].ChromeOptions()</arg>
+<arg>sys</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:47.777740" elapsed="0.000374"/>
+</kw>
+<if>
+<branch type="IF" condition="'${HEADLESS}' == 'True'">
+<kw name="Evaluate" owner="BuiltIn">
+<var>${_}</var>
+<arg>$options.add_argument('--headless=new')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="NOT RUN" start="2026-10-09T06:03:47.778409" elapsed="0.000025"/>
+</kw>
+<status status="NOT RUN" start="2026-10-09T06:03:47.778214" elapsed="0.000251"/>
+</branch>
+<status status="PASS" start="2026-10-09T06:03:47.778198" elapsed="0.000295"/>
+</if>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:47.778846" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--no-sandbox')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:47.778565" elapsed="0.000322"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:47.779292" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-dev-shm-usage')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:47.779000" elapsed="0.000316"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:47.779626" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-gpu')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:47.779414" elapsed="0.000229"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:47.779922" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--window-size=1440,900')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:47.779728" elapsed="0.000212"/>
+</kw>
+<kw name="Open Browser" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:47.780237" level="INFO">Opening browser 'chrome' to base url 'https://panda-store-kappa.vercel.app/signup'.</msg>
+<arg>${url}</arg>
+<arg>${BROWSER}</arg>
+<arg>options=${options}</arg>
+<doc>Opens a new browser instance to the optional ``url``.</doc>
+<status status="PASS" start="2026-10-09T06:03:47.780105" elapsed="1.389242"/>
+</kw>
+<kw name="Maximize Browser Window" owner="SeleniumLibrary">
+<doc>Maximizes current browser window.</doc>
+<status status="PASS" start="2026-10-09T06:03:49.169534" elapsed="0.017559"/>
+</kw>
+<kw name="Set Selenium Speed" owner="SeleniumLibrary">
+<arg>${DELAY}</arg>
+<doc>Sets the delay that is waited after each Selenium command.</doc>
+<status status="PASS" start="2026-10-09T06:03:49.187260" elapsed="0.000197"/>
+</kw>
+<kw name="Set Selenium Timeout" owner="SeleniumLibrary">
+<arg>${TIMEOUT}</arg>
+<doc>Sets the timeout that is used by various keywords.</doc>
+<status status="PASS" start="2026-10-09T06:03:49.187554" elapsed="0.000707"/>
+</kw>
+<kw name="Set Selenium Implicit Wait" owner="SeleniumLibrary">
+<arg>${IMPLICIT_WAIT}</arg>
+<doc>Sets the implicit wait value used by Selenium.</doc>
+<status status="PASS" start="2026-10-09T06:03:49.188381" elapsed="0.000667"/>
+</kw>
+<arg>${SIGNUP_URL}</arg>
+<status status="PASS" start="2026-10-09T06:03:47.777350" elapsed="1.411787"/>
+</kw>
+<kw name="Generate Random Customer Credentials" owner="common_keywords">
+<kw name="Generate Random String" owner="String">
+<msg time="2026-10-09T06:03:49.189640" level="INFO">${rand_str} = ixthxn</msg>
+<var>${rand_str}</var>
+<arg>6</arg>
+<arg>[LOWER]</arg>
+<doc>Generates a string with a desired `length` from the given `chars`.</doc>
+<status status="PASS" start="2026-10-09T06:03:49.189513" elapsed="0.000148"/>
+</kw>
+<kw name="Generate Random String" owner="String">
+<msg time="2026-10-09T06:03:49.189861" level="INFO">${rand_digits} = 96291356</msg>
+<var>${rand_digits}</var>
+<arg>8</arg>
+<arg>[NUMBERS]</arg>
+<doc>Generates a string with a desired `length` from the given `chars`.</doc>
+<status status="PASS" start="2026-10-09T06:03:49.189758" elapsed="0.000122"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:49.190310" level="INFO">${test_username} = user_ixthxn</msg>
+<var>${test_username}</var>
+<arg>user_${rand_str}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:49.189962" elapsed="0.000372"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:49.190603" level="INFO">${test_email} = user_ixthxn@testpanda.com</msg>
+<var>${test_email}</var>
+<arg>${test_username}@testpanda.com</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:49.190423" elapsed="0.000200"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:49.190859" level="INFO">${test_phone} = 0896291356</msg>
+<var>${test_phone}</var>
+<arg>08${rand_digits}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:49.190701" elapsed="0.000176"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:49.191113" level="INFO">${test_fullname} = Test User ixthxn</msg>
+<var>${test_fullname}</var>
+<arg>Test User ${rand_str}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:49.190954" elapsed="0.000178"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:49.191356" level="INFO">${test_password} = PandaPass123!</msg>
+<var>${test_password}</var>
+<arg>PandaPass123!</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:49.191210" elapsed="0.000164"/>
+</kw>
+<return>
+<value>${test_username}</value>
+<value>${test_email}</value>
+<value>${test_phone}</value>
+<value>${test_fullname}</value>
+<value>${test_password}</value>
+<status status="PASS" start="2026-10-09T06:03:49.191414" elapsed="0.000051"/>
+</return>
+<msg time="2026-10-09T06:03:49.191599" level="INFO">${u} = user_ixthxn</msg>
+<msg time="2026-10-09T06:03:49.191628" level="INFO">${e} = user_ixthxn@testpanda.com</msg>
+<msg time="2026-10-09T06:03:49.191651" level="INFO">${p} = 0896291356</msg>
+<msg time="2026-10-09T06:03:49.191673" level="INFO">${n} = Test User ixthxn</msg>
+<msg time="2026-10-09T06:03:49.191695" level="INFO">${pw} = PandaPass123!</msg>
+<var>${u}</var>
+<var>${e}</var>
+<var>${p}</var>
+<var>${n}</var>
+<var>${pw}</var>
+<status status="PASS" start="2026-10-09T06:03:49.189305" elapsed="0.002404"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:49.191981" level="INFO">Typing text 'user_ixthxn' into text field 'id:username'.</msg>
+<arg>${SIGNUP_INPUT_USERNAME}</arg>
+<arg>${u}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:49.191807" elapsed="1.115860"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:50.308071" level="INFO">Typing text 'Test User ixthxn' into text field 'id:fullName'.</msg>
+<arg>${SIGNUP_INPUT_FULLNAME}</arg>
+<arg>${n}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.307849" elapsed="0.045452"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:50.353742" level="INFO">Typing text 'user_ixthxn@testpanda.com' into text field 'id:email'.</msg>
+<arg>${SIGNUP_INPUT_EMAIL}</arg>
+<arg>${e}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.353495" elapsed="0.044138"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:50.398025" level="INFO">Typing text '0896291356' into text field 'id:phoneNumber'.</msg>
+<arg>${SIGNUP_INPUT_PHONE}</arg>
+<arg>${p}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.397809" elapsed="0.038929"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:50.437166" level="INFO">Typing password into text field 'id:password'.</msg>
+<msg time="2026-10-09T06:03:50.452919" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNUP_INPUT_PASSWORD}</arg>
+<arg>12345</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.436940" elapsed="0.036019"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:50.473338" level="INFO">Typing password into text field 'id:confirmPassword'.</msg>
+<msg time="2026-10-09T06:03:50.490932" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNUP_INPUT_CONFIRM_PW}</arg>
+<arg>12345</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.473130" elapsed="0.040268"/>
+</kw>
+<kw name="Click Signup Submit Button" owner="common_keywords">
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.513811" elapsed="0.011443"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.525417" elapsed="0.263305"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:50.793048" level="INFO">${sub_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="8bbb92a0d0ce587aab12bfb8fc60f77d", element="f.65E839570D767885E4DCFB6DBAF6A54E.d.C9E8BC614B74FE2CD31EF2501B66D8A5.e.62")&gt;</msg>
+<var>${sub_btn}</var>
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.788886" elapsed="0.004199"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:50.793408" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="8bbb92a0d0ce587aab12bfb8fc60f77d", element="f.65E839570D767885E4DCFB6DBAF6A54E.d.C9E8BC614B74FE2CD31EF2501B66D8A5.e.62")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${sub_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.793243" elapsed="0.020295"/>
+</kw>
+<status status="PASS" start="2026-10-09T06:03:50.513591" elapsed="0.300087"/>
+</kw>
+<kw name="Wait Until Page Contains" owner="SeleniumLibrary">
+<arg>Password must contain at least 6 characters</arg>
+<arg>timeout=5s</arg>
+<doc>Waits until ``text`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.813811" elapsed="0.006834"/>
+</kw>
+<kw name="Location Should Contain" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:50.823914" level="INFO">Current location contains '/signup'.</msg>
+<arg>/signup</arg>
+<doc>Verifies that the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.820841" elapsed="0.003146"/>
+</kw>
+<kw name="Teardown With Screenshot" owner="common_keywords" type="TEARDOWN">
+<kw name="Replace String Using Regexp" owner="String">
+<msg time="2026-10-09T06:03:50.824660" level="INFO">${clean_name} = TC_REG_03__Register_Fails_When_Password_Is_Too_Short</msg>
+<var>${clean_name}</var>
+<arg>${TEST NAME}</arg>
+<arg>[^a-zA-Z0-9_-]</arg>
+<arg>_</arg>
+<doc>Replaces `pattern` in the given `string` with `replace_with`.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.824449" elapsed="0.000235"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:50.880218" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/TC_REG_03__Register_Fails_When_Password_Is_Too_Short_1.png"&gt;&lt;img src="img/robot/TC_REG_03__Register_Fails_When_Password_Is_Too_Short_1.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>filename=${SCREENSHOT_DIR}/${clean_name}_{index}.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.825061" elapsed="0.055250"/>
+</kw>
+<arg>Capture Page Screenshot</arg>
+<arg>filename=${SCREENSHOT_DIR}/${clean_name}_{index}.png</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible errorw.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.824789" elapsed="0.055594"/>
+</kw>
+<kw name="Close PandaStore Browser" owner="common_keywords">
+<kw name="Close All Browsers" owner="SeleniumLibrary">
+<doc>Closes all open browsers and resets the browser cache.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.880810" elapsed="2.149784"/>
+</kw>
+<status status="PASS" start="2026-10-09T06:03:50.880559" elapsed="2.150131"/>
+</kw>
+<doc>Capture screenshot to img/robot before closing browser.</doc>
+<status status="PASS" start="2026-10-09T06:03:50.824210" elapsed="2.206515"/>
+</kw>
+<doc>Test validation error when password length is less than 6 characters.</doc>
+<tag>negative</tag>
+<tag>register</tag>
+<status status="PASS" start="2026-10-09T06:03:47.776444" elapsed="5.254311"/>
+</test>
+<test id="s1-t4" name="TC_REG_04: Register Fails When Passwords Do Not Match" line="56">
+<kw name="Open PandaStore Browser" owner="common_keywords" type="SETUP">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:53.031887" level="INFO">${options} = &lt;selenium.webdriver.chrome.options.Options object at 0x000001DCB77F68B0&gt;</msg>
+<var>${options}</var>
+<arg>sys.modules['selenium.webdriver'].ChromeOptions()</arg>
+<arg>sys</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:53.031598" elapsed="0.000313"/>
+</kw>
+<if>
+<branch type="IF" condition="'${HEADLESS}' == 'True'">
+<kw name="Evaluate" owner="BuiltIn">
+<var>${_}</var>
+<arg>$options.add_argument('--headless=new')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="NOT RUN" start="2026-10-09T06:03:53.032129" elapsed="0.000018"/>
+</kw>
+<status status="NOT RUN" start="2026-10-09T06:03:53.031981" elapsed="0.000194"/>
+</branch>
+<status status="PASS" start="2026-10-09T06:03:53.031963" elapsed="0.000237"/>
+</if>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:53.032504" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--no-sandbox')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:53.032265" elapsed="0.000263"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:53.032821" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-dev-shm-usage')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:53.032618" elapsed="0.000221"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:53.033109" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-gpu')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:53.032925" elapsed="0.000201"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:53.033382" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--window-size=1440,900')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:53.033206" elapsed="0.000192"/>
+</kw>
+<kw name="Open Browser" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:53.033716" level="INFO">Opening browser 'chrome' to base url 'https://panda-store-kappa.vercel.app/signup'.</msg>
+<arg>${url}</arg>
+<arg>${BROWSER}</arg>
+<arg>options=${options}</arg>
+<doc>Opens a new browser instance to the optional ``url``.</doc>
+<status status="PASS" start="2026-10-09T06:03:53.033580" elapsed="1.568542"/>
+</kw>
+<kw name="Maximize Browser Window" owner="SeleniumLibrary">
+<doc>Maximizes current browser window.</doc>
+<status status="PASS" start="2026-10-09T06:03:54.602285" elapsed="0.016846"/>
+</kw>
+<kw name="Set Selenium Speed" owner="SeleniumLibrary">
+<arg>${DELAY}</arg>
+<doc>Sets the delay that is waited after each Selenium command.</doc>
+<status status="PASS" start="2026-10-09T06:03:54.619300" elapsed="0.000180"/>
+</kw>
+<kw name="Set Selenium Timeout" owner="SeleniumLibrary">
+<arg>${TIMEOUT}</arg>
+<doc>Sets the timeout that is used by various keywords.</doc>
+<status status="PASS" start="2026-10-09T06:03:54.619597" elapsed="0.000697"/>
+</kw>
+<kw name="Set Selenium Implicit Wait" owner="SeleniumLibrary">
+<arg>${IMPLICIT_WAIT}</arg>
+<doc>Sets the implicit wait value used by Selenium.</doc>
+<status status="PASS" start="2026-10-09T06:03:54.620401" elapsed="0.000537"/>
+</kw>
+<arg>${SIGNUP_URL}</arg>
+<status status="PASS" start="2026-10-09T06:03:53.031348" elapsed="1.589651"/>
+</kw>
+<kw name="Generate Random Customer Credentials" owner="common_keywords">
+<kw name="Generate Random String" owner="String">
+<msg time="2026-10-09T06:03:54.621485" level="INFO">${rand_str} = wgezxp</msg>
+<var>${rand_str}</var>
+<arg>6</arg>
+<arg>[LOWER]</arg>
+<doc>Generates a string with a desired `length` from the given `chars`.</doc>
+<status status="PASS" start="2026-10-09T06:03:54.621366" elapsed="0.000139"/>
+</kw>
+<kw name="Generate Random String" owner="String">
+<msg time="2026-10-09T06:03:54.621686" level="INFO">${rand_digits} = 35014808</msg>
+<var>${rand_digits}</var>
+<arg>8</arg>
+<arg>[NUMBERS]</arg>
+<doc>Generates a string with a desired `length` from the given `chars`.</doc>
+<status status="PASS" start="2026-10-09T06:03:54.621594" elapsed="0.000109"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:54.621974" level="INFO">${test_username} = user_wgezxp</msg>
+<var>${test_username}</var>
+<arg>user_${rand_str}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:54.621780" elapsed="0.000213"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:54.622226" level="INFO">${test_email} = user_wgezxp@testpanda.com</msg>
+<var>${test_email}</var>
+<arg>${test_username}@testpanda.com</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:54.622070" elapsed="0.000173"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:54.622459" level="INFO">${test_phone} = 0835014808</msg>
+<var>${test_phone}</var>
+<arg>08${rand_digits}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:54.622315" elapsed="0.000160"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:54.622685" level="INFO">${test_fullname} = Test User wgezxp</msg>
+<var>${test_fullname}</var>
+<arg>Test User ${rand_str}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:54.622544" elapsed="0.000156"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:54.622905" level="INFO">${test_password} = PandaPass123!</msg>
+<var>${test_password}</var>
+<arg>PandaPass123!</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:54.622774" elapsed="0.000147"/>
+</kw>
+<return>
+<value>${test_username}</value>
+<value>${test_email}</value>
+<value>${test_phone}</value>
+<value>${test_fullname}</value>
+<value>${test_password}</value>
+<status status="PASS" start="2026-10-09T06:03:54.622954" elapsed="0.000032"/>
+</return>
+<msg time="2026-10-09T06:03:54.623099" level="INFO">${u} = user_wgezxp</msg>
+<msg time="2026-10-09T06:03:54.623124" level="INFO">${e} = user_wgezxp@testpanda.com</msg>
+<msg time="2026-10-09T06:03:54.623144" level="INFO">${p} = 0835014808</msg>
+<msg time="2026-10-09T06:03:54.623161" level="INFO">${n} = Test User wgezxp</msg>
+<msg time="2026-10-09T06:03:54.623180" level="INFO">${pw} = PandaPass123!</msg>
+<var>${u}</var>
+<var>${e}</var>
+<var>${p}</var>
+<var>${n}</var>
+<var>${pw}</var>
+<status status="PASS" start="2026-10-09T06:03:54.621162" elapsed="0.002031"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:54.623427" level="INFO">Typing text 'user_wgezxp' into text field 'id:username'.</msg>
+<arg>${SIGNUP_INPUT_USERNAME}</arg>
+<arg>${u}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:54.623281" elapsed="1.108077"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:55.731874" level="INFO">Typing text 'Test User wgezxp' into text field 'id:fullName'.</msg>
+<arg>${SIGNUP_INPUT_FULLNAME}</arg>
+<arg>${n}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:55.731648" elapsed="0.045431"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:55.777474" level="INFO">Typing text 'user_wgezxp@testpanda.com' into text field 'id:email'.</msg>
+<arg>${SIGNUP_INPUT_EMAIL}</arg>
+<arg>${e}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:55.777248" elapsed="0.046064"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:55.823714" level="INFO">Typing text '0835014808' into text field 'id:phoneNumber'.</msg>
+<arg>${SIGNUP_INPUT_PHONE}</arg>
+<arg>${p}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:55.823487" elapsed="0.039839"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:55.863739" level="INFO">Typing password into text field 'id:password'.</msg>
+<msg time="2026-10-09T06:03:55.879295" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNUP_INPUT_PASSWORD}</arg>
+<arg>${pw}</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:55.863512" elapsed="0.042886"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:55.906775" level="INFO">Typing password into text field 'id:confirmPassword'.</msg>
+<msg time="2026-10-09T06:03:55.927581" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNUP_INPUT_CONFIRM_PW}</arg>
+<arg>DifferentPassword999!</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:55.906568" elapsed="0.054105"/>
+</kw>
+<kw name="Click Signup Submit Button" owner="common_keywords">
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-09T06:03:55.961094" elapsed="0.012087"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-09T06:03:55.973398" elapsed="0.267461"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:56.245143" level="INFO">${sub_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="544167b5c0c6a196f7332bb3eaa12211", element="f.4B972529218B72337E8879BE09FDF1A4.d.6FE4B949A09349CC2E5AC0E0662AAF8A.e.62")&gt;</msg>
+<var>${sub_btn}</var>
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:56.241024" elapsed="0.004180"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:56.245514" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="544167b5c0c6a196f7332bb3eaa12211", element="f.4B972529218B72337E8879BE09FDF1A4.d.6FE4B949A09349CC2E5AC0E0662AAF8A.e.62")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${sub_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-09T06:03:56.245363" elapsed="0.019499"/>
+</kw>
+<status status="PASS" start="2026-10-09T06:03:55.960870" elapsed="0.304099"/>
+</kw>
+<kw name="Wait Until Page Contains" owner="SeleniumLibrary">
+<arg>Passwords do not match</arg>
+<arg>timeout=5s</arg>
+<doc>Waits until ``text`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-09T06:03:56.265088" elapsed="0.006533"/>
+</kw>
+<kw name="Location Should Contain" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:56.275350" level="INFO">Current location contains '/signup'.</msg>
+<arg>/signup</arg>
+<doc>Verifies that the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-10-09T06:03:56.271796" elapsed="0.003631"/>
+</kw>
+<kw name="Teardown With Screenshot" owner="common_keywords" type="TEARDOWN">
+<kw name="Replace String Using Regexp" owner="String">
+<msg time="2026-10-09T06:03:56.276072" level="INFO">${clean_name} = TC_REG_04__Register_Fails_When_Passwords_Do_Not_Match</msg>
+<var>${clean_name}</var>
+<arg>${TEST NAME}</arg>
+<arg>[^a-zA-Z0-9_-]</arg>
+<arg>_</arg>
+<doc>Replaces `pattern` in the given `string` with `replace_with`.</doc>
+<status status="PASS" start="2026-10-09T06:03:56.275909" elapsed="0.000186"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:56.331171" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/TC_REG_04__Register_Fails_When_Passwords_Do_Not_Match_1.png"&gt;&lt;img src="img/robot/TC_REG_04__Register_Fails_When_Passwords_Do_Not_Match_1.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>filename=${SCREENSHOT_DIR}/${clean_name}_{index}.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-09T06:03:56.276473" elapsed="0.054788"/>
+</kw>
+<arg>Capture Page Screenshot</arg>
+<arg>filename=${SCREENSHOT_DIR}/${clean_name}_{index}.png</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible errorw.</doc>
+<status status="PASS" start="2026-10-09T06:03:56.276202" elapsed="0.055128"/>
+</kw>
+<kw name="Close PandaStore Browser" owner="common_keywords">
+<kw name="Close All Browsers" owner="SeleniumLibrary">
+<doc>Closes all open browsers and resets the browser cache.</doc>
+<status status="PASS" start="2026-10-09T06:03:56.331714" elapsed="2.133477"/>
+</kw>
+<status status="PASS" start="2026-10-09T06:03:56.331476" elapsed="2.133810"/>
+</kw>
+<doc>Capture screenshot to img/robot before closing browser.</doc>
+<status status="PASS" start="2026-10-09T06:03:56.275661" elapsed="2.189660"/>
+</kw>
+<doc>Test validation error when confirm password does not match password.</doc>
+<tag>negative</tag>
+<tag>register</tag>
+<status status="PASS" start="2026-10-09T06:03:53.030962" elapsed="5.434390"/>
+</test>
+<test id="s1-t5" name="TC_REG_05: Register Fails When Email Format Is Invalid" line="72">
+<kw name="Open PandaStore Browser" owner="common_keywords" type="SETUP">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:58.466540" level="INFO">${options} = &lt;selenium.webdriver.chrome.options.Options object at 0x000001DCB77F5F30&gt;</msg>
+<var>${options}</var>
+<arg>sys.modules['selenium.webdriver'].ChromeOptions()</arg>
+<arg>sys</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:58.466250" elapsed="0.000314"/>
+</kw>
+<if>
+<branch type="IF" condition="'${HEADLESS}' == 'True'">
+<kw name="Evaluate" owner="BuiltIn">
+<var>${_}</var>
+<arg>$options.add_argument('--headless=new')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="NOT RUN" start="2026-10-09T06:03:58.466766" elapsed="0.000017"/>
+</kw>
+<status status="NOT RUN" start="2026-10-09T06:03:58.466633" elapsed="0.000177"/>
+</branch>
+<status status="PASS" start="2026-10-09T06:03:58.466616" elapsed="0.000218"/>
+</if>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:58.467138" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--no-sandbox')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:58.466900" elapsed="0.000257"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:58.467431" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-dev-shm-usage')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:58.467242" elapsed="0.000206"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:58.467709" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-gpu')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:58.467530" elapsed="0.000196"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:03:58.467981" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--window-size=1440,900')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:03:58.467805" elapsed="0.000192"/>
+</kw>
+<kw name="Open Browser" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:58.468313" level="INFO">Opening browser 'chrome' to base url 'https://panda-store-kappa.vercel.app/signup'.</msg>
+<arg>${url}</arg>
+<arg>${BROWSER}</arg>
+<arg>options=${options}</arg>
+<doc>Opens a new browser instance to the optional ``url``.</doc>
+<status status="PASS" start="2026-10-09T06:03:58.468175" elapsed="1.365768"/>
+</kw>
+<kw name="Maximize Browser Window" owner="SeleniumLibrary">
+<doc>Maximizes current browser window.</doc>
+<status status="PASS" start="2026-10-09T06:03:59.834117" elapsed="0.018466"/>
+</kw>
+<kw name="Set Selenium Speed" owner="SeleniumLibrary">
+<arg>${DELAY}</arg>
+<doc>Sets the delay that is waited after each Selenium command.</doc>
+<status status="PASS" start="2026-10-09T06:03:59.852736" elapsed="0.000187"/>
+</kw>
+<kw name="Set Selenium Timeout" owner="SeleniumLibrary">
+<arg>${TIMEOUT}</arg>
+<doc>Sets the timeout that is used by various keywords.</doc>
+<status status="PASS" start="2026-10-09T06:03:59.853010" elapsed="0.000578"/>
+</kw>
+<kw name="Set Selenium Implicit Wait" owner="SeleniumLibrary">
+<arg>${IMPLICIT_WAIT}</arg>
+<doc>Sets the implicit wait value used by Selenium.</doc>
+<status status="PASS" start="2026-10-09T06:03:59.853693" elapsed="0.000510"/>
+</kw>
+<arg>${SIGNUP_URL}</arg>
+<status status="PASS" start="2026-10-09T06:03:58.466010" elapsed="1.388247"/>
+</kw>
+<kw name="Generate Random Customer Credentials" owner="common_keywords">
+<kw name="Generate Random String" owner="String">
+<msg time="2026-10-09T06:03:59.854701" level="INFO">${rand_str} = ozhcms</msg>
+<var>${rand_str}</var>
+<arg>6</arg>
+<arg>[LOWER]</arg>
+<doc>Generates a string with a desired `length` from the given `chars`.</doc>
+<status status="PASS" start="2026-10-09T06:03:59.854583" elapsed="0.000138"/>
+</kw>
+<kw name="Generate Random String" owner="String">
+<msg time="2026-10-09T06:03:59.854923" level="INFO">${rand_digits} = 32306319</msg>
+<var>${rand_digits}</var>
+<arg>8</arg>
+<arg>[NUMBERS]</arg>
+<doc>Generates a string with a desired `length` from the given `chars`.</doc>
+<status status="PASS" start="2026-10-09T06:03:59.854827" elapsed="0.000113"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:59.855213" level="INFO">${test_username} = user_ozhcms</msg>
+<var>${test_username}</var>
+<arg>user_${rand_str}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:59.855017" elapsed="0.000212"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:59.855450" level="INFO">${test_email} = user_ozhcms@testpanda.com</msg>
+<var>${test_email}</var>
+<arg>${test_username}@testpanda.com</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:59.855300" elapsed="0.000166"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:59.855677" level="INFO">${test_phone} = 0832306319</msg>
+<var>${test_phone}</var>
+<arg>08${rand_digits}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:59.855533" elapsed="0.000161"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:59.855994" level="INFO">${test_fullname} = Test User ozhcms</msg>
+<var>${test_fullname}</var>
+<arg>Test User ${rand_str}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:59.855768" elapsed="0.000243"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-09T06:03:59.856217" level="INFO">${test_password} = PandaPass123!</msg>
+<var>${test_password}</var>
+<arg>PandaPass123!</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-09T06:03:59.856087" elapsed="0.000146"/>
+</kw>
+<return>
+<value>${test_username}</value>
+<value>${test_email}</value>
+<value>${test_phone}</value>
+<value>${test_fullname}</value>
+<value>${test_password}</value>
+<status status="PASS" start="2026-10-09T06:03:59.856269" elapsed="0.000036"/>
+</return>
+<msg time="2026-10-09T06:03:59.856419" level="INFO">${u} = user_ozhcms</msg>
+<msg time="2026-10-09T06:03:59.856443" level="INFO">${e} = user_ozhcms@testpanda.com</msg>
+<msg time="2026-10-09T06:03:59.856464" level="INFO">${p} = 0832306319</msg>
+<msg time="2026-10-09T06:03:59.856483" level="INFO">${n} = Test User ozhcms</msg>
+<msg time="2026-10-09T06:03:59.856504" level="INFO">${pw} = PandaPass123!</msg>
+<var>${u}</var>
+<var>${e}</var>
+<var>${p}</var>
+<var>${n}</var>
+<var>${pw}</var>
+<status status="PASS" start="2026-10-09T06:03:59.854399" elapsed="0.002117"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:03:59.856754" level="INFO">Typing text 'user_ozhcms' into text field 'id:username'.</msg>
+<arg>${SIGNUP_INPUT_USERNAME}</arg>
+<arg>${u}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:03:59.856606" elapsed="1.105487"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:04:00.962565" level="INFO">Typing text 'Test User ozhcms' into text field 'id:fullName'.</msg>
+<arg>${SIGNUP_INPUT_FULLNAME}</arg>
+<arg>${n}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:04:00.962314" elapsed="0.039863"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:04:01.002553" level="INFO">Typing text 'invalid-format-email' into text field 'id:email'.</msg>
+<arg>${SIGNUP_INPUT_EMAIL}</arg>
+<arg>${INVALID_EMAIL}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.002341" elapsed="0.038472"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:04:01.041180" level="INFO">Typing text '0832306319' into text field 'id:phoneNumber'.</msg>
+<arg>${SIGNUP_INPUT_PHONE}</arg>
+<arg>${p}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.040974" elapsed="0.035012"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:04:01.076349" level="INFO">Typing password into text field 'id:password'.</msg>
+<msg time="2026-10-09T06:04:01.091348" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNUP_INPUT_PASSWORD}</arg>
+<arg>${pw}</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.076145" elapsed="0.040545"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:04:01.117073" level="INFO">Typing password into text field 'id:confirmPassword'.</msg>
+<msg time="2026-10-09T06:04:01.132750" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNUP_INPUT_CONFIRM_PW}</arg>
+<arg>${pw}</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.116861" elapsed="0.043892"/>
+</kw>
+<kw name="Click Signup Submit Button" owner="common_keywords">
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.161205" elapsed="0.012152"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.173517" elapsed="0.269346"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:04:01.447190" level="INFO">${sub_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="a4cc6e13853d416a1db1f81ab10f5e27", element="f.8E9A3701680FBEF76BDD8136C4B405C5.d.7E810D1C93E18764F1713A89DC80F75B.e.63")&gt;</msg>
+<var>${sub_btn}</var>
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.443026" elapsed="0.004202"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:04:01.447545" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="a4cc6e13853d416a1db1f81ab10f5e27", element="f.8E9A3701680FBEF76BDD8136C4B405C5.d.7E810D1C93E18764F1713A89DC80F75B.e.63")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${sub_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.447392" elapsed="0.008845"/>
+</kw>
+<status status="PASS" start="2026-10-09T06:04:01.160971" elapsed="0.295363"/>
+</kw>
+<kw name="Location Should Contain" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:04:01.459859" level="INFO">Current location contains '/signup'.</msg>
+<arg>/signup</arg>
+<doc>Verifies that the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.456449" elapsed="0.003487"/>
+</kw>
+<kw name="Teardown With Screenshot" owner="common_keywords" type="TEARDOWN">
+<kw name="Replace String Using Regexp" owner="String">
+<msg time="2026-10-09T06:04:01.460580" level="INFO">${clean_name} = TC_REG_05__Register_Fails_When_Email_Format_Is_Invalid</msg>
+<var>${clean_name}</var>
+<arg>${TEST NAME}</arg>
+<arg>[^a-zA-Z0-9_-]</arg>
+<arg>_</arg>
+<doc>Replaces `pattern` in the given `string` with `replace_with`.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.460414" elapsed="0.000189"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:04:01.522631" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/TC_REG_05__Register_Fails_When_Email_Format_Is_Invalid_1.png"&gt;&lt;img src="img/robot/TC_REG_05__Register_Fails_When_Email_Format_Is_Invalid_1.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>filename=${SCREENSHOT_DIR}/${clean_name}_{index}.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.461082" elapsed="0.061654"/>
+</kw>
+<arg>Capture Page Screenshot</arg>
+<arg>filename=${SCREENSHOT_DIR}/${clean_name}_{index}.png</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible errorw.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.460720" elapsed="0.062088"/>
+</kw>
+<kw name="Close PandaStore Browser" owner="common_keywords">
+<kw name="Close All Browsers" owner="SeleniumLibrary">
+<doc>Closes all open browsers and resets the browser cache.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.523210" elapsed="2.189055"/>
+</kw>
+<status status="PASS" start="2026-10-09T06:04:01.522963" elapsed="2.189399"/>
+</kw>
+<doc>Capture screenshot to img/robot before closing browser.</doc>
+<status status="PASS" start="2026-10-09T06:04:01.460171" elapsed="2.252229"/>
+</kw>
+<doc>Test validation error when email is not properly formatted.</doc>
+<tag>negative</tag>
+<tag>register</tag>
+<status status="PASS" start="2026-10-09T06:03:58.465618" elapsed="5.246815"/>
+</test>
+<test id="s1-t6" name="TC_REG_06: Navigate From Signup Page To Signin Page" line="88">
+<kw name="Open PandaStore Browser" owner="common_keywords" type="SETUP">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:04:03.713536" level="INFO">${options} = &lt;selenium.webdriver.chrome.options.Options object at 0x000001DCB7888EF0&gt;</msg>
+<var>${options}</var>
+<arg>sys.modules['selenium.webdriver'].ChromeOptions()</arg>
+<arg>sys</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:04:03.713248" elapsed="0.000311"/>
+</kw>
+<if>
+<branch type="IF" condition="'${HEADLESS}' == 'True'">
+<kw name="Evaluate" owner="BuiltIn">
+<var>${_}</var>
+<arg>$options.add_argument('--headless=new')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="NOT RUN" start="2026-10-09T06:04:03.713760" elapsed="0.000019"/>
+</kw>
+<status status="NOT RUN" start="2026-10-09T06:04:03.713626" elapsed="0.000180"/>
+</branch>
+<status status="PASS" start="2026-10-09T06:04:03.713610" elapsed="0.000220"/>
+</if>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:04:03.714133" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--no-sandbox')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:04:03.713897" elapsed="0.000256"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:04:03.714441" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-dev-shm-usage')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:04:03.714246" elapsed="0.000213"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:04:03.714723" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-gpu')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:04:03.714542" elapsed="0.000200"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-09T06:04:03.715003" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--window-size=1440,900')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-09T06:04:03.714824" elapsed="0.000195"/>
+</kw>
+<kw name="Open Browser" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:04:03.715314" level="INFO">Opening browser 'chrome' to base url 'https://panda-store-kappa.vercel.app/signup'.</msg>
+<arg>${url}</arg>
+<arg>${BROWSER}</arg>
+<arg>options=${options}</arg>
+<doc>Opens a new browser instance to the optional ``url``.</doc>
+<status status="PASS" start="2026-10-09T06:04:03.715180" elapsed="1.821898"/>
+</kw>
+<kw name="Maximize Browser Window" owner="SeleniumLibrary">
+<doc>Maximizes current browser window.</doc>
+<status status="PASS" start="2026-10-09T06:04:05.537266" elapsed="0.020948"/>
+</kw>
+<kw name="Set Selenium Speed" owner="SeleniumLibrary">
+<arg>${DELAY}</arg>
+<doc>Sets the delay that is waited after each Selenium command.</doc>
+<status status="PASS" start="2026-10-09T06:04:05.558498" elapsed="0.000234"/>
+</kw>
+<kw name="Set Selenium Timeout" owner="SeleniumLibrary">
+<arg>${TIMEOUT}</arg>
+<doc>Sets the timeout that is used by various keywords.</doc>
+<status status="PASS" start="2026-10-09T06:04:05.559016" elapsed="0.001217"/>
+</kw>
+<kw name="Set Selenium Implicit Wait" owner="SeleniumLibrary">
+<arg>${IMPLICIT_WAIT}</arg>
+<doc>Sets the implicit wait value used by Selenium.</doc>
+<status status="PASS" start="2026-10-09T06:04:05.560517" elapsed="0.001703"/>
+</kw>
+<arg>${SIGNUP_URL}</arg>
+<status status="PASS" start="2026-10-09T06:04:03.713008" elapsed="1.849327"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNUP_LINK_SIGNIN}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-09T06:04:05.563061" elapsed="1.057742"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:04:06.621165" level="INFO">Clicking element 'xpath://a[@href='/signin']'.</msg>
+<arg>${SIGNUP_LINK_SIGNIN}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-09T06:04:06.620968" elapsed="0.034867"/>
+</kw>
+<kw name="Wait Until Location Contains" owner="SeleniumLibrary">
+<arg>/signin</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-10-09T06:04:06.656004" elapsed="2.242956"/>
+</kw>
+<kw name="Teardown With Screenshot" owner="common_keywords" type="TEARDOWN">
+<kw name="Replace String Using Regexp" owner="String">
+<msg time="2026-10-09T06:04:08.899584" level="INFO">${clean_name} = TC_REG_06__Navigate_From_Signup_Page_To_Signin_Page</msg>
+<var>${clean_name}</var>
+<arg>${TEST NAME}</arg>
+<arg>[^a-zA-Z0-9_-]</arg>
+<arg>_</arg>
+<doc>Replaces `pattern` in the given `string` with `replace_with`.</doc>
+<status status="PASS" start="2026-10-09T06:04:08.899432" elapsed="0.000174"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-09T06:04:08.943108" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/TC_REG_06__Navigate_From_Signup_Page_To_Signin_Page_1.png"&gt;&lt;img src="img/robot/TC_REG_06__Navigate_From_Signup_Page_To_Signin_Page_1.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>filename=${SCREENSHOT_DIR}/${clean_name}_{index}.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-09T06:04:08.899938" elapsed="0.043259"/>
+</kw>
+<arg>Capture Page Screenshot</arg>
+<arg>filename=${SCREENSHOT_DIR}/${clean_name}_{index}.png</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible errorw.</doc>
+<status status="PASS" start="2026-10-09T06:04:08.899699" elapsed="0.043568"/>
+</kw>
+<kw name="Close PandaStore Browser" owner="common_keywords">
+<kw name="Close All Browsers" owner="SeleniumLibrary">
+<doc>Closes all open browsers and resets the browser cache.</doc>
+<status status="PASS" start="2026-10-09T06:04:08.943656" elapsed="2.203640"/>
+</kw>
+<status status="PASS" start="2026-10-09T06:04:08.943418" elapsed="2.204064"/>
+</kw>
+<doc>Capture screenshot to img/robot before closing browser.</doc>
+<status status="PASS" start="2026-10-09T06:04:08.899203" elapsed="2.248351"/>
+</kw>
+<doc>Verify customer can navigate to the sign in page via link.</doc>
+<tag>navigation</tag>
+<tag>register</tag>
+<status status="PASS" start="2026-10-09T06:04:03.712644" elapsed="7.434975"/>
+</test>
+<doc>Test suite for User Registration (Customer Sign Up) in PandaStore.</doc>
+<status status="PASS" start="2026-10-09T06:03:32.299840" elapsed="38.848380"/>
+</suite>
+<statistics>
+<total>
+<stat pass="6" fail="0" skip="0">All Tests</stat>
+</total>
+<tag>
+<stat pass="1" fail="0" skip="0">navigation</stat>
+<stat pass="4" fail="0" skip="0">negative</stat>
+<stat pass="1" fail="0" skip="0">positive</stat>
+<stat pass="6" fail="0" skip="0">register</stat>
+<stat pass="1" fail="0" skip="0">smoke</stat>
+</tag>
+<suite>
+<stat name="01 User Register" id="s1" pass="6" fail="0" skip="0">01 User Register</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>
