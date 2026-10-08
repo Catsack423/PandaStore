@@ -21,10 +21,10 @@ check() {
 }
 
 fe_audit() { node scripts/frontend-audit-check.cjs; }
-fe_tests() { (cd frontend && npm test); }
-be_dependency() { (cd backend && bash ./mvnw -B -ntp dependency-check:check); }
-be_sast() { (cd backend && bash ./mvnw -B -ntp compile spotbugs:check); }
-be_tests() { (cd backend && bash ./mvnw -B -ntp test); }
+fe_tests() { (cd code/frontend && npm test); }
+be_dependency() { (cd code/backend && bash ./mvnw -B -ntp dependency-check:check); }
+be_sast() { (cd code/backend && bash ./mvnw -B -ntp compile spotbugs:check); }
+be_tests() { (cd code/backend && bash ./mvnw -B -ntp test); }
 aco_dependency() { mvn -B -ntp -f aco-testgen/pom.xml dependency-check:check; }
 aco_sast() { mvn -B -ntp -f aco-testgen/pom.xml compile spotbugs:check; }
 aco_tests() { mvn -B -ntp -f aco-testgen/pom.xml test; }
@@ -49,7 +49,7 @@ check "BE actuator is restricted" node scripts/security-static-check.cjs be-actu
 check "BE every RequestBody has Valid" node scripts/security-static-check.cjs be-validation
 check "gitleaks repository history" gitleaks detect --no-banner --redact=100
 check "gitleaks current tracked and nonignored files" working_tree_secrets
-check "Semgrep FE + BE + ACO" semgrep --config auto --error --strict --quiet frontend/src backend/src aco-testgen/src
+check "Semgrep FE + BE + ACO" semgrep --config auto --error --strict --quiet code/frontend/src code/backend/src aco-testgen/src
 check "env ignored and config uses environment secrets" node scripts/security-static-check.cjs env-config
 
 for url in "$FE_URL" "$BE_URL"; do

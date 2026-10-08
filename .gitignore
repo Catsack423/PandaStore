@@ -23,7 +23,6 @@ Thumbs.db
 *.iml
 *.ipr
 out/
-tsconfig.json
 # Visual Studio Code
 .vscode/
 *.code-workspace
@@ -51,7 +50,6 @@ aco-testgen
 *.swo
 *~
 *.bak
-scripts
 # ------------------------------------------
 # Environment Variables & Secrets
 # ------------------------------------------

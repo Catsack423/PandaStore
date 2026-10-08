@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-report_dir="${PMD_REPORT_DIR:-backend/target/pmd-diff}"
+report_dir="${PMD_REPORT_DIR:-code/backend/target/pmd-diff}"
 : "${PMD_BIN:?Set PMD_BIN to the pinned PMD CLI executable}"
 "$PMD_BIN" --version > "$report_dir/pmd-version.txt" 2>&1
 java -version > "$report_dir/java-version.txt" 2>&1

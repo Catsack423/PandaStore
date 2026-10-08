@@ -1,7 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseAuditResult, evaluateAudit } = require('../../scripts/frontend-audit-check.cjs');
-const policy = require('../../scripts/frontend-audit-exceptions.json');
+const { parseAuditResult, evaluateAudit } = require('../../../scripts/frontend-audit-check.cjs');
+const policy = require('../../../scripts/frontend-audit-exceptions.json');
 
 function swiperFinding() {
   return {

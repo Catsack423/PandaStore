@@ -6,8 +6,8 @@
       "name": "Run PandaStore",
       "request": "launch",
       "mainClass": "project.project.ProjectApplication",
-      "cwd": "${workspaceFolder}/backend",
-      "envFile": "${workspaceFolder}/backend/.env"
+      "cwd": "${workspaceFolder}/code/backend",
+      "envFile": "${workspaceFolder}/code/backend/.env"
     }
   ]
 }

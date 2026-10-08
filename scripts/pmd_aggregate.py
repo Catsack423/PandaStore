@@ -179,7 +179,7 @@ def aggregate(inputs, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("inputs", nargs="+", type=Path, help="Downloaded attribution.json files or directories containing them")
-    parser.add_argument("--output", type=Path, default=Path("backend/target/pmd-summary"))
+    parser.add_argument("--output", type=Path, default=Path("code/backend/target/pmd-summary"))
     args = parser.parse_args()
     report = aggregate(args.inputs, args.output)
     print(f"Selected {report['selected_prs']} latest PR results; complete={report['complete']}; output={args.output}")

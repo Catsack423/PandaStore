@@ -24,7 +24,7 @@ jobs:
     env:
       PMD_VERSION: '7.10.0'
       PMD_SHA256: cd676b19dbe87e86f7eed5940a484be2d3ab6a2d1d552e605860ab12fbf05cbb
-      PMD_REPORT_DIR: backend/target/pmd-diff
+      PMD_REPORT_DIR: code/backend/target/pmd-diff
       PMD_BASE_SHA: ${{ github.event.pull_request.base.sha }}
       PMD_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
@@ -94,7 +94,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: pmd-pr-${{ github.event.pull_request.number }}-run-${{ github.run_id }}-attempt-${{ github.run_attempt }}
-          path: backend/target/pmd-diff/
+          path: code/backend/target/pmd-diff/
           retention-days: 90
           if-no-files-found: error
 

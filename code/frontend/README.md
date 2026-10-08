@@ -2,9 +2,9 @@
 
 ### ขั้นตอนที่ 4: ตั้งค่าและรัน Frontend
 
-1. เปิด Terminal ใหม่แล้วเข้าไปยังโฟลเดอร์ `frontend`:
+1. เปิด Terminal ใหม่แล้วเข้าไปยังโฟลเดอร์ `code/frontend`:
    ```bash
-   cd frontend
+   cd code/frontend
    ```
 2. คัดลอกไฟล์ `.env.example` เป็น `.env.local` หรือ `.env`:
    - บน Windows (PowerShell):
@@ -15,7 +15,7 @@
      ```bash
      cp .env.example .env.local
      ```
-3. เปิดไฟล์ `frontend/.env.local` แล้วตั้งค่าตัวแปร:
+3. เปิดไฟล์ `code/frontend/.env.local` แล้วตั้งค่าตัวแปร:
    ```env
    # ชี้ไปยัง URL ของ Backend API
    BACKEND_API_URL=http://localhost:8080
@@ -64,20 +64,20 @@
 ### 1. สคริปต์เพิ่มสินค้าตัวอย่าง (Seed Demo Products)
 หากต้องการเพิ่มสินค้าชุดทดสอบเข้าไปในร้านค้า สามารถรันสคริปต์ PowerShell ได้ดังนี้ (ขณะที่ Backend กำลังทำงาน):
 ```powershell
-cd backend/scripts
+cd code/backend/scripts
 .\seed-demo-products.ps1 -Username "seller1" -Password "password123"
 ```
 
 ### 2. สคริปต์ทดสอบ Checkout จำลอง
 จำลองการสั่งซื้อสินค้าและสร้าง Order ที่รอชำระเงิน:
 ```powershell
-cd backend/scripts
+cd code/backend/scripts
 .\checkout-demo.ps1 -PlaceOrder
 ```
 
 ### 3. การรันตรวจสอบโค้ดและทดสอบฝั่ง Frontend
 ```bash
-cd frontend
+cd code/frontend
 
 # ตรวจสอบ TypeScript Type
 node node_modules/typescript/bin/tsc --noEmit --incremental false
@@ -92,14 +92,14 @@ node --test --test-isolation=none tests/payment.test.cjs tests/middleware-role.t
 ### 4. การ Build สำหรับ Production
 - **Backend:**
   ```bash
-  cd backend
+  cd code/backend
   ./mvnw clean package -DskipTests
   # ไฟล์ JAR จะอยู่ที่ target/project-0.0.1-SNAPSHOT.jar
   java -jar target/project-0.0.1-SNAPSHOT.jar
   ```
 - **Frontend:**
   ```bash
-  cd frontend
+  cd code/frontend
   npm run build
   npm run start
   ```
@@ -111,7 +111,7 @@ node --test --test-isolation=none tests/payment.test.cjs tests/middleware-role.t
 ### 1. Backend เชื่อมต่อฐานข้อมูลไม่สำเร็จ (`Connection refused` หรือ `database "pandastore" does not exist`)
 - ตรวจสอบว่า PostgreSQL service กำลังทำงานอยู่ (เช่น บน Windows เช็คผ่าน `services.msc`)
 - ตรวจสอบว่าได้สร้าง database ชื่อ `pandastore` แล้วหรือยัง
-- ตรวจสอบ port, username และ password ใน `backend/.env` ว่าถูกต้องตรงกับเครื่องของคุณหรือไม่
+- ตรวจสอบ port, username และ password ใน `code/backend/.env` ว่าถูกต้องตรงกับเครื่องของคุณหรือไม่
 
 ### 2. Backend เกิดข้อผิดพลาดเกี่ยวกับ `JWT_SECRET`
 - `JWT_SECRET` ต้องมีความยาวอย่างน้อย 256 bits (64 hex characters) หากสั้นเกินไป JJWT จะโยน `WeakKeyException`
@@ -121,11 +121,11 @@ node --test --test-isolation=none tests/payment.test.cjs tests/middleware-role.t
   ```
 
 ### 3. Frontend แสดงข้อผิดพลาดเกี่ยวกับ `UploadThing` หรืออัปโหลดรูปไม่ผ่าน
-- ตรวจสอบว่าใส่ `UPLOADTHING_TOKEN` ใน `frontend/.env.local` หรือ `frontend/.env` แล้วหรือไม่
+- ตรวจสอบว่าใส่ `UPLOADTHING_TOKEN` ใน `code/frontend/.env.local` หรือ `code/frontend/.env` แล้วหรือไม่
 - ตรวจสอบว่าได้ Restart Next.js dev server หลังแก้ไขไฟล์ `.env` แล้ว
 
 ### 4. ปัญหา CORS หรือ Forbidden ในการเรียก Action
-- ตรวจสอบค่า `ALLOWED_REQUEST_ORIGINS` ใน `frontend/.env.local`
+- ตรวจสอบค่า `ALLOWED_REQUEST_ORIGINS` ใน `code/frontend/.env.local`
 - หากมีการใช้ ngrok หรือรันบนพอร์ตอื่น ให้เพิ่ม URL คั่นด้วยจุลภาค เช่น:
   `ALLOWED_REQUEST_ORIGINS=http://localhost:3000,https://your-domain.ngrok-free.dev`
 create at https://uploadthing.com/

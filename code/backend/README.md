@@ -22,7 +22,7 @@ Backend ใช้ PostgreSQL JDBC และ Spring Data JPA ที่มีอ�
    - **Direct connection**: ใช้พอร์ต `5432` และ username `postgres` เมื่อเครื่องรองรับ IPv6 หรือโปรเจกต์มี IPv4 add-on
    - **Session pooler**: ใช้พอร์ต `5432` และ username `postgres.PROJECT_REF` สำหรับ backend ที่ deploy บนเครือข่าย IPv4
    - ใช้ host จาก Dashboard เท่านั้น เพราะไม่สามารถระบุ pooler host จาก region ได้
-2. ตั้งค่าใน `backend/.env` สำหรับเครื่อง local หรือใน environment variables ของบริการที่ deploy:
+2. ตั้งค่าใน `code/backend/.env` สำหรับเครื่อง local หรือใน environment variables ของบริการที่ deploy:
 
    ```env
    DB_URL=jdbc:postgresql://YOUR_HOST:5432/postgres?sslmode=require
@@ -87,9 +87,9 @@ ID ของผู้ใช้ยังเป็น `bigint` ตาม JPA เ�
 
 ### ตั้งค่าและรัน Backend บนเครื่อง local
 
-1. เข้าไปยังโฟลเดอร์ `backend`:
+1. เข้าไปยังโฟลเดอร์ `code/backend`:
    ```bash
-   cd backend
+   cd code/backend
    ```
 2. คัดลอกไฟล์ `.env.example` เป็น `.env`:
    - บน Windows (PowerShell):
@@ -100,7 +100,7 @@ ID ของผู้ใช้ยังเป็น `bigint` ตาม JPA เ�
      ```bash
      cp .env.example .env
      ```
-3. เปิดไฟล์ `backend/.env` แล้วแก้ไขค่าให้ตรงกับการตั้งค่าเครื่องของคุณ:
+3. เปิดไฟล์ `code/backend/.env` แล้วแก้ไขค่าให้ตรงกับการตั้งค่าเครื่องของคุณ:
    ```env
    # ตัวอย่าง: ปรับ URL, Port, User และ Password ให้ตรงกับ PostgreSQL ของคุณ
    DB_URL=jdbc:postgresql://localhost:5432/pandastore
@@ -126,7 +126,7 @@ ID ของผู้ใช้ยังเป็น `bigint` ตาม JPA เ�
      ```bash
      ./mvnw spring-boot:run
      ```
-   - *หรือเปิดโฟลเดอร์ `backend` ใน IDE เช่น IntelliJ IDEA / Eclipse แล้วรันคลาส `project.project.ProjectApplication`*
+   - *หรือเปิดโฟลเดอร์ `code/backend` ใน IDE เช่น IntelliJ IDEA / Eclipse แล้วรันคลาส `project.project.ProjectApplication`*
 
 5. Backend จะเปิดทำงานที่: **`http://localhost:8080`**
    - ระบบจะ seed ข้อมูล demo เฉพาะเมื่อเปิด `SEED_DATA=true` บนฐานข้อมูล local ที่แยกไว้เท่านั้น
