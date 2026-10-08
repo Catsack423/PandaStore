@@ -21,7 +21,7 @@ class PmdDiffTest(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        self.output = self.root / "backend/target/pmd-diff"
+        self.output = self.root / "code/backend/target/pmd-diff"
         # A temporary test repo is not the repository hosting this Actions run.
         # Tests that need Actions context supply it explicitly instead.
         self.env = patch.dict(os.environ, {"GITHUB_OUTPUT": "", "GITHUB_STEP_SUMMARY": "", "PMD_GITHUB_TOKEN": "",
@@ -34,10 +34,10 @@ class PmdDiffTest(unittest.TestCase):
         self.git("config", "user.email", "pmd-test@example.invalid")
         self.git("config", "core.autocrlf", "false")
         self.write("config/pmd/ruleset.xml", "<ruleset />\n")
-        self.write("backend/src/main/java/Unchanged.java", "class Unchanged {}\n")
-        self.write("backend/src/main/java/Modified.java", "class Modified {\n    int count;\n}\n")
-        self.write("backend/src/main/java/Rename.java", "class Rename {\n    int size;\n    int total;\n}\n")
-        self.write("backend/src/main/java/Delete.java", "class Delete {}\n")
+        self.write("code/backend/src/main/java/Unchanged.java", "class Unchanged {}\n")
+        self.write("code/backend/src/main/java/Modified.java", "class Modified {\n    int count;\n}\n")
+        self.write("code/backend/src/main/java/Rename.java", "class Rename {\n    int size;\n    int total;\n}\n")
+        self.write("code/backend/src/main/java/Delete.java", "class Delete {}\n")
         self.base = self.commit("base")
         self.git("checkout", "-b", "feature")
 
@@ -64,7 +64,7 @@ class PmdDiffTest(unittest.TestCase):
         for fmt in ("json", "xml"):
             (self.output / f"exit-{fmt}.txt").write_text(str(code))
         violations = violations or []
-        groups = file_violations if file_violations is not None else {"backend/src/main/java/Modified.java": violations}
+        groups = file_violations if file_violations is not None else {"code/backend/src/main/java/Modified.java": violations}
         data = {"files": [{"filename": filename, "violations": findings} for filename, findings in groups.items()],
                 "processingErrors": processing_errors or [], "configurationErrors": []}
         pmd.write_json(self.output / "pmd.json", data)
@@ -77,38 +77,38 @@ class PmdDiffTest(unittest.TestCase):
         ET.ElementTree(xml).write(self.output / "pmd.xml", encoding="utf-8")
 
     def changed(self):
-        self.write("backend/src/main/java/Modified.java", "class Modified {\n    int changed;\n}\n")
+        self.write("code/backend/src/main/java/Modified.java", "class Modified {\n    int changed;\n}\n")
         return self.commit("edit Java")
 
     def test_select_only_pr_java_including_renames_and_spaces(self):
         self.changed()
-        self.write("backend/src/main/java/Added File.java", "class Added {}\n")
-        self.write("backend/src/test/java/Test.java", "class Test {}\n")
-        self.write("frontend/src/Other.java", "class Other {}\n")
-        self.git("mv", "backend/src/main/java/Rename.java", "backend/src/main/java/Renamed.java")
-        self.git("rm", "backend/src/main/java/Delete.java")
+        self.write("code/backend/src/main/java/Added File.java", "class Added {}\n")
+        self.write("code/backend/src/test/java/Test.java", "class Test {}\n")
+        self.write("code/frontend/src/Other.java", "class Other {}\n")
+        self.git("mv", "code/backend/src/main/java/Rename.java", "code/backend/src/main/java/Renamed.java")
+        self.git("rm", "code/backend/src/main/java/Delete.java")
         head = self.commit("rename, delete and add")
         metadata = self.prepare(head)
         self.assertEqual(set(metadata["scope"]["files"]), {
-            "backend/src/main/java/Modified.java", "backend/src/main/java/Added File.java", "backend/src/main/java/Renamed.java"})
+            "code/backend/src/main/java/Modified.java", "code/backend/src/main/java/Added File.java", "code/backend/src/main/java/Renamed.java"})
         changes = {item["path"]: item for item in self.read("changed-files.json")}
-        self.assertEqual(changes["backend/src/main/java/Modified.java"]["changed_line_ranges"], [[2, 2]])
-        self.assertEqual(changes["backend/src/main/java/Renamed.java"]["changed_line_ranges"], [])
-        self.assertEqual(changes["backend/src/main/java/Renamed.java"]["added_lines"], 0)
+        self.assertEqual(changes["code/backend/src/main/java/Modified.java"]["changed_line_ranges"], [[2, 2]])
+        self.assertEqual(changes["code/backend/src/main/java/Renamed.java"]["changed_line_ranges"], [])
+        self.assertEqual(changes["code/backend/src/main/java/Renamed.java"]["added_lines"], 0)
         self.assertEqual(len(self.read("commits.json")), 2)
-        self.assertFalse(changes["backend/src/main/java/Delete.java"]["scanned"])
+        self.assertFalse(changes["code/backend/src/main/java/Delete.java"]["scanned"])
 
     def test_develop_advances_after_fork_and_is_not_used_as_two_dot_base(self):
         self.git("branch", "-m", "main", "develop")
         head = self.changed()
         self.git("checkout", "develop")
-        self.write("backend/src/main/java/BaseOnly.java", "class BaseOnly {}\n")
-        self.write("backend/src/main/java/Modified.java", "class Modified {\n    int count;\n    int developOnly;\n}\n")
+        self.write("code/backend/src/main/java/BaseOnly.java", "class BaseOnly {}\n")
+        self.write("code/backend/src/main/java/Modified.java", "class Modified {\n    int count;\n    int developOnly;\n}\n")
         base = self.commit("advance target branch")
         self.git("checkout", "feature")
         metadata = self.prepare(head, base)
         self.assertEqual(metadata["comparison"]["merge_base_sha"], self.base)
-        self.assertEqual(metadata["scope"]["files"], ["backend/src/main/java/Modified.java"])
+        self.assertEqual(metadata["scope"]["files"], ["code/backend/src/main/java/Modified.java"])
         changed = next(item for item in self.read("changed-files.json") if item["scanned"])
         self.assertEqual((changed["added_lines"], changed["deleted_lines"], changed["changed_line_ranges"]), (1, 1, [[2, 2]]))
 
@@ -120,7 +120,7 @@ class PmdDiffTest(unittest.TestCase):
         self.assertEqual((self.output / "java.diff.patch").read_bytes(), b"")
 
     def test_deleted_java_only_is_not_scanned(self):
-        self.git("rm", "backend/src/main/java/Delete.java")
+        self.git("rm", "code/backend/src/main/java/Delete.java")
         self.prepare(self.commit("delete"))
         self.assertEqual(pmd.finalize(self.root, self.output), 0)
         self.assertIn("Delete.java", (self.output / "java.diff.patch").read_text())
@@ -157,7 +157,7 @@ class PmdDiffTest(unittest.TestCase):
         self.assertEqual(counts["raw_by_rule"], {"GatingRule": 1, "OutsideRule": 2})
         self.assertEqual(counts["gating_by_rule"], {"GatingRule": 1})
         self.assertEqual(counts["raw_by_priority"], {"3": 3})
-        self.assertEqual(counts["raw_by_file"], {"backend/src/main/java/Modified.java": 3})
+        self.assertEqual(counts["raw_by_file"], {"code/backend/src/main/java/Modified.java": 3})
         self.assertEqual(counts, self.read("status.json")["counts"])
         self.assertEqual(len(self.read("violations.json")), 3)
         self.assertEqual(attribution["summary"]["by_category"], {"own": 1, "imported": 0, "unknown": 0, "not_in_scope": 2})
@@ -198,10 +198,10 @@ class PmdDiffTest(unittest.TestCase):
         self.reports([{**self.finding(2), "description": "unsafe <script> | message\nnext"}], code=4)
         self.assertEqual(pmd.finalize(self.root, self.output), 1)
         summary = (self.output / "summary.md").read_text(encoding="utf-8")
-        self.assertIn(f"https://github.com/team/PandaStore/blob/{head}/backend/src/main/java/Modified.java#L2", summary)
+        self.assertIn(f"https://github.com/team/PandaStore/blob/{head}/code/backend/src/main/java/Modified.java#L2", summary)
         self.assertIn("unsafe &lt;script&gt; \\| message next", summary)
         self.assertNotIn("unsafe <script>", summary)
-        location = pmd.finding_location(metadata, {"file": "backend/src/main/java/A File.java", "beginline": 7})
+        location = pmd.finding_location(metadata, {"file": "code/backend/src/main/java/A File.java", "beginline": 7})
         self.assertIn("A%20File.java#L7", location)
 
     def test_summary_passed_with_outside_findings_does_not_ask_for_code_fixes(self):
@@ -226,13 +226,13 @@ class PmdDiffTest(unittest.TestCase):
         self.git("branch", "-m", "main", "develop")
         self.changed()
         self.git("checkout", "develop")
-        self.write("backend/src/main/java/FromDevelop.java", "class FromDevelop {}\n")
+        self.write("code/backend/src/main/java/FromDevelop.java", "class FromDevelop {}\n")
         base = self.commit("develop Java")
         self.git("checkout", "feature")
         self.git("merge", "--no-ff", "develop", "-m", "Merge develop")
         metadata = self.prepare(base=base)
         self.assertEqual(metadata["comparison"]["merge_base_sha"], base)
-        self.assertEqual(metadata["scope"]["files"], ["backend/src/main/java/Modified.java"])
+        self.assertEqual(metadata["scope"]["files"], ["code/backend/src/main/java/Modified.java"])
         self.reports([self.finding(2)], code=4)
         self.assertEqual(pmd.finalize(self.root, self.output), 1)
         attribution = self.read("attribution.json")
@@ -243,7 +243,7 @@ class PmdDiffTest(unittest.TestCase):
         self.git("checkout", "-b", "other", self.base)
         self.git("config", "user.name", "Other person")
         self.git("config", "user.email", "other@example.invalid")
-        filename = "backend/src/main/java/Borrowed.java"
+        filename = "code/backend/src/main/java/Borrowed.java"
         self.write(filename, "class Borrowed {\n    int imported;\n}\n")
         imported = self.commit("other work")
         self.git("checkout", "feature")
@@ -300,13 +300,13 @@ class PmdDiffTest(unittest.TestCase):
 
     def test_manual_merge_conflict_resolution_has_low_confidence(self):
         self.git("checkout", "-b", "other", self.base)
-        self.write("backend/src/main/java/Modified.java", "class Modified {\n    int other;\n}\n")
+        self.write("code/backend/src/main/java/Modified.java", "class Modified {\n    int other;\n}\n")
         self.commit("other change")
         self.git("checkout", "feature")
         self.changed()
         with self.assertRaises(subprocess.CalledProcessError):
             self.git("merge", "--no-ff", "other", "-m", "Merge other")
-        self.write("backend/src/main/java/Modified.java", "class Modified {\n    int resolved;\n}\n")
+        self.write("code/backend/src/main/java/Modified.java", "class Modified {\n    int resolved;\n}\n")
         merge = self.commit("Resolve merge conflict")
         self.prepare()
         self.reports([self.finding(2)], code=4)
@@ -329,7 +329,7 @@ class PmdDiffTest(unittest.TestCase):
         metadata = self.prepare(self.changed())
         cloned = self.root / "shallow-copy"
         self.git("clone", "--depth", "1", self.root.as_uri(), str(cloned))
-        findings = [{**self.finding(2), "file": "backend/src/main/java/Modified.java", "overlaps_changed_lines": True}]
+        findings = [{**self.finding(2), "file": "code/backend/src/main/java/Modified.java", "overlaps_changed_lines": True}]
         attribution = pmd.attribute_violations(cloned, metadata, self.read("changed-files.json"), findings)
         item = attribution["findings"][0]
         self.assertEqual((item["category"], item["confidence"], item["reason"]), ("unknown", "low", "incomplete_git_history"))
@@ -455,7 +455,7 @@ class PmdDiffTest(unittest.TestCase):
         self.prepare(head)
         self.reports()
         self.assertEqual(pmd.finalize(self.root, self.output), 0)
-        self.write("backend/src/main/java/Modified.java", "local changes\n")
+        self.write("code/backend/src/main/java/Modified.java", "local changes\n")
         with self.assertRaisesRegex(ValueError, "Working file differs"):
             self.prepare(head)
         self.assertEqual(pmd.finalize(self.root, self.output), 1)
@@ -470,7 +470,7 @@ class PmdDiffTest(unittest.TestCase):
         self.prepare(self.changed())
         self.reports()
         data = self.read("pmd.json")
-        data["files"][0]["filename"] = "backend/src/main/java/Unchanged.java"
+        data["files"][0]["filename"] = "code/backend/src/main/java/Unchanged.java"
         pmd.write_json(self.output / "pmd.json", data)
         self.assertEqual(pmd.finalize(self.root, self.output), 1)
 
@@ -478,14 +478,14 @@ class PmdDiffTest(unittest.TestCase):
         head = self.changed()
         with self.assertRaisesRegex(ValueError, "Checkout must match"):
             self.prepare(self.base)
-        self.write("backend/src/main/java/Modified.java", "different content\n")
+        self.write("code/backend/src/main/java/Modified.java", "different content\n")
         with self.assertRaisesRegex(ValueError, "Working file differs"):
             self.prepare(head)
 
     def test_crlf_checkout_matches_git_normalized_blob(self):
         self.git("config", "core.autocrlf", "true")
         head = self.changed()
-        source = self.root / "backend/src/main/java/Modified.java"
+        source = self.root / "code/backend/src/main/java/Modified.java"
         source.write_bytes(source.read_text(encoding="utf-8").replace("\n", "\r\n").encode("utf-8"))
         self.assertEqual(self.prepare(head)["scope"]["file_count"], 1)
 
@@ -496,15 +496,15 @@ class PmdDiffTest(unittest.TestCase):
             original = pmd.git
             def response(root, *args):
                 if args[:2] == ("diff", "--name-status"):
-                    return b"A\0backend/src/main/java/New\nFile.java\0"
+                    return b"A\0code/backend/src/main/java/New\nFile.java\0"
                 if args[:2] == ("diff", "--numstat"):
-                    return b"1\t0\tbackend/src/main/java/New\\nFile.java\n"
+                    return b"1\t0\tcode/backend/src/main/java/New\\nFile.java\n"
                 return original(root, *args)
             with patch.object(pmd, "git", side_effect=response):
                 with self.assertRaisesRegex(ValueError, "cannot safely represent"):
                     self.prepare()
         else:
-            self.write("backend/src/main/java/New\nFile.java", "class New {}\n")
+            self.write("code/backend/src/main/java/New\nFile.java", "class New {}\n")
             with self.assertRaisesRegex(ValueError, "cannot safely represent"):
                 self.prepare(self.commit("odd filename"))
 
@@ -522,7 +522,7 @@ class PmdDiffTest(unittest.TestCase):
         self.assertEqual(metadata["run"]["github_repository"], "fixture/PandaStore")
         self.assertEqual(metadata["run"]["github_run_id"], "123")
         self.assertEqual(metadata["run"]["github_run_attempt"], "2")
-        location = pmd.finding_location(metadata, {"file": "backend/src/main/java/Modified.java", "beginline": 2})
+        location = pmd.finding_location(metadata, {"file": "code/backend/src/main/java/Modified.java", "beginline": 2})
         self.assertIn(f"https://github.com/fixture/PandaStore/blob/{head}/", location)
 
     def test_missing_metadata_after_failed_tests_reports_no_measurement(self):
