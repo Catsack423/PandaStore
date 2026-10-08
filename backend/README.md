@@ -1,3 +1,11 @@
+## Swagger UI
+
+Run the backend, then open `http://localhost:8080/swagger-ui.html` to browse and try its API endpoints.
+The OpenAPI JSON is at `http://localhost:8080/v3/api-docs` (YAML: `/v3/api-docs.yaml`).
+For protected endpoints, sign in through `/api/auth/login`, copy the returned JWT,
+and use Swagger UI's **Authorize** button. Requests from the UI go to the same backend origin.
+When deployed, replace `localhost:8080` with the backend's public base URL.
+
 ## เชื่อม Backend กับ Supabase ก่อน deploy
 
 Backend ใช้ PostgreSQL JDBC และ Spring Data JPA ที่มีอยู่แล้ว โดยใช้ระบบ login/JWT เดิมของ PandaStore

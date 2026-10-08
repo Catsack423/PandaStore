@@ -7,6 +7,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -22,6 +23,24 @@ import project.project.Filter.SellerApplicationAdminFilter;
 @Configuration
 public class SecurityConfig {
     @Bean
+    @Order(1)
+    SecurityFilterChain apiDocumentationSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs",
+                        "/v3/api-docs/**", "/v3/api-docs.yaml")
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+                                        + "img-src 'self' data:; font-src 'self' data:; connect-src 'self'; "
+                                        + "frame-ancestors 'none'; base-uri 'none'; form-action 'none'"))
+                        .frameOptions(frame -> frame.deny())
+                        .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
+                .build();
+    }
+
+    @Bean
+    @Order(2)
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwt,
             LoginRateLimitFilter rateLimit, SellerApplicationAdminFilter sellerAdmin) throws Exception {
         return http
