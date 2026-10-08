@@ -13,13 +13,13 @@ id = "generic-api-key"
 [[rules.allowlists]]
 description = "Historical dummy JWT key in test properties only"
 condition = "AND"
-paths = ['''^backend/src/test/resources/application\.properties$''']
+paths = ['''^code/backend/src/test/resources/application\.properties$''']
 regexTarget = "secret"
 regexes = ['''^(?:0123456789abcdef){4}$''']
 
 [[rules.allowlists]]
 description = "Historical dummy key prefix in JWT unit test only"
 condition = "AND"
-paths = ['''^backend/src/test/java/project/project/Service/JwtTokenServiceTest\.java$''']
+paths = ['''^code/backend/src/test/java/project/project/Service/JwtTokenServiceTest\.java$''']
 regexTarget = "secret"
 regexes = ['''^0123456789abcdef$''']

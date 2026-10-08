@@ -25,20 +25,13 @@
 
 ```text
 PandaStore/
-├── backend/                # Spring Boot REST API
-│   ├── src/                # ซอร์สโค้ด Java (Controller, Service, Repository, Entity)
-│   ├── db/                 # สคริปต์ SQL เสริม (auth_sessions.sql, create_demo_admin.sql)
-│   ├── scripts/            # สคริปต์ PowerShell สำหรับ Seed สินค้า และ Demo Checkout
-│   ├── pom.xml             # การจัดการ Dependency ของ Maven
-│   ├── .env.example        # ไฟล์ตัวอย่าง Environment Variables ของ Backend
-│   └── mvnw / mvnw.cmd     # Maven Wrapper
-├── frontend/               # Next.js Web Application
-│   ├── src/                # ซอร์สโค้ด Next.js (App Router, Components, Redux)
-│   ├── public/             # ไฟล์ Static Assets และรูปภาพ
-│   ├── tests/              # เทสต์สคริปต์สำหรับฟังก์ชัน Checkout, Payment, Middleware
-│   ├── package.json        # การจัดการ Dependency ของ Node.js
-│   └── .env.example        # ไฟล์ตัวอย่าง Environment Variables ของ Frontend
-└── README.md               # คู่มือการติดตั้งและใช้งานโปรเจกต์
+├── code/
+│   ├── backend/            # Spring Boot API, Maven, SQL, backend demo scripts
+│   └── frontend/           # Next.js app, public assets, tests
+├── config/pmd/           # PMD Java ruleset
+├── scripts/               # Repository-wide quality and security checks
+├── .github/workflows/     # CI checks
+└── README.md
 ```
 
 

@@ -19,7 +19,7 @@ import xml.etree.ElementTree as ET
 SCHEMA_VERSION = 2
 CHECK_SCOPE = "violations_overlapping_changed_lines"
 CHECK_SCOPE_DESCRIPTION = "Only unsuppressed violations overlapping changed lines affect the check; outside findings are informational only."
-JAVA_ROOT = "backend/src/main/java/"
+JAVA_ROOT = "code/backend/src/main/java/"
 RULESET = "config/pmd/ruleset.xml"
 
 
@@ -580,7 +580,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("prepare", "finalize"))
     parser.add_argument("--root", type=Path, default=Path.cwd())
-    parser.add_argument("--output", type=Path, default=Path("backend/target/pmd-diff"))
+    parser.add_argument("--output", type=Path, default=Path("code/backend/target/pmd-diff"))
     parser.add_argument("--base")
     parser.add_argument("--head")
     args = parser.parse_args()

@@ -56,14 +56,14 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-          cache-dependency-path: backend/pom.xml
+          cache-dependency-path: code/backend/pom.xml
 
       - name: Set up Node.js and npm cache
         uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: code/frontend/package-lock.json
 
       - name: Set up Python for Semgrep
         uses: actions/setup-python@v7
@@ -86,7 +86,7 @@ jobs:
             dependency-check-${{ runner.os }}-13-
 
       - name: Update the Dependency-Check database
-        working-directory: backend
+        working-directory: code/backend
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: bash ./mvnw -B -ntp dependency-check:update-only
@@ -113,7 +113,7 @@ jobs:
           printf '%s\n' "$tool_dir/bin" >> "$GITHUB_PATH"
 
       - name: Install frontend dependencies from the lockfile
-        working-directory: frontend
+        working-directory: code/frontend
         run: npm ci
 
       - name: Generate temporary server credentials
@@ -126,7 +126,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/security-logs"
 
       - name: Start Spring Boot on port 8080
-        working-directory: backend
+        working-directory: code/backend
         env:
           DB_URL: jdbc:h2:mem:security-ci;DB_CLOSE_DELAY=-1
           DB_USERNAME: sa
@@ -138,7 +138,7 @@ jobs:
             > "$RUNNER_TEMP/security-logs/backend.log" 2>&1 < /dev/null &
 
       - name: Start Next.js on port 3000
-        working-directory: frontend
+        working-directory: code/frontend
         env:
           BACKEND_API_URL: http://localhost:8080
           ALLOWED_REQUEST_ORIGINS: http://localhost:3000
@@ -181,7 +181,7 @@ jobs:
           if-no-files-found: warn
           path: |
             ${{ runner.temp }}/security-logs/
-            backend/target/dependency-check-report.html
-            backend/target/dependency-check-report.json
-            backend/target/spotbugsXml.xml
-            backend/target/surefire-reports/
+            code/backend/target/dependency-check-report.html
+            code/backend/target/dependency-check-report.json
+            code/backend/target/spotbugsXml.xml
+            code/backend/target/surefire-reports/

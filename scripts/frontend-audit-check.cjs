@@ -69,7 +69,7 @@ function evaluateAudit(report, policy, versions) {
 }
 
 function installedVersions(report) {
-  const frontend = path.join(root, 'frontend');
+  const frontend = path.join(root, 'code', 'frontend');
   const modules = path.join(frontend, 'node_modules') + path.sep;
   const lock = JSON.parse(fs.readFileSync(path.join(frontend, 'package-lock.json'), 'utf8'));
   const versions = {};
@@ -87,7 +87,7 @@ function installedVersions(report) {
 
 if (require.main === module) {
   try {
-    const options = { cwd: path.join(root, 'frontend'), encoding: 'utf8', timeout: 180000, maxBuffer: 10 * 1024 * 1024 };
+    const options = { cwd: path.join(root, 'code', 'frontend'), encoding: 'utf8', timeout: 180000, maxBuffer: 10 * 1024 * 1024 };
     const result = process.platform === 'win32'
       ? spawnSync('cmd.exe', ['/d', '/s', '/c', 'npm audit --json --audit-level=high'], options)
       : spawnSync('npm', ['audit', '--json', '--audit-level=high'], options);
