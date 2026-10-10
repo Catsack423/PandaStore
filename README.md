@@ -200,8 +200,8 @@ python -m robot -v HEADLESS:True test/Robot/00_e2e_full_lifecycle.robot
 | **Phase 8** | Customer Verifies Shipped Order In Order History (ลูกค้าตรวจสอบสถานะพัสดุ) | **PASS** | [`E2E_08_Order_History_Complete.png`](img/robot/E2E_08_Order_History_Complete.png) |
 
 ### เอกสารและไฟล์สรุปผลการทดสอบ (Test Reports)
-* **Report File:** [`test/Robot/report.html`](test/Robot/report.html) / [`results/report.html`](results/report.html)
-* **Log File:** [`test/Robot/log.html`](test/Robot/log.html) / [`results/log.html`](results/log.html)
-* **Output XML:** [`test/Robot/output.xml`](test/Robot/output.xml) / [`results/output.xml`](results/output.xml)
+* **Report File:** [`test/Robot/report.html`](test/Robot/report.html) / [`img/robot/results/report.html`](img/robot/results/report.html)
+* **Log File:** [`test/Robot/log.html`](test/Robot/log.html) / [`img/robot/results/log.html`](img/robot/results/log.html)
+* **Output XML:** [`test/Robot/output.xml`](test/Robot/output.xml) / [`img/robot/results/output.xml`](img/robot/results/output.xml)
 * **ภาพบันทึกหน้าจอขณะทดสอบ:** โฟลเดอร์ [`img/robot/`](img/robot/)
 
