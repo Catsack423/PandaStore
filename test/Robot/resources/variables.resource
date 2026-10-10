@@ -12,7 +12,7 @@ ${DELAY}                    0s
 ${TIMEOUT}                  15s
 ${IMPLICIT_WAIT}            5s
 ${SCREENSHOT_DIR}           ${EXECDIR}/img/robot
-${TEST_IMAGE_PATH}          ${EXECDIR}/img/icon.png
+${TEST_IMAGE_PATH}          ${EXECDIR}/img/products/product-1-sm-1.png
 
 # ==============================================================================
 # USER (CUSTOMER) TEST DATA

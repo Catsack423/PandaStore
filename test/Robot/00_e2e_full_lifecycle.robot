@@ -73,6 +73,7 @@ PHASE 2: User Submits Seller Application
     Input Text    ${APPLY_INPUT_ID_CARD}          ${APPLY_ID_CARD_NO}
     Make File Input Interactable                  ${APPLY_FILE_ID_CARD}
     Choose File   ${APPLY_FILE_ID_CARD}           ${TEST_IMAGE_PATH}
+    Wait Until Element Is Visible                 xpath://span[contains(., 'File uploaded')]    timeout=30s
 
     Input Text    ${APPLY_INPUT_BANK_NAME}        ${APPLY_BANK_NAME}
     Input Text    ${APPLY_INPUT_BANK_ACC_NAME}    ${APPLY_BANK_ACC_NAME}
@@ -97,10 +98,18 @@ PHASE 3: Admin Approves Seller Application
     Wait Until Page Contains Element    ${ADMIN_FILTER_STATUS}    timeout=${TIMEOUT}
     Select From List By Value           ${ADMIN_FILTER_STATUS}    PENDING
     Sleep                               1.5s
-    Wait Until Page Contains Element    ${ADMIN_BTN_REVIEW}       timeout=${TIMEOUT}
-    Wait Until Element Is Visible       ${ADMIN_BTN_REVIEW}       timeout=${TIMEOUT}
-    Scroll Element Into View            ${ADMIN_BTN_REVIEW}
-    ${rev_btn}=    Get WebElement       ${ADMIN_BTN_REVIEW}
+    # Locate pending application for the newly created shop, or fallback to first review button
+    ${specific_shop_btn}=    Set Variable    xpath:(//table//tr[contains(., '${NEW_SHOP_NAME}')]//button[contains(., 'Review') or contains(., 'View')])[1]
+    ${has_specific}=    Run Keyword And Return Status    Page Should Contain Element    ${specific_shop_btn}
+    IF    ${has_specific}
+        Scroll Element Into View    ${specific_shop_btn}
+        ${rev_btn}=    Get WebElement    ${specific_shop_btn}
+    ELSE
+        Wait Until Page Contains Element    ${ADMIN_BTN_REVIEW}       timeout=${TIMEOUT}
+        Wait Until Element Is Visible       ${ADMIN_BTN_REVIEW}       timeout=${TIMEOUT}
+        Scroll Element Into View            ${ADMIN_BTN_REVIEW}
+        ${rev_btn}=    Get WebElement       ${ADMIN_BTN_REVIEW}
+    END
     Execute JavaScript    arguments[0].click();    ARGUMENTS    ${rev_btn}
 
     # Review dialog: Click Approve and Confirm decision
