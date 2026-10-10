@@ -14,13 +14,33 @@ PandaStore เป็นเว็บสำหรับซื้อและขา
 
 ## สมาชิกกลุ่ม
 
-| ลำดับ | ชื่อ-นามสกุล | รหัสนักศึกษา | Section | Git Branch |
-| :---: | :--- | :---: | :---: | :--- |
-| 1 | นาย ธนันชัย พันธราช | 673380042-8 | 2 | `Thananchai_673380042-8_sec2` |
-| 2 | นาย ปวัฒน์ ปัดทุมมา | 673380048-6 | 1 | `Pawat_673380048-6_SEC01` |
-| 3 | นาย ณัฐพงศ์ กรธนกิจ | 673380038-9 | 2 | `Nattapong_673380038-9_sec2` |
-| 4 | นาย ธนกร ทองศรี | 673380040-2 | 2 | `Thanakon_673380040-2_sec2` |
-| 5 | นาย ปิยะพล ตุ่นป่า | 673380280-2 | 1 | `Piyapon_673380280-2sec1` |
+| ลำดับ | ชื่อ-นามสกุล | รหัสนักศึกษา | Section | Git Branch | หน้าที่รับผิดชอบหลัก |
+| :---: | :--- | :---: | :---: | :--- | :--- |
+| 1 | นาย ธนันชัย พันธราช (ด้า) | 673380042-8 | 2 | `Thananchai_673380042-8_sec2` | Backend: `SellerShopService`, `ShippingService`, `SubOrderService` |
+| 2 | นาย ปวัฒน์ ปัดทุมมา (คิม) | 673380048-6 | 1 | `Pawat_673380048-6_SEC01` | Backend: `AuthService`, `CartService` |
+| 3 | นาย ณัฐพงศ์ กรธนกิจ (เพชร) | 673380038-9 | 2 | `Nattapong_673380038-9_sec2` | Backend: `ProductService`, `ReviewService`, `SellerApplicationService` |
+| 4 | นาย ธนกร ทองศรี (แซน) | 673380040-2 | 2 | `Thanakon_673380040-2_sec2` | Backend: `NotificationService`, `OrderOrchestrationService` |
+| 5 | นาย ปิยะพล ตุ่นป่า | 673380280-2 | 1 | `Piyapon_673380280-2sec1` | Frontend: ออกแบบและพัฒนา Frontend (UI/UX Design & Components) |
+
+### รายละเอียดหน้าที่รับผิดชอบ (Responsibilities Breakdown)
+
+1. **นาย ปวัฒน์ ปัดทุมมา :**
+   * **`AuthService.java`**: ระบบยืนยันตัวตน, จัดการสิทธิ์การเข้าใช้งาน (Authentication & Authorization), จัดการโทเคน JWT
+   * **`CartService.java`**: ระบบจัดการตะกร้าสินค้า (Cart Management), เพิ่ม/ลบ/แก้ไขจำนวนสินค้าในตะกร้า
+2. **นาย ธนกร ทองศรี :**
+   * **`NotificationService.java`**: ระบบแจ้งเตือนผู้ใช้งานและผู้ขายเกี่ยวกับการสั่งซื้อและการเปลี่ยนแปลงสถานะ
+   * **`OrderOrchestrationService.java`**: ระบบประสานงานและควบคุมวงจรคำสั่งซื้อ (Order Lifecycle & Orchestration)
+3. **นาย ณัฐพงศ์ กรธนกิจ :**
+   * **`ProductService.java`**: ระบบจัดการข้อมูลสินค้า (Product Management), เพิ่ม แก้ไข ลบ ค้นหา และแสดงรายการสินค้า
+   * **`ReviewService.java`**: ระบบรีวิวและให้คะแนนสินค้า (Review & Rating Management)
+   * **`SellerApplicationService.java`**: ระบบส่งคำขอเปิดร้านค้าและเอกสารยืนยันตัวตน (KYC) และการตรวจสอบอนุมัติโดยแอดมิน
+4. **นาย ธนันชัย พันธราช :**
+   * **`SellerShopService.java`**: ระบบจัดการร้านค้าของผู้ขาย (Seller Shop Profile & Configuration)
+   * **`ShippingService.java`**: ระบบจัดส่งสินค้า (Shipping Management), คำนวณค่าจัดส่ง และบันทึกเลขติดตามพัสดุ
+   * **`SubOrderService.java`**: ระบบจัดการคำสั่งซื้อย่อยแยกตามร้านค้า (Sub-Order Fulfillment)
+   * **Automated Testing**: ออกแบบและพัฒนาระบบทดสอบ End-to-End ด้วย Robot Framework
+5. **นาย ปิยะพล ตุ่นป่า:**
+   * **Frontend Design & Development**: ออกแบบส่วนติดต่อผู้ใช้ (UI/UX Design) และพัฒนาหน้าเว็บ Frontend ด้วย Next.js, React, Tailwind CSS และ Radix UI / Shadcn UI รวมถึงการเชื่อมต่อ REST API
 
 ## เทคโนโลยีที่ใช้
 
@@ -163,3 +183,25 @@ python -m robot test/Robot/00_e2e_full_lifecycle.robot
 # รันแบบ Headless
 python -m robot -v HEADLESS:True test/Robot/00_e2e_full_lifecycle.robot
 ```
+
+## ผลการทดสอบอัตโนมัติ (Robot Framework Test Results)
+
+ระบบผ่านการทดสอบอัตโนมัติแบบครบวงจร (End-to-End Full Lifecycle) ด้วย **Robot Framework** ครบทั้ง 8 Phase สำเร็จ **100% (Pass 8 / Fail 0)**:
+
+| ลำดับ Phase | รายละเอียดการทดสอบ (Test Case) | ผลลัพธ์ | หลักฐานการทดสอบ (Screenshot) |
+| :---: | :--- | :---: | :--- |
+| **Phase 1** | Customer Account Registration (สมัครสมาชิกใหม่) | **PASS** | [`E2E_01_User_Registered.png`](img/robot/E2E_01_User_Registered.png) |
+| **Phase 2** | User Submits Seller Application (ยื่นเอกสารขอเปิดร้านค้า/KYC) | **PASS** | [`E2E_02_Seller_Application_Submitted.png`](img/robot/E2E_02_Seller_Application_Submitted.png) |
+| **Phase 3** | Admin Approves Seller Application (แอดมินอนุมัติคำขอเปิดร้าน) | **PASS** | [`E2E_03_Admin_Approved_Application.png`](img/robot/E2E_03_Admin_Approved_Application.png) |
+| **Phase 4** | Approved Seller Publishes A New Product (ผู้ขายลงขายสินค้าใหม่) | **PASS** | [`E2E_04_Product_Published.png`](img/robot/E2E_04_Product_Published.png) |
+| **Phase 5** | Customer Buys Product And Places Order (ลูกค้าสั่งซื้อสินค้าลงตะกร้า) | **PASS** | [`E2E_05_Order_Placed.png`](img/robot/E2E_05_Order_Placed.png) |
+| **Phase 6** | Customer Confirms PromptPay Payment (ชำระเงินผ่าน PromptPay QR) | **PASS** | [`E2E_06_Payment_Confirmed.png`](img/robot/E2E_06_Payment_Confirmed.png) |
+| **Phase 7** | Seller Fulfills And Ships The Order (ผู้ขายกดยืนยันออเดอร์และใส่เลขพัสดุ) | **PASS** | [`E2E_07_Seller_Shipped_Order.png`](img/robot/E2E_07_Seller_Shipped_Order.png) |
+| **Phase 8** | Customer Verifies Shipped Order In Order History (ลูกค้าตรวจสอบสถานะพัสดุ) | **PASS** | [`E2E_08_Order_History_Complete.png`](img/robot/E2E_08_Order_History_Complete.png) |
+
+### เอกสารและไฟล์สรุปผลการทดสอบ (Test Reports)
+* **Report File:** [`report.html`](report.html) / [`results/report.html`](results/report.html)
+* **Log File:** [`log.html`](log.html) / [`results/log.html`](results/log.html)
+* **Output XML:** [`output.xml`](output.xml) / [`results/output.xml`](results/output.xml)
+* **ภาพบันทึกหน้าจอขณะทดสอบ:** โฟลเดอร์ [`img/robot/`](img/robot/)
+
