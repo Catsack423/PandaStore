@@ -1,0 +1,559 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 7.5 (Python 3.14.8 on win32)" generated="2026-10-10T17:55:58.279389" rpa="false" schemaversion="5">
+<suite id="s1" name="PandaStore" source="C:\Users\Thananchai\Pictures\printi\PandaStore">
+<suite id="s1-s1" name="Test" source="C:\Users\Thananchai\Pictures\printi\PandaStore\test">
+<suite id="s1-s1-s1" name="Robot" source="C:\Users\Thananchai\Pictures\printi\PandaStore\test\Robot">
+<suite id="s1-s1-s1-s1" name="00 E2E Full Lifecycle" source="C:\Users\Thananchai\Pictures\printi\PandaStore\test\Robot\00_e2e_full_lifecycle.robot">
+<kw name="Open PandaStore Browser" owner="common_keywords" type="SETUP">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-10T17:55:58.613400" level="INFO">${options} = &lt;selenium.webdriver.chrome.options.Options object at 0x000001DDC2799A90&gt;</msg>
+<var>${options}</var>
+<arg>sys.modules['selenium.webdriver'].ChromeOptions()</arg>
+<arg>sys</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-10T17:55:58.610317" elapsed="0.003214"/>
+</kw>
+<if>
+<branch type="IF" condition="'${HEADLESS}' == 'True'">
+<kw name="Evaluate" owner="BuiltIn">
+<var>${_}</var>
+<arg>$options.add_argument('--headless=new')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="NOT RUN" start="2026-10-10T17:55:58.614048" elapsed="0.000105"/>
+</kw>
+<status status="NOT RUN" start="2026-10-10T17:55:58.613688" elapsed="0.000537"/>
+</branch>
+<status status="PASS" start="2026-10-10T17:55:58.613663" elapsed="0.000606"/>
+</if>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-10T17:55:58.614840" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--no-sandbox')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-10T17:55:58.614352" elapsed="0.000818"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-10T17:55:58.615879" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-dev-shm-usage')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-10T17:55:58.615368" elapsed="0.000605"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-10T17:55:58.616496" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-gpu')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-10T17:55:58.616113" elapsed="0.000464"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-10T17:55:58.617110" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--window-size=1440,900')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-10T17:55:58.616704" elapsed="0.000488"/>
+</kw>
+<kw name="Open Browser" owner="SeleniumLibrary">
+<msg time="2026-10-10T17:55:58.617652" level="INFO">Opening browser 'chrome' to base url 'https://panda-store-kappa.vercel.app/'.</msg>
+<arg>${url}</arg>
+<arg>${BROWSER}</arg>
+<arg>options=${options}</arg>
+<doc>Opens a new browser instance to the optional ``url``.</doc>
+<status status="PASS" start="2026-10-10T17:55:58.617399" elapsed="5.301788"/>
+</kw>
+<kw name="Maximize Browser Window" owner="SeleniumLibrary">
+<msg time="2026-10-10T17:56:04.348329" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="../test/img/robot/selenium-screenshot-1.png"&gt;&lt;img src="../test/img/robot/selenium-screenshot-1.png" width="800px"&gt;&lt;/a&gt;</msg>
+<msg time="2026-10-10T17:56:04.348666" level="FAIL">WebDriverException: Message: unknown error: JavaScript code failed
+from unknown command: 'Runtime.evaluate' wasn't found
+  (Session info: chrome=155.0.8059.39)
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff72af301c5+5825]
+	chromedriver!(No symbol) [0x7ff72ae47990]
+	chromedriver!(No symbol) [0x7ff72ac5448d]
+	chromedriver!(No symbol) [0x7ff72ac40d52]
+	chromedriver!(No symbol) [0x7ff72ac3f4b8]
+	chromedriver!(No symbol) [0x7ff72ac3fbdf]
+	chromedriver!(No symbol) [0x7ff72ac6c8eb]
+	chromedriver!(No symbol) [0x7ff72ac5eee5]
+	chromedriver!(No symbol) [0x7ff72ac5ed74]
+	chromedriver!(No symbol) [0x7ff72ac2f59b]
+	chromedriver!(No symbol) [0x7ff72ac2d5bf]
+	chromedriver!(No symbol) [0x7ff72ad1e737]
+	chromedriver!(No symbol) [0x7ff72acd8eea]
+	chromedriver!(No symbol) [0x7ff72ad055a4]
+	chromedriver!(No symbol) [0x7ff72aca1892]
+	chromedriver!(No symbol) [0x7ff72aca26a3]
+	chromedriver!GetHandleVerifier [0x7ff72b33ab51+4101b1]
+	chromedriver!GetHandleVerifier [0x7ff72b363aeb+43914b]
+	chromedriver!GetHandleVerifier [0x7ff72b357fbe+42d61e]
+	chromedriver!GetHandleVerifier [0x7ff72b03260e+107c6e]
+	chromedriver!(No symbol) [0x7ff72ae55085]
+	chromedriver!(No symbol) [0x7ff72ae503f4]
+	chromedriver!(No symbol) [0x7ff72ae50584]
+	chromedriver!(No symbol) [0x7ff72ae3ab1c]
+	KERNEL32!BaseThreadInitThunk [0x7ffc1edb7374+14]
+	ntdll!RtlUserThreadStart [0x7ffc1f79cc91+21]
+</msg>
+<doc>Maximizes current browser window.</doc>
+<status status="FAIL" start="2026-10-10T17:56:03.919552" elapsed="0.489643">WebDriverException: Message: unknown error: JavaScript code failed
+from unknown command: 'Runtime.evaluate' wasn't found
+  (Session info: chrome=155.0.8059.39)
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff72af301c5+5825]
+	chromedriver!(No symbol) [0x7ff72ae47990]
+	chromedriver!(No symbol) [0x7ff72ac5448d]
+	chromedriver!(No symbol) [0x7ff72ac40d52]
+	chromedriver!(No symbol) [0x7ff72ac3f4b8]
+	chromedriver!(No symbol) [0x7ff72ac3fbdf]
+	chromedriver!(No symbol) [0x7ff72ac6c8eb]
+	chromedriver!(No symbol) [0x7ff72ac5eee5]
+	chromedriver!(No symbol) [0x7ff72ac5ed74]
+	chromedriver!(No symbol) [0x7ff72ac2f59b]
+	chromedriver!(No symbol) [0x7ff72ac2d5bf]
+	chromedriver!(No symbol) [0x7ff72ad1e737]
+	chromedriver!(No symbol) [0x7ff72acd8eea]
+	chromedriver!(No symbol) [0x7ff72ad055a4]
+	chromedriver!(No symbol) [0x7ff72aca1892]
+	chromedriver!(No symbol) [0x7ff72aca26a3]
+	chromedriver!GetHandleVerifier [0x7ff72b33ab51+4101b1]
+	chromedriver!GetHandleVerifier [0x7ff72b363aeb+43914b]
+	chromedriver!GetHandleVerifier [0x7ff72b357fbe+42d61e]
+	chromedriver!GetHandleVerifier [0x7ff72b03260e+107c6e]
+	chromedriver!(No symbol) [0x7ff72ae55085]
+	chromedriver!(No symbol) [0x7ff72ae503f4]
+	chromedriver!(No symbol) [0x7ff72ae50584]
+	chromedriver!(No symbol) [0x7ff72ae3ab1c]
+	KERNEL32!BaseThreadInitThunk [0x7ffc1edb7374+14]
+	ntdll!RtlUserThreadStart [0x7ffc1f79cc91+21]
+</status>
+</kw>
+<kw name="Set Selenium Speed" owner="SeleniumLibrary">
+<arg>${DELAY}</arg>
+<doc>Sets the delay that is waited after each Selenium command.</doc>
+<status status="NOT RUN" start="2026-10-10T17:56:04.409449" elapsed="0.000146"/>
+</kw>
+<kw name="Set Selenium Timeout" owner="SeleniumLibrary">
+<arg>${TIMEOUT}</arg>
+<doc>Sets the timeout that is used by various keywords.</doc>
+<status status="NOT RUN" start="2026-10-10T17:56:04.409729" elapsed="0.001391"/>
+</kw>
+<kw name="Set Selenium Implicit Wait" owner="SeleniumLibrary">
+<arg>${IMPLICIT_WAIT}</arg>
+<doc>Sets the implicit wait value used by Selenium.</doc>
+<status status="NOT RUN" start="2026-10-10T17:56:04.411292" elapsed="0.000115"/>
+</kw>
+<arg>${HOME_URL}</arg>
+<status status="FAIL" start="2026-10-10T17:55:58.609536" elapsed="5.802025">WebDriverException: Message: unknown error: JavaScript code failed
+from unknown command: 'Runtime.evaluate' wasn't found
+  (Session info: chrome=155.0.8059.39)
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff72af301c5+5825]
+	chromedriver!(No symbol) [0x7ff72ae47990]
+	chromedriver!(No symbol) [0x7ff72ac5448d]
+	chromedriver!(No symbol) [0x7ff72ac40d52]
+	chromedriver!(No symbol) [0x7ff72ac3f4b8]
+	chromedriver!(No symbol) [0x7ff72ac3fbdf]
+	chromedriver!(No symbol) [0x7ff72ac6c8eb]
+	chromedriver!(No symbol) [0x7ff72ac5eee5]
+	chromedriver!(No symbol) [0x7ff72ac5ed74]
+	chromedriver!(No symbol) [0x7ff72ac2f59b]
+	chromedriver!(No symbol) [0x7ff72ac2d5bf]
+	chromedriver!(No symbol) [0x7ff72ad1e737]
+	chromedriver!(No symbol) [0x7ff72acd8eea]
+	chromedriver!(No symbol) [0x7ff72ad055a4]
+	chromedriver!(No symbol) [0x7ff72aca1892]
+	chromedriver!(No symbol) [0x7ff72aca26a3]
+	chromedriver!GetHandleVerifier [0x7ff72b33ab51+4101b1]
+	chromedriver!GetHandleVerifier [0x7ff72b363aeb+43914b]
+	chromedriver!GetHandleVerifier [0x7ff72b357fbe+42d61e]
+	chromedriver!GetHandleVerifier [0x7ff72b03260e+107c6e]
+	chromedriver!(No symbol) [0x7ff72ae55085]
+	chromedriver!(No symbol) [0x7ff72ae503f4]
+	chromedriver!(No symbol) [0x7ff72ae50584]
+	chromedriver!(No symbol) [0x7ff72ae3ab1c]
+	KERNEL32!BaseThreadInitThunk [0x7ffc1edb7374+14]
+	ntdll!RtlUserThreadStart [0x7ffc1f79cc91+21]
+</status>
+</kw>
+<test id="s1-s1-s1-s1-t1" name="PHASE 1: Customer Account Registration" line="20">
+<doc>Step 1: A new user registers a Customer account on PandaStore.</doc>
+<tag>e2e</tag>
+<tag>register</tag>
+<tag>user</tag>
+<status status="FAIL" start="2026-10-10T17:56:04.411713" elapsed="0.023456">Parent suite setup failed:
+WebDriverException: Message: unknown error: JavaScript code failed
+from unknown command: 'Runtime.evaluate' wasn't found
+  (Session info: chrome=155.0.8059.39)
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff72af301c5+5825]
+	chromedriver!(No symbol) [0x7ff72ae47990]
+	chromedriver!(No symbol) [0x7ff72ac5448d]
+	chromedriver!(No symbol) [0x7ff72ac40d52]
+	chromedriver!(No symbol) [0x7ff72ac3f4b8]
+	chromedriver!(No symbol) [0x7ff72ac3fbdf]
+	chromedriver!(No symbol) [0x7ff72ac6c8eb]
+	chromedriver!(No symbol) [0x7ff72ac5eee5]
+	chromedriver!(No symbol) [0x7ff72ac5ed74]
+	chromedriver!(No symbol) [0x7ff72ac2f59b]
+	chromedriver!(No symbol) [0x7ff72ac2d5bf]
+	chromedriver!(No symbol) [0x7ff72ad1e737]
+	chromedriver!(No symbol) [0x7ff72acd8eea]
+	chromedriver!(No symbol) [0x7ff72ad055a4]
+	chromedriver!(No symbol) [0x7ff72aca1892]
+	chromedriver!(No symbol) [0x7ff72aca26a3]
+	chromedriver!GetHandleVerifier [0x7ff72b33ab51+4101b1]
+	chromedriver!GetHandleVerifier [0x7ff72b363aeb+43914b]
+	chromedriver!GetHandleVerifier [0x7ff72b357fbe+42d61e]
+	chromedriver!GetHandleVerifier [0x7ff72b03260e+107c6e]
+	chromedriver!(No symbol) [0x7ff72ae55085]
+	chromedriver!(No symbol) [0x7ff72ae503f4]
+	chromedriver!(No symbol) [0x7ff72ae50584]
+	chromedriver!(No symbol) [0x7ff72ae3ab1c]
+	KERNEL32!BaseThreadInitThunk [0x7ffc1edb7374+14]
+	ntdll!RtlUserThreadStart [0x7ffc1f79cc91+21]
+</status>
+</test>
+<test id="s1-s1-s1-s1-t2" name="PHASE 2: User Submits Seller Application" line="50">
+<doc>Step 2: The registered customer applies to become a Seller.</doc>
+<tag>application</tag>
+<tag>e2e</tag>
+<tag>seller</tag>
+<status status="FAIL" start="2026-10-10T17:56:04.440887" elapsed="0.003087">Parent suite setup failed:
+WebDriverException: Message: unknown error: JavaScript code failed
+from unknown command: 'Runtime.evaluate' wasn't found
+  (Session info: chrome=155.0.8059.39)
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff72af301c5+5825]
+	chromedriver!(No symbol) [0x7ff72ae47990]
+	chromedriver!(No symbol) [0x7ff72ac5448d]
+	chromedriver!(No symbol) [0x7ff72ac40d52]
+	chromedriver!(No symbol) [0x7ff72ac3f4b8]
+	chromedriver!(No symbol) [0x7ff72ac3fbdf]
+	chromedriver!(No symbol) [0x7ff72ac6c8eb]
+	chromedriver!(No symbol) [0x7ff72ac5eee5]
+	chromedriver!(No symbol) [0x7ff72ac5ed74]
+	chromedriver!(No symbol) [0x7ff72ac2f59b]
+	chromedriver!(No symbol) [0x7ff72ac2d5bf]
+	chromedriver!(No symbol) [0x7ff72ad1e737]
+	chromedriver!(No symbol) [0x7ff72acd8eea]
+	chromedriver!(No symbol) [0x7ff72ad055a4]
+	chromedriver!(No symbol) [0x7ff72aca1892]
+	chromedriver!(No symbol) [0x7ff72aca26a3]
+	chromedriver!GetHandleVerifier [0x7ff72b33ab51+4101b1]
+	chromedriver!GetHandleVerifier [0x7ff72b363aeb+43914b]
+	chromedriver!GetHandleVerifier [0x7ff72b357fbe+42d61e]
+	chromedriver!GetHandleVerifier [0x7ff72b03260e+107c6e]
+	chromedriver!(No symbol) [0x7ff72ae55085]
+	chromedriver!(No symbol) [0x7ff72ae503f4]
+	chromedriver!(No symbol) [0x7ff72ae50584]
+	chromedriver!(No symbol) [0x7ff72ae3ab1c]
+	KERNEL32!BaseThreadInitThunk [0x7ffc1edb7374+14]
+	ntdll!RtlUserThreadStart [0x7ffc1f79cc91+21]
+</status>
+</test>
+<test id="s1-s1-s1-s1-t3" name="PHASE 3: Admin Approves Seller Application" line="91">
+<doc>Step 3: Platform Admin reviews and approves the pending seller application.</doc>
+<tag>admin</tag>
+<tag>approval</tag>
+<tag>e2e</tag>
+<status status="FAIL" start="2026-10-10T17:56:04.447373" elapsed="0.004595">Parent suite setup failed:
+WebDriverException: Message: unknown error: JavaScript code failed
+from unknown command: 'Runtime.evaluate' wasn't found
+  (Session info: chrome=155.0.8059.39)
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff72af301c5+5825]
+	chromedriver!(No symbol) [0x7ff72ae47990]
+	chromedriver!(No symbol) [0x7ff72ac5448d]
+	chromedriver!(No symbol) [0x7ff72ac40d52]
+	chromedriver!(No symbol) [0x7ff72ac3f4b8]
+	chromedriver!(No symbol) [0x7ff72ac3fbdf]
+	chromedriver!(No symbol) [0x7ff72ac6c8eb]
+	chromedriver!(No symbol) [0x7ff72ac5eee5]
+	chromedriver!(No symbol) [0x7ff72ac5ed74]
+	chromedriver!(No symbol) [0x7ff72ac2f59b]
+	chromedriver!(No symbol) [0x7ff72ac2d5bf]
+	chromedriver!(No symbol) [0x7ff72ad1e737]
+	chromedriver!(No symbol) [0x7ff72acd8eea]
+	chromedriver!(No symbol) [0x7ff72ad055a4]
+	chromedriver!(No symbol) [0x7ff72aca1892]
+	chromedriver!(No symbol) [0x7ff72aca26a3]
+	chromedriver!GetHandleVerifier [0x7ff72b33ab51+4101b1]
+	chromedriver!GetHandleVerifier [0x7ff72b363aeb+43914b]
+	chromedriver!GetHandleVerifier [0x7ff72b357fbe+42d61e]
+	chromedriver!GetHandleVerifier [0x7ff72b03260e+107c6e]
+	chromedriver!(No symbol) [0x7ff72ae55085]
+	chromedriver!(No symbol) [0x7ff72ae503f4]
+	chromedriver!(No symbol) [0x7ff72ae50584]
+	chromedriver!(No symbol) [0x7ff72ae3ab1c]
+	KERNEL32!BaseThreadInitThunk [0x7ffc1edb7374+14]
+	ntdll!RtlUserThreadStart [0x7ffc1f79cc91+21]
+</status>
+</test>
+<test id="s1-s1-s1-s1-t4" name="PHASE 4: Approved Seller Publishes A New Product" line="118">
+<doc>Step 4: The approved Seller adds and publishes a product for sale.</doc>
+<tag>e2e</tag>
+<tag>product</tag>
+<tag>seller</tag>
+<status status="FAIL" start="2026-10-10T17:56:04.457223" elapsed="0.010563">Parent suite setup failed:
+WebDriverException: Message: unknown error: JavaScript code failed
+from unknown command: 'Runtime.evaluate' wasn't found
+  (Session info: chrome=155.0.8059.39)
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff72af301c5+5825]
+	chromedriver!(No symbol) [0x7ff72ae47990]
+	chromedriver!(No symbol) [0x7ff72ac5448d]
+	chromedriver!(No symbol) [0x7ff72ac40d52]
+	chromedriver!(No symbol) [0x7ff72ac3f4b8]
+	chromedriver!(No symbol) [0x7ff72ac3fbdf]
+	chromedriver!(No symbol) [0x7ff72ac6c8eb]
+	chromedriver!(No symbol) [0x7ff72ac5eee5]
+	chromedriver!(No symbol) [0x7ff72ac5ed74]
+	chromedriver!(No symbol) [0x7ff72ac2f59b]
+	chromedriver!(No symbol) [0x7ff72ac2d5bf]
+	chromedriver!(No symbol) [0x7ff72ad1e737]
+	chromedriver!(No symbol) [0x7ff72acd8eea]
+	chromedriver!(No symbol) [0x7ff72ad055a4]
+	chromedriver!(No symbol) [0x7ff72aca1892]
+	chromedriver!(No symbol) [0x7ff72aca26a3]
+	chromedriver!GetHandleVerifier [0x7ff72b33ab51+4101b1]
+	chromedriver!GetHandleVerifier [0x7ff72b363aeb+43914b]
+	chromedriver!GetHandleVerifier [0x7ff72b357fbe+42d61e]
+	chromedriver!GetHandleVerifier [0x7ff72b03260e+107c6e]
+	chromedriver!(No symbol) [0x7ff72ae55085]
+	chromedriver!(No symbol) [0x7ff72ae503f4]
+	chromedriver!(No symbol) [0x7ff72ae50584]
+	chromedriver!(No symbol) [0x7ff72ae3ab1c]
+	KERNEL32!BaseThreadInitThunk [0x7ffc1edb7374+14]
+	ntdll!RtlUserThreadStart [0x7ffc1f79cc91+21]
+</status>
+</test>
+<test id="s1-s1-s1-s1-t5" name="PHASE 5: Customer Buys Product And Places Order" line="152">
+<doc>Step 5: Customer browses, adds the product to cart, and completes checkout.</doc>
+<tag>checkout</tag>
+<tag>customer</tag>
+<tag>e2e</tag>
+<status status="FAIL" start="2026-10-10T17:56:04.472126" elapsed="0.002673">Parent suite setup failed:
+WebDriverException: Message: unknown error: JavaScript code failed
+from unknown command: 'Runtime.evaluate' wasn't found
+  (Session info: chrome=155.0.8059.39)
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff72af301c5+5825]
+	chromedriver!(No symbol) [0x7ff72ae47990]
+	chromedriver!(No symbol) [0x7ff72ac5448d]
+	chromedriver!(No symbol) [0x7ff72ac40d52]
+	chromedriver!(No symbol) [0x7ff72ac3f4b8]
+	chromedriver!(No symbol) [0x7ff72ac3fbdf]
+	chromedriver!(No symbol) [0x7ff72ac6c8eb]
+	chromedriver!(No symbol) [0x7ff72ac5eee5]
+	chromedriver!(No symbol) [0x7ff72ac5ed74]
+	chromedriver!(No symbol) [0x7ff72ac2f59b]
+	chromedriver!(No symbol) [0x7ff72ac2d5bf]
+	chromedriver!(No symbol) [0x7ff72ad1e737]
+	chromedriver!(No symbol) [0x7ff72acd8eea]
+	chromedriver!(No symbol) [0x7ff72ad055a4]
+	chromedriver!(No symbol) [0x7ff72aca1892]
+	chromedriver!(No symbol) [0x7ff72aca26a3]
+	chromedriver!GetHandleVerifier [0x7ff72b33ab51+4101b1]
+	chromedriver!GetHandleVerifier [0x7ff72b363aeb+43914b]
+	chromedriver!GetHandleVerifier [0x7ff72b357fbe+42d61e]
+	chromedriver!GetHandleVerifier [0x7ff72b03260e+107c6e]
+	chromedriver!(No symbol) [0x7ff72ae55085]
+	chromedriver!(No symbol) [0x7ff72ae503f4]
+	chromedriver!(No symbol) [0x7ff72ae50584]
+	chromedriver!(No symbol) [0x7ff72ae3ab1c]
+	KERNEL32!BaseThreadInitThunk [0x7ffc1edb7374+14]
+	ntdll!RtlUserThreadStart [0x7ffc1f79cc91+21]
+</status>
+</test>
+<test id="s1-s1-s1-s1-t6" name="PHASE 6: Customer Confirms PromptPay Payment" line="207">
+<doc>Step 6: Customer scans PromptPay QR and confirms payment.</doc>
+<tag>customer</tag>
+<tag>e2e</tag>
+<tag>payment</tag>
+<status status="FAIL" start="2026-10-10T17:56:04.479254" elapsed="0.002805">Parent suite setup failed:
+WebDriverException: Message: unknown error: JavaScript code failed
+from unknown command: 'Runtime.evaluate' wasn't found
+  (Session info: chrome=155.0.8059.39)
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff72af301c5+5825]
+	chromedriver!(No symbol) [0x7ff72ae47990]
+	chromedriver!(No symbol) [0x7ff72ac5448d]
+	chromedriver!(No symbol) [0x7ff72ac40d52]
+	chromedriver!(No symbol) [0x7ff72ac3f4b8]
+	chromedriver!(No symbol) [0x7ff72ac3fbdf]
+	chromedriver!(No symbol) [0x7ff72ac6c8eb]
+	chromedriver!(No symbol) [0x7ff72ac5eee5]
+	chromedriver!(No symbol) [0x7ff72ac5ed74]
+	chromedriver!(No symbol) [0x7ff72ac2f59b]
+	chromedriver!(No symbol) [0x7ff72ac2d5bf]
+	chromedriver!(No symbol) [0x7ff72ad1e737]
+	chromedriver!(No symbol) [0x7ff72acd8eea]
+	chromedriver!(No symbol) [0x7ff72ad055a4]
+	chromedriver!(No symbol) [0x7ff72aca1892]
+	chromedriver!(No symbol) [0x7ff72aca26a3]
+	chromedriver!GetHandleVerifier [0x7ff72b33ab51+4101b1]
+	chromedriver!GetHandleVerifier [0x7ff72b363aeb+43914b]
+	chromedriver!GetHandleVerifier [0x7ff72b357fbe+42d61e]
+	chromedriver!GetHandleVerifier [0x7ff72b03260e+107c6e]
+	chromedriver!(No symbol) [0x7ff72ae55085]
+	chromedriver!(No symbol) [0x7ff72ae503f4]
+	chromedriver!(No symbol) [0x7ff72ae50584]
+	chromedriver!(No symbol) [0x7ff72ae3ab1c]
+	KERNEL32!BaseThreadInitThunk [0x7ffc1edb7374+14]
+	ntdll!RtlUserThreadStart [0x7ffc1f79cc91+21]
+</status>
+</test>
+<test id="s1-s1-s1-s1-t7" name="PHASE 7: Seller Fulfills And Ships The Order" line="225">
+<doc>Step 7: Seller accepts order, enters tracking, and marks as shipped.</doc>
+<tag>e2e</tag>
+<tag>seller</tag>
+<tag>shipping</tag>
+<status status="FAIL" start="2026-10-10T17:56:04.485878" elapsed="0.002609">Parent suite setup failed:
+WebDriverException: Message: unknown error: JavaScript code failed
+from unknown command: 'Runtime.evaluate' wasn't found
+  (Session info: chrome=155.0.8059.39)
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff72af301c5+5825]
+	chromedriver!(No symbol) [0x7ff72ae47990]
+	chromedriver!(No symbol) [0x7ff72ac5448d]
+	chromedriver!(No symbol) [0x7ff72ac40d52]
+	chromedriver!(No symbol) [0x7ff72ac3f4b8]
+	chromedriver!(No symbol) [0x7ff72ac3fbdf]
+	chromedriver!(No symbol) [0x7ff72ac6c8eb]
+	chromedriver!(No symbol) [0x7ff72ac5eee5]
+	chromedriver!(No symbol) [0x7ff72ac5ed74]
+	chromedriver!(No symbol) [0x7ff72ac2f59b]
+	chromedriver!(No symbol) [0x7ff72ac2d5bf]
+	chromedriver!(No symbol) [0x7ff72ad1e737]
+	chromedriver!(No symbol) [0x7ff72acd8eea]
+	chromedriver!(No symbol) [0x7ff72ad055a4]
+	chromedriver!(No symbol) [0x7ff72aca1892]
+	chromedriver!(No symbol) [0x7ff72aca26a3]
+	chromedriver!GetHandleVerifier [0x7ff72b33ab51+4101b1]
+	chromedriver!GetHandleVerifier [0x7ff72b363aeb+43914b]
+	chromedriver!GetHandleVerifier [0x7ff72b357fbe+42d61e]
+	chromedriver!GetHandleVerifier [0x7ff72b03260e+107c6e]
+	chromedriver!(No symbol) [0x7ff72ae55085]
+	chromedriver!(No symbol) [0x7ff72ae503f4]
+	chromedriver!(No symbol) [0x7ff72ae50584]
+	chromedriver!(No symbol) [0x7ff72ae3ab1c]
+	KERNEL32!BaseThreadInitThunk [0x7ffc1edb7374+14]
+	ntdll!RtlUserThreadStart [0x7ffc1f79cc91+21]
+</status>
+</test>
+<test id="s1-s1-s1-s1-t8" name="PHASE 8: Customer Verifies Shipped Order In Order History" line="257">
+<doc>Step 8: Customer tracks order in Order History and verifies SHIPPED status.</doc>
+<tag>customer</tag>
+<tag>e2e</tag>
+<tag>order_history</tag>
+<status status="FAIL" start="2026-10-10T17:56:04.492312" elapsed="0.002900">Parent suite setup failed:
+WebDriverException: Message: unknown error: JavaScript code failed
+from unknown command: 'Runtime.evaluate' wasn't found
+  (Session info: chrome=155.0.8059.39)
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff72af301c5+5825]
+	chromedriver!(No symbol) [0x7ff72ae47990]
+	chromedriver!(No symbol) [0x7ff72ac5448d]
+	chromedriver!(No symbol) [0x7ff72ac40d52]
+	chromedriver!(No symbol) [0x7ff72ac3f4b8]
+	chromedriver!(No symbol) [0x7ff72ac3fbdf]
+	chromedriver!(No symbol) [0x7ff72ac6c8eb]
+	chromedriver!(No symbol) [0x7ff72ac5eee5]
+	chromedriver!(No symbol) [0x7ff72ac5ed74]
+	chromedriver!(No symbol) [0x7ff72ac2f59b]
+	chromedriver!(No symbol) [0x7ff72ac2d5bf]
+	chromedriver!(No symbol) [0x7ff72ad1e737]
+	chromedriver!(No symbol) [0x7ff72acd8eea]
+	chromedriver!(No symbol) [0x7ff72ad055a4]
+	chromedriver!(No symbol) [0x7ff72aca1892]
+	chromedriver!(No symbol) [0x7ff72aca26a3]
+	chromedriver!GetHandleVerifier [0x7ff72b33ab51+4101b1]
+	chromedriver!GetHandleVerifier [0x7ff72b363aeb+43914b]
+	chromedriver!GetHandleVerifier [0x7ff72b357fbe+42d61e]
+	chromedriver!GetHandleVerifier [0x7ff72b03260e+107c6e]
+	chromedriver!(No symbol) [0x7ff72ae55085]
+	chromedriver!(No symbol) [0x7ff72ae503f4]
+	chromedriver!(No symbol) [0x7ff72ae50584]
+	chromedriver!(No symbol) [0x7ff72ae3ab1c]
+	KERNEL32!BaseThreadInitThunk [0x7ffc1edb7374+14]
+	ntdll!RtlUserThreadStart [0x7ffc1f79cc91+21]
+</status>
+</test>
+<kw name="Close PandaStore Browser" owner="common_keywords" type="TEARDOWN">
+<kw name="Close All Browsers" owner="SeleniumLibrary">
+<doc>Closes all open browsers and resets the browser cache.</doc>
+<status status="PASS" start="2026-10-10T17:56:04.499474" elapsed="2.192542"/>
+</kw>
+<status status="PASS" start="2026-10-10T17:56:04.499049" elapsed="2.193168"/>
+</kw>
+<doc>Complete End-to-End (E2E) Lifecycle Test Suite for PandaStore.
+Workflow: User Signup -&gt; Seller Application -&gt; Admin Approval -&gt;
+Seller Publishes Product -&gt; Customer Orders &amp; Pays -&gt; Seller Fulfills &amp; Ships.</doc>
+<status status="FAIL" start="2026-10-10T17:55:58.331832" elapsed="8.360455">Suite setup failed:
+WebDriverException: Message: unknown error: JavaScript code failed
+from unknown command: 'Runtime.evaluate' wasn't found
+  (Session info: chrome=155.0.8059.39)
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff72af301c5+5825]
+	chromedriver!(No symbol) [0x7ff72ae47990]
+	chromedriver!(No symbol) [0x7ff72ac5448d]
+	chromedriver!(No symbol) [0x7ff72ac40d52]
+	chromedriver!(No symbol) [0x7ff72ac3f4b8]
+	chromedriver!(No symbol) [0x7ff72ac3fbdf]
+	chromedriver!(No symbol) [0x7ff72ac6c8eb]
+	chromedriver!(No symbol) [0x7ff72ac5eee5]
+	chromedriver!(No symbol) [0x7ff72ac5ed74]
+	chromedriver!(No symbol) [0x7ff72ac2f59b]
+	chromedriver!(No symbol) [0x7ff72ac2d5bf]
+	chromedriver!(No symbol) [0x7ff72ad1e737]
+	chromedriver!(No symbol) [0x7ff72acd8eea]
+	chromedriver!(No symbol) [0x7ff72ad055a4]
+	chromedriver!(No symbol) [0x7ff72aca1892]
+	chromedriver!(No symbol) [0x7ff72aca26a3]
+	chromedriver!GetHandleVerifier [0x7ff72b33ab51+4101b1]
+	chromedriver!GetHandleVerifier [0x7ff72b363aeb+43914b]
+	chromedriver!GetHandleVerifier [0x7ff72b357fbe+42d61e]
+	chromedriver!GetHandleVerifier [0x7ff72b03260e+107c6e]
+	chromedriver!(No symbol) [0x7ff72ae55085]
+	chromedriver!(No symbol) [0x7ff72ae503f4]
+	chromedriver!(No symbol) [0x7ff72ae50584]
+	chromedriver!(No symbol) [0x7ff72ae3ab1c]
+	KERNEL32!BaseThreadInitThunk [0x7ffc1edb7374+14]
+	ntdll!RtlUserThreadStart [0x7ffc1f79cc91+21]
+</status>
+</suite>
+<status status="FAIL" start="2026-10-10T17:55:58.329236" elapsed="8.369557"/>
+</suite>
+<status status="FAIL" start="2026-10-10T17:55:58.326544" elapsed="8.379216"/>
+</suite>
+<status status="FAIL" start="2026-10-10T17:55:58.296631" elapsed="8.455954"/>
+</suite>
+<statistics>
+<total>
+<stat pass="0" fail="8" skip="0">All Tests</stat>
+</total>
+<tag>
+<stat pass="0" fail="1" skip="0">admin</stat>
+<stat pass="0" fail="1" skip="0">application</stat>
+<stat pass="0" fail="1" skip="0">approval</stat>
+<stat pass="0" fail="1" skip="0">checkout</stat>
+<stat pass="0" fail="3" skip="0">customer</stat>
+<stat pass="0" fail="8" skip="0">e2e</stat>
+<stat pass="0" fail="1" skip="0">order_history</stat>
+<stat pass="0" fail="1" skip="0">payment</stat>
+<stat pass="0" fail="1" skip="0">product</stat>
+<stat pass="0" fail="1" skip="0">register</stat>
+<stat pass="0" fail="3" skip="0">seller</stat>
+<stat pass="0" fail="1" skip="0">shipping</stat>
+<stat pass="0" fail="1" skip="0">user</stat>
+</tag>
+<suite>
+<stat name="PandaStore" id="s1" pass="0" fail="8" skip="0">PandaStore</stat>
+<stat name="Test" id="s1-s1" pass="0" fail="8" skip="0">PandaStore.Test</stat>
+<stat name="Robot" id="s1-s1-s1" pass="0" fail="8" skip="0">PandaStore.Test.Robot</stat>
+<stat name="00 E2E Full Lifecycle" id="s1-s1-s1-s1" pass="0" fail="8" skip="0">PandaStore.Test.Robot.00 E2E Full Lifecycle</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>

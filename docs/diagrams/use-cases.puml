@@ -1,0 +1,109 @@
+@startuml
+!include _style.puml
+title PandaStore - Implemented Use Cases
+left to right direction
+skinparam packageStyle rectangle
+skinparam nodesep 15
+skinparam ranksep 30
+package "Catalogue and account" as AccountPanel {
+ actor Guest as AG
+ actor "Authenticated user\n(Customer / Seller / Admin)" as AU
+ rectangle PandaStore as AS {
+  usecase "UC01\nBrowse products, categories,\nshops and product reviews" as UC01
+  usecase "UC02\nRegister customer account" as UC02
+  usecase "UC03\nSign in / sign out" as UC03
+  usecase "UC04\nEdit own profile /\nchange password" as UC04
+  usecase "UC14\nRead own notifications /\nmark as read" as UC14
+ }
+ AG --> UC01
+ AG --> UC02
+ AG --> UC03 : sign in
+ AU --> UC01
+ AU --> UC03 : sign out
+ AU --> UC04
+ AU --> UC14
+}
+package "Customer shopping" as ShoppingPanel {
+ actor Guest as CG
+ actor Customer as CC
+ actor Seller as CS
+ actor Admin as CA
+ rectangle PandaStore as CTS {
+  usecase "UC05\nManage cart" as UC05
+  usecase "UC06\nManage own addresses" as UC06
+  usecase "UC07\nCheckout across shops" as UC07
+  usecase "UC08\nSimulate payment" as UC08
+  usecase "UC09\nView own order history /\norder and tracking details" as UC09
+  usecase "UC10\nCancel own sub-order" as UC10
+  usecase "UC11\nConfirm receipt" as UC11
+  usecase "UC12\nCreate / edit own review" as UC12
+  usecase "UC13\nApply to sell /\nview application history" as UC13
+ }
+ CG --> UC05 : browser cart
+ CC --> UC05 : persisted cart
+ CC --> UC06
+ CC --> UC07
+ CC --> UC08
+ CC --> UC09
+ CC --> UC10
+ CC --> UC11
+ CC --> UC12
+ CC --> UC13
+ CS --> UC13 : read history
+ CA --> UC08 : API
+}
+package "Seller operations" as SellerPanel {
+ actor Seller as SS
+ actor Admin as SA
+ rectangle PandaStore as STS {
+  usecase "UC15\nView shop dashboard /\norders" as UC15
+  usecase "UC16\nCreate / update own products" as UC16
+  usecase "UC17\nAccept / reject paid order" as UC17
+  usecase "UC18\nAssign courier and tracking" as UC18
+  usecase "UC19\nManage shop profile /\nbank account [API]" as UC19
+  usecase "UC20\nReply to product review [API]" as UC20
+ }
+ SS --> UC15
+ SS --> UC16
+ SS --> UC17
+ SS --> UC18
+ SS --> UC19
+ SS --> UC20
+ SA --> UC19 : read bank only
+}
+package Administration as AdminPanel {
+ actor Admin as AA
+ actor Customer as AC
+ rectangle PandaStore as ATS {
+  usecase "UC21\nReview seller applications" as UC21
+  usecase "UC22\nCreate / delete categories" as UC22
+  usecase "UC23\nProcess payment callback /\nrefund [API]" as UC23
+  usecase "UC24\nUpdate shipment status [API]" as UC24
+  usecase "UC25\nManage customer records [API]" as UC25
+ }
+ AA --> UC21
+ AA --> UC22
+ AA --> UC23
+ AA --> UC24
+ AA --> UC25
+ AC --> UC25 : own record only
+}
+package "Additional exposed APIs" as ApiPanel {
+ actor Guest as EG
+ actor "Authenticated user\n(Customer / Seller / Admin)" as EU
+ rectangle PandaStore as ETS {
+  usecase "UC26\nLegacy direct seller\nregistration [API]" as UC26
+  usecase "UC27\nDeduct / restore stock [API]" as UC27
+ }
+ EG --> UC26
+ EU --> UC27
+}
+legend bottom
+ Actor names repeat across panels; they represent the same four roles.
+ [API] = backend capability without a complete current UI workflow.
+ SELLER does not inherit CUSTOMER shopping access.
+ Payment is simulated; no external gateway is integrated.
+ UC26 creates a PENDING shop and conflicts with normal approval.
+ UC27 currently checks authentication, without role/ownership guards.
+endlegend
+@enduml

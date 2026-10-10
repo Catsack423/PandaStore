@@ -1,0 +1,182 @@
+@startuml class-patterns
+!include _style.puml
+title PandaStore - Implemented Design Patterns
+top to bottom direction
+hide empty members
+hide circle
+
+package "Strategy and strategy selector" as StrategyPattern {
+  interface ShippingFeeStrategy <<Strategy>> {
+    +getCourierCode() : String
+    +supports(shippingMethod : String) : boolean
+    +calculateFee(sellerId, addressId) : BigDecimal
+  }
+  class ShippingFeeStrategyFactory <<Strategy selector>> {
+    -strategies : List<ShippingFeeStrategy>
+    -defaultStrategy : DefaultShippingStrategy
+    +getStrategy(shippingMethod : String) : ShippingFeeStrategy
+    +getAvailableMethods() : List<String>
+    +requireSupportedMethod(method : String) : String
+  }
+  class DefaultShippingStrategy <<Concrete Strategy>> {
+    DEFAULT : 50.00
+  }
+  class EmsShippingStrategy <<Concrete Strategy>> {
+    EMS : 60.00
+  }
+  class FlashShippingStrategy <<Concrete Strategy>> {
+    FLASH : 40.00
+  }
+  class JAndTShippingStrategy <<Concrete Strategy>> {
+    J&T : 45.00
+  }
+  class KerryShippingStrategy <<Concrete Strategy>> {
+    KERRY : 50.00
+  }
+  class StandardShippingStrategy <<Concrete Strategy>> {
+    STANDARD : 30.00
+  }
+  class ThailandPostShippingStrategy <<Concrete Strategy>> {
+    THAILANDPOST : 35.00
+  }
+  interface ShippingService {
+    +calculateShippingFee(sellerId, shippingMethod, addressId) : BigDecimal
+  }
+  class ShippingServiceImp <<Strategy context>>
+  interface ShippingFeeCalculator {
+    +calculateShippingFee(sellerId, shippingMethod, addressId) : BigDecimal
+  }
+  class ConfiguredShippingFeeCalculator
+  ShippingFeeStrategy <|.. DefaultShippingStrategy
+  ShippingFeeStrategy <|.. EmsShippingStrategy
+  ShippingFeeStrategy <|.. FlashShippingStrategy
+  ShippingFeeStrategy <|.. JAndTShippingStrategy
+  ShippingFeeStrategy <|.. KerryShippingStrategy
+  ShippingFeeStrategy <|.. StandardShippingStrategy
+  ShippingFeeStrategy <|.. ThailandPostShippingStrategy
+  ShippingFeeStrategyFactory o-- ShippingFeeStrategy : injected Spring beans
+  ShippingFeeStrategyFactory --> DefaultShippingStrategy : fallback
+  ShippingService <|.. ShippingServiceImp
+  ShippingServiceImp --> ShippingFeeStrategyFactory : selects
+  ShippingServiceImp ..> ShippingFeeStrategy : calculateFee()
+  ShippingFeeCalculator <|.. ConfiguredShippingFeeCalculator
+  ConfiguredShippingFeeCalculator --> ShippingService
+  ConfiguredShippingFeeCalculator --> ShippingFeeStrategyFactory : requireSupportedMethod()
+  note bottom of ShippingFeeStrategyFactory
+    Selects existing Spring beans; it does not instantiate them.
+    getStrategy() falls back to DEFAULT for blank/unknown codes.
+    requireSupportedMethod() rejects the DEFAULT fallback.
+    Checkout quotes and order creation use supported methods only.
+    Fees are fixed strategy constants, not courier API calls.
+  end note
+}
+
+package "Order draft object factory" as FactoryPattern {
+  interface "ShippingFeeCalculator" as DraftShippingFeeCalculator
+  interface OrderDraftFactory <<Object Factory>> {
+    +create(...) : OrderGroup
+  }
+  class OrderDraftFactoryImp <<Concrete Factory>>
+  class OrderOrchestrationServiceImp <<Client / publisher>> {
+    +createOrderGroupFromCart(...) : OrderGroup
+    +handlePaymentSuccess(orderGroupId, gatewayTransactionId) : void
+    +handlePaymentFailure(orderGroupId, failureReason) : void
+  }
+  class OrderGroup <<Product>>
+  class Order <<Product>>
+  class OrderItem <<Product>>
+  class Payment <<Product>>
+  OrderDraftFactory <|.. OrderDraftFactoryImp
+  OrderOrchestrationServiceImp --> OrderDraftFactory : creates draft
+  OrderDraftFactoryImp --> DraftShippingFeeCalculator : computes fees
+  OrderDraftFactoryImp ..> OrderGroup : creates
+  OrderDraftFactoryImp ..> Order : creates one per seller
+  OrderDraftFactoryImp ..> OrderItem : snapshots product name / price
+  OrderDraftFactoryImp ..> Payment : creates PENDING payment
+  note bottom of OrderDraftFactoryImp
+    Creates the aggregate in memory; orchestration persists it.
+    Group, order and payment amounts derive from server prices.
+    Object factory, not an Abstract Factory product family.
+  end note
+}
+
+package "Spring application event observer" as ObserverPattern {
+  class "OrderOrchestrationServiceImp" as OrchestrationPublisher <<Publisher>> {
+    +handlePaymentSuccess(orderGroupId, gatewayTransactionId) : void
+  }
+  interface ApplicationEventPublisher <<Spring publisher>> {
+    +publishEvent(event : Object) : void
+  }
+  class OrderPaidEvent <<Java record>> {
+    orderGroupId : Long
+    customerId : Long
+    sellerOrders : List<SellerOrder>
+  }
+  class OrderPaidNotificationObserver <<Observer>> {
+    +onOrderPaid(event : OrderPaidEvent) : void
+  }
+  interface NotificationService {
+    +notifyCustomerOrderPaid(customerId, orderGroupId) : void
+    +notifySellerNewOrder(sellerId, orderId) : void
+  }
+  class NotificationServiceImp
+  class PaymentServiceImp <<Separate payment flow>>
+  OrchestrationPublisher --> ApplicationEventPublisher : publishEvent()
+  OrchestrationPublisher ..> OrderPaidEvent : constructs
+  ApplicationEventPublisher ..> OrderPaidNotificationObserver : synchronous @EventListener
+  OrderPaidNotificationObserver ..> OrderPaidEvent : receives
+  OrderPaidNotificationObserver --> NotificationService
+  NotificationService <|.. NotificationServiceImp
+  PaymentServiceImp --> NotificationService : direct calls in\nhandleGatewayCallback()
+  note bottom of OrderPaidNotificationObserver
+    @Transactional(propagation = MANDATORY)
+    Runs in the publishing transaction; not an async queue
+    and not an after-commit @TransactionalEventListener.
+    PaymentServiceImp does not publish OrderPaidEvent.
+  end note
+}
+
+package "Spring Data Repository" as RepositoryPattern {
+  class "OrderOrchestrationServiceImp" as OrchestrationRepositoryClient <<Repository client>>
+  class "PaymentServiceImp" as PaymentRepositoryClient <<Repository client>>
+  interface "JpaRepository<T, ID>" as JpaRepository <<Spring Data>>
+  interface OrderGroupRepository <<Repository>> {
+    +findByIdForUpdate(orderGroupId : Long) : Optional<OrderGroup>
+  }
+  interface ProductRepository <<Repository>> {
+    +findByIdForUpdate(productId : Long) : Optional<Product>
+  }
+  interface PaymentRepository <<Repository>> {
+    +findByOrderGroup_OrderGroupId(orderGroupId : Long) : Optional<Payment>
+  }
+  class InventoryServiceImp
+  JpaRepository <|-- OrderGroupRepository : <OrderGroup, Long>
+  JpaRepository <|-- ProductRepository : <Product, Long>
+  JpaRepository <|-- PaymentRepository : <Payment, Long>
+  OrchestrationRepositoryClient --> OrderGroupRepository : persists / locks\naggregate
+  OrchestrationRepositoryClient --> ProductRepository : loads products
+  OrchestrationRepositoryClient --> InventoryServiceImp : reserve / release
+  InventoryServiceImp --> ProductRepository : locks stock rows
+  PaymentRepositoryClient --> PaymentRepository
+  PaymentRepositoryClient --> OrderGroupRepository
+  note bottom of JpaRepository
+    Spring supplies repository implementations at runtime.
+    All 20 interfaces in project.project.Repository extend JpaRepository;
+    AuthSessionRepository uses String IDs, all others use Long IDs.
+    Only representative repositories are shown here.
+  end note
+}
+
+DefaultShippingStrategy -[hidden]down-> OrderOrchestrationServiceImp
+OrderGroup -[hidden]down-> OrchestrationPublisher
+NotificationServiceImp -[hidden]down-> OrchestrationRepositoryClient
+
+legend bottom
+  Sources: Service/strategy/shipping/*, OrderDraftFactoryImp,
+  ConfiguredShippingFeeCalculator, OrderOrchestrationServiceImp,
+  Observer/OrderPaidNotificationObserver, PaymentServiceImp, Repository/*.
+  Class members are selected; ellipses omit parameters for readability.
+  Repeated client/interface names are views of the same Java types in each pattern.
+  All labels describe current implementation.
+endlegend
+@enduml

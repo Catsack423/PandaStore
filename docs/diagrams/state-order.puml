@@ -1,0 +1,44 @@
+@startuml
+!include _style.puml
+title Order State: Seller Sub-Order Lifecycle
+hide empty description
+[*] --> PENDING_PAYMENT : OrderDraftFactory.create()
+PENDING_PAYMENT --> WAITING_SELLER_CONFIRM : successful payment
+WAITING_SELLER_CONFIRM --> PREPARING : sellerAcceptOrder()\n[owning active seller; group PAID/PARTIALLY_REFUNDED]
+PREPARING --> SHIPPED : assignTrackingNumber()\n[owning seller; paid group; valid courier/tracking]
+SHIPPED --> COMPLETED : confirmOrderDelivered() [customer owner]\nor autoConfirmDelivered() [scheduler eligible]
+COMPLETED --> COMPLETED : confirmOrderDelivered()\n[customer owner] / no-op
+PENDING_PAYMENT --> CANCELLED : customerCancelOrder()\n[owner; nonblank reason]\nor orchestration payment failure
+WAITING_SELLER_CONFIRM --> CANCELLED : sellerRejectOrder() [paid; reason]\nor customerCancelOrder() [owner; reason]
+PREPARING --> CANCELLED : customerCancelOrder()\n[owner; nonblank reason]
+SHIPPED --> CANCELLED : Admin partial/full refund\n[refundable payment]
+COMPLETED --> CANCELLED : Admin partial refund\n[refundable payment]
+CANCELLED --> CANCELLED : customerCancelOrder()\n[owner; nonblank reason] / no-op
+
+note right of CANCELLED
+Customer cancellation accepts PENDING_PAYMENT,
+WAITING_SELLER_CONFIRM and PREPARING.
+Seller rejection/customer cancellation restore stock;
+paid orders also invoke partial refund for the shop total.
+Orchestration failure releases all reserved stock.
+Admin refund methods can cancel orders without restoring stock:
+partial refund has no source-order-status guard;
+full refund cancels every non-COMPLETED sub-order.
+end note
+note left of WAITING_SELLER_CONFIRM
+PaymentService callback updates null, PENDING_PAYMENT
+or existing WAITING_SELLER_CONFIRM orders only.
+It does not resurrect CANCELLED/COMPLETED orders.
+Its failure path leaves order states and stock unchanged.
+end note
+note right of COMPLETED
+Receipt sets completedAt, without changing Shipment.
+Auto-confirm runs hourly for SHIPPED orders
+whose shippedAt is before now minus 7 days.
+The 24h unconfirmed-order scheduler queries shippedAt,
+not createdAt; ordinary waiting orders have no shippedAt.
+end note
+' Sources: backend/src/main/java/project/project/Entity/order/OrderStatus.java
+' Sources: backend/src/main/java/project/project/Service/implement/OrderDraftFactoryImp.java; SubOrderServiceImp.java
+' Sources: backend/src/main/java/project/project/Service/implement/ShippingServiceImp.java; PaymentServiceImp.java; OrderOrchestrationServiceImp.java; OrderSchedulerService.java
+@enduml

@@ -1,0 +1,65 @@
+@startuml
+!include _style.puml
+title Seller Fulfillment and Customer Delivery Confirmation
+autonumber
+actor "Seller" as Seller
+actor "Customer" as Customer
+participant "Next.js\nseller-orders/sub-orders proxies" as Next
+participant "Backend controllers\n+ OrderAccess" as API
+participant "SubOrderServiceImp" as Orders
+participant "ShippingServiceImp" as Shipping
+database "Order / Product /\nShipment repositories" as DB
+participant "PaymentService /\nNotificationService" as Effects
+
+Seller -> Next : POST /api/seller-orders/{id}/{action}\n(action = accept or reject)
+Next -> API : GET /api/auth/me, owned shop, target order
+API --> Next : active SELLER, active shop, owned order
+Next -> Next : validate origin and action payload\nreject browser-supplied sellerId
+alt Reject action with a nonblank reason of at most 255 characters
+  Next -> API : POST /api/sub-orders/{id}/reject?sellerId=shopId\n{reason}
+  API -> API : requireSellerOrder(shopId, orderId)
+  API -> Orders : sellerRejectOrder(shopId, orderId, reason)
+  Orders -> DB : load order; OrderStateLock.lock(order)
+  Orders -> Orders : require owning shop, PAID/PARTIALLY_REFUNDED group\nand WAITING_SELLER_CONFIRM order
+  Orders -> DB : CANCELLED; restore own order stock under product locks
+  Orders -> Effects : processPartialRefund(orderId, order.totalAmount, reason)
+  Orders -> Orders : group PARTIALLY_REFUNDED or REFUNDED\nbased on cancelled sub-orders
+  Orders -> Effects : notify customer [failure caught]
+  API --> Seller : rejected (through proxy)
+else Accept
+  Next -> API : POST /api/sub-orders/{id}/accept?sellerId=shopId
+  API -> API : requireSellerOrder(shopId, orderId)
+  API -> Orders : sellerAcceptOrder(shopId, orderId)
+  Orders -> DB : load order; OrderStateLock.lock(order)
+  Orders -> Orders : require owning shop, PAID/PARTIALLY_REFUNDED group\nand WAITING_SELLER_CONFIRM order
+  Orders -> DB : save order PREPARING
+  Orders -> Effects : notify customer [failure caught]
+  API --> Seller : accepted (through proxy)
+  Seller -> Next : POST /api/seller-orders/{id}/ship\n{courierName, trackingNumber}
+  Next -> API : resolve session shop and validate owned order/payload
+  Next -> API : POST /api/shipping/orders/{id}/assign-tracking?sellerId=shopId
+  API -> API : requireSellerOrder(shopId, orderId)
+  API -> Shipping : assignTrackingNumber(shopId, orderId, courier, tracking)
+  Shipping -> DB : load order; lock order state
+  Shipping -> Shipping : require PREPARING and PAID/PARTIALLY_REFUNDED\nnonblank courier/tracking, each at most 100 characters
+  Shipping -> DB : create/update Shipment(SHIPPED, shippedAt)\nsave Order(SHIPPED, shippedAt)
+  Shipping -> Effects : notifyCustomerOrderShipped(...) [failure caught]
+  API --> Seller : tracking saved (through proxy)
+  Customer -> Next : POST /api/sub-orders/{id}/confirm-delivered
+  Next -> API : Bearer token; no browser customer identity needed
+  API -> API : resolveCustomerId(); requireCustomerOrder(...)
+  API -> Orders : confirmOrderDelivered(customerId, orderId)
+  Orders -> DB : load and lock order
+  Orders -> Orders : verify customer owner; require SHIPPED\nreturn early if already COMPLETED
+  Orders -> DB : save COMPLETED; completedAt=now
+  API --> Customer : delivery confirmed (through proxy)
+end
+note over Orders, Shipping
+Customer receipt changes Order only; it does not set Shipment=DELIVERED.
+Admin can separately PATCH /api/shipping/shipments/{id}/status.
+Hourly scheduler completes SHIPPED orders with shippedAt older than 7 days.
+end note
+' Sources: frontend/src/app/api/seller-orders/[[...path]]/route.ts; frontend/src/app/api/sub-orders/[[...path]]/route.ts
+' Sources: backend/src/main/java/project/project/Controller/SubOrderController.java; ShippingController.java
+' Sources: backend/src/main/java/project/project/Service/implement/SubOrderServiceImp.java; ShippingServiceImp.java; OrderSchedulerService.java
+@enduml

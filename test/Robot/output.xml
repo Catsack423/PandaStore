@@ -1,0 +1,2065 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 7.5 (Python 3.14.8 on win32)" generated="2026-10-10T18:11:34.814280" rpa="false" schemaversion="5">
+<suite id="s1" name="00 E2E Full Lifecycle" source="C:\Users\Thananchai\Pictures\printi\PandaStore\test\Robot\00_e2e_full_lifecycle.robot">
+<kw name="Open PandaStore Browser" owner="common_keywords" type="SETUP">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-10T18:11:35.099201" level="INFO">${options} = &lt;selenium.webdriver.chrome.options.Options object at 0x000002762CC51FD0&gt;</msg>
+<var>${options}</var>
+<arg>sys.modules['selenium.webdriver'].ChromeOptions()</arg>
+<arg>sys</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-10T18:11:35.097089" elapsed="0.002153"/>
+</kw>
+<if>
+<branch type="IF" condition="'${HEADLESS}' == 'True'">
+<kw name="Evaluate" owner="BuiltIn">
+<var>${_}</var>
+<arg>$options.add_argument('--headless=new')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="NOT RUN" start="2026-10-10T18:11:35.099551" elapsed="0.000026"/>
+</kw>
+<status status="NOT RUN" start="2026-10-10T18:11:35.099361" elapsed="0.000257"/>
+</branch>
+<status status="PASS" start="2026-10-10T18:11:35.099339" elapsed="0.000311"/>
+</if>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-10T18:11:35.100041" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--no-sandbox')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-10T18:11:35.099735" elapsed="0.000331"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-10T18:11:35.100397" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-dev-shm-usage')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-10T18:11:35.100163" elapsed="0.000255"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-10T18:11:35.100738" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--disable-gpu')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-10T18:11:35.100517" elapsed="0.000243"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-10T18:11:35.101104" level="INFO">${_} = None</msg>
+<var>${_}</var>
+<arg>$options.add_argument('--window-size=1440,900')</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-10T18:11:35.100858" elapsed="0.000267"/>
+</kw>
+<kw name="Open Browser" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:35.101486" level="INFO">Opening browser 'chrome' to base url 'https://panda-store-kappa.vercel.app/'.</msg>
+<arg>${url}</arg>
+<arg>${BROWSER}</arg>
+<arg>options=${options}</arg>
+<doc>Opens a new browser instance to the optional ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:11:35.101316" elapsed="2.461840"/>
+</kw>
+<kw name="Maximize Browser Window" owner="SeleniumLibrary">
+<doc>Maximizes current browser window.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.563326" elapsed="0.024274"/>
+</kw>
+<kw name="Set Selenium Speed" owner="SeleniumLibrary">
+<arg>${DELAY}</arg>
+<doc>Sets the delay that is waited after each Selenium command.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.587773" elapsed="0.000234"/>
+</kw>
+<kw name="Set Selenium Timeout" owner="SeleniumLibrary">
+<arg>${TIMEOUT}</arg>
+<doc>Sets the timeout that is used by various keywords.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.588120" elapsed="0.000801"/>
+</kw>
+<kw name="Set Selenium Implicit Wait" owner="SeleniumLibrary">
+<arg>${IMPLICIT_WAIT}</arg>
+<doc>Sets the implicit wait value used by Selenium.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.589053" elapsed="0.000656"/>
+</kw>
+<arg>${HOME_URL}</arg>
+<status status="PASS" start="2026-10-10T18:11:35.096476" elapsed="2.493319"/>
+</kw>
+<test id="s1-t1" name="PHASE 1: Customer Account Registration" line="20">
+<kw name="Generate Random Customer Credentials" owner="common_keywords">
+<kw name="Generate Random String" owner="String">
+<msg time="2026-10-10T18:11:37.591410" level="INFO">${rand_str} = wzzyym</msg>
+<var>${rand_str}</var>
+<arg>6</arg>
+<arg>[LOWER]</arg>
+<doc>Generates a string with a desired `length` from the given `chars`.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.591121" elapsed="0.000322"/>
+</kw>
+<kw name="Generate Random String" owner="String">
+<msg time="2026-10-10T18:11:37.591702" level="INFO">${rand_digits} = 04813043</msg>
+<var>${rand_digits}</var>
+<arg>8</arg>
+<arg>[NUMBERS]</arg>
+<doc>Generates a string with a desired `length` from the given `chars`.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.591565" elapsed="0.000160"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-10T18:11:37.592075" level="INFO">${test_username} = user_wzzyym</msg>
+<var>${test_username}</var>
+<arg>user_${rand_str}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.591815" elapsed="0.000287"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-10T18:11:37.592398" level="INFO">${test_email} = user_wzzyym@testpanda.com</msg>
+<var>${test_email}</var>
+<arg>${test_username}@testpanda.com</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.592200" elapsed="0.000220"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-10T18:11:37.592749" level="INFO">${test_phone} = 0804813043</msg>
+<var>${test_phone}</var>
+<arg>08${rand_digits}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.592517" elapsed="0.000255"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-10T18:11:37.593054" level="INFO">${test_fullname} = Test User wzzyym</msg>
+<var>${test_fullname}</var>
+<arg>Test User ${rand_str}</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.592863" elapsed="0.000212"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-10T18:11:37.593336" level="INFO">${test_password} = PandaPass123!</msg>
+<var>${test_password}</var>
+<arg>PandaPass123!</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.593166" elapsed="0.000193"/>
+</kw>
+<return>
+<value>${test_username}</value>
+<value>${test_email}</value>
+<value>${test_phone}</value>
+<value>${test_fullname}</value>
+<value>${test_password}</value>
+<status status="PASS" start="2026-10-10T18:11:37.593409" elapsed="0.000050"/>
+</return>
+<msg time="2026-10-10T18:11:37.593610" level="INFO">${u} = user_wzzyym</msg>
+<msg time="2026-10-10T18:11:37.593640" level="INFO">${e} = user_wzzyym@testpanda.com</msg>
+<msg time="2026-10-10T18:11:37.593665" level="INFO">${p} = 0804813043</msg>
+<msg time="2026-10-10T18:11:37.593687" level="INFO">${n} = Test User wzzyym</msg>
+<msg time="2026-10-10T18:11:37.593710" level="INFO">${pw} = PandaPass123!</msg>
+<var>${u}</var>
+<var>${e}</var>
+<var>${p}</var>
+<var>${n}</var>
+<var>${pw}</var>
+<status status="PASS" start="2026-10-10T18:11:37.590755" elapsed="0.002969"/>
+</kw>
+<kw name="Set Suite Variable" owner="BuiltIn">
+<msg time="2026-10-10T18:11:37.594453" level="INFO">${NEW_SELLER_USER} = user_wzzyym</msg>
+<arg>${NEW_SELLER_USER}</arg>
+<arg>${u}</arg>
+<doc>Makes the variable available everywhere within the scope of the current suite.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.594162" elapsed="0.000329"/>
+</kw>
+<kw name="Set Suite Variable" owner="BuiltIn">
+<msg time="2026-10-10T18:11:37.595067" level="INFO">${NEW_SELLER_EMAIL} = user_wzzyym@testpanda.com</msg>
+<arg>${NEW_SELLER_EMAIL}</arg>
+<arg>${e}</arg>
+<doc>Makes the variable available everywhere within the scope of the current suite.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.594806" elapsed="0.000298"/>
+</kw>
+<kw name="Set Suite Variable" owner="BuiltIn">
+<msg time="2026-10-10T18:11:37.595548" level="INFO">${NEW_SELLER_PASS} = PandaPass123!</msg>
+<arg>${NEW_SELLER_PASS}</arg>
+<arg>${pw}</arg>
+<doc>Makes the variable available everywhere within the scope of the current suite.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.595331" elapsed="0.000251"/>
+</kw>
+<kw name="Set Suite Variable" owner="BuiltIn">
+<msg time="2026-10-10T18:11:37.596002" level="INFO">${NEW_SHOP_NAME} = Shop_user_wzzyym</msg>
+<arg>${NEW_SHOP_NAME}</arg>
+<arg>Shop_${u}</arg>
+<doc>Makes the variable available everywhere within the scope of the current suite.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.595796" elapsed="0.000238"/>
+</kw>
+<kw name="Go To Sign Up Page" owner="common_keywords">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:37.597173" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/signup'</msg>
+<arg>${SIGNUP_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:11:37.597063" elapsed="0.547696"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNUP_INPUT_USERNAME}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:11:38.144926" elapsed="1.063356"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:11:37.596232" elapsed="1.612148"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:39.208856" level="INFO">Typing text 'user_wzzyym' into text field 'id:username'.</msg>
+<arg>${SIGNUP_INPUT_USERNAME}</arg>
+<arg>${u}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:39.208620" elapsed="0.056372"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:39.265591" level="INFO">Typing text 'Test User wzzyym' into text field 'id:fullName'.</msg>
+<arg>${SIGNUP_INPUT_FULLNAME}</arg>
+<arg>${n}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:39.265347" elapsed="0.047014"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:39.312971" level="INFO">Typing text 'user_wzzyym@testpanda.com' into text field 'id:email'.</msg>
+<arg>${SIGNUP_INPUT_EMAIL}</arg>
+<arg>${e}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:39.312729" elapsed="0.048907"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:39.362361" level="INFO">Typing text '0804813043' into text field 'id:phoneNumber'.</msg>
+<arg>${SIGNUP_INPUT_PHONE}</arg>
+<arg>${p}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:39.362127" elapsed="0.041179"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:39.403890" level="INFO">Typing password into text field 'id:password'.</msg>
+<msg time="2026-10-10T18:11:39.420591" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNUP_INPUT_PASSWORD}</arg>
+<arg>${pw}</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:39.403648" elapsed="0.047358"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:39.451882" level="INFO">Typing password into text field 'id:confirmPassword'.</msg>
+<msg time="2026-10-10T18:11:39.480112" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNUP_INPUT_CONFIRM_PW}</arg>
+<arg>${pw}</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:39.451551" elapsed="0.060080"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:11:39.511919" elapsed="0.010368"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-10T18:11:39.522649" elapsed="0.278645"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:39.805978" level="INFO">${sub_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.8D0E1A92947EA6CA722CAD50166BEF8B.e.150")&gt;</msg>
+<var>${sub_btn}</var>
+<arg>${SIGNUP_BUTTON_SUBMIT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:39.801767" elapsed="0.004253"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:39.806433" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.8D0E1A92947EA6CA722CAD50166BEF8B.e.150")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${sub_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:11:39.806268" elapsed="0.020052"/>
+</kw>
+<kw name="Run Keyword And Return Status" owner="BuiltIn">
+<kw name="Wait Until Location Does Not Contain" owner="SeleniumLibrary">
+<arg>/signup</arg>
+<arg>timeout=10s</arg>
+<doc>Waits until the current URL does not contains ``location``.</doc>
+<status status="PASS" start="2026-10-10T18:11:39.827059" elapsed="4.681733"/>
+</kw>
+<msg time="2026-10-10T18:11:44.508926" level="INFO">${redirected} = True</msg>
+<var>${redirected}</var>
+<arg>Wait Until Location Does Not Contain</arg>
+<arg>/signup</arg>
+<arg>timeout=10s</arg>
+<doc>Runs the specified keyword and returns the status as a Boolean value.</doc>
+<status status="PASS" start="2026-10-10T18:11:39.826673" elapsed="4.682276"/>
+</kw>
+<if>
+<branch type="IF" condition="not ${redirected}">
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${sub_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="NOT RUN" start="2026-10-10T18:11:44.509658" elapsed="0.000027"/>
+</kw>
+<kw name="Wait Until Location Does Not Contain" owner="SeleniumLibrary">
+<arg>/signup</arg>
+<arg>timeout=20s</arg>
+<doc>Waits until the current URL does not contains ``location``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:11:44.509772" elapsed="0.000019"/>
+</kw>
+<status status="NOT RUN" start="2026-10-10T18:11:44.509372" elapsed="0.000448"/>
+</branch>
+<status status="PASS" start="2026-10-10T18:11:44.509333" elapsed="0.000525"/>
+</if>
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:44.584892" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/E2E_01_User_Registered.png"&gt;&lt;img src="img/robot/E2E_01_User_Registered.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>${SCREENSHOT_DIR}/E2E_01_User_Registered.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-10T18:11:44.510022" elapsed="0.074961"/>
+</kw>
+<doc>Step 1: A new user registers a Customer account on PandaStore.</doc>
+<tag>e2e</tag>
+<tag>register</tag>
+<tag>user</tag>
+<status status="PASS" start="2026-10-10T18:11:37.589877" elapsed="6.995367"/>
+</test>
+<test id="s1-t2" name="PHASE 2: User Submits Seller Application" line="50">
+<kw name="Login If Not Already Logged In" owner="common_keywords">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:44.586898" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/my-account'</msg>
+<arg>${ACCOUNT_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:11:44.586799" elapsed="0.555572"/>
+</kw>
+<kw name="Run Keyword And Return Status" owner="BuiltIn">
+<kw name="Element Should Be Visible" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:50.223371" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="test/img/robot/selenium-screenshot-11.png"&gt;&lt;img src="test/img/robot/selenium-screenshot-11.png" width="800px"&gt;&lt;/a&gt;</msg>
+<msg time="2026-10-10T18:11:50.223514" level="FAIL">Element with locator 'id:usernameOrEmail' not found.</msg>
+<arg>${SIGNIN_INPUT_USERNAME}</arg>
+<doc>Verifies that the element identified by ``locator`` is visible.</doc>
+<status status="FAIL" start="2026-10-10T18:11:45.143024" elapsed="5.123243">Element with locator 'id:usernameOrEmail' not found.</status>
+</kw>
+<msg time="2026-10-10T18:11:50.266408" level="INFO">${is_signin_required} = False</msg>
+<var>${is_signin_required}</var>
+<arg>Element Should Be Visible</arg>
+<arg>${SIGNIN_INPUT_USERNAME}</arg>
+<doc>Runs the specified keyword and returns the status as a Boolean value.</doc>
+<status status="PASS" start="2026-10-10T18:11:45.142674" elapsed="5.123755"/>
+</kw>
+<if>
+<branch type="IF" condition="${is_signin_required}">
+<kw name="Login As Customer" owner="common_keywords">
+<arg>${username}</arg>
+<arg>${password}</arg>
+<status status="NOT RUN" start="2026-10-10T18:11:50.266664" elapsed="0.000026"/>
+</kw>
+<status status="NOT RUN" start="2026-10-10T18:11:50.266506" elapsed="0.000212"/>
+</branch>
+<status status="PASS" start="2026-10-10T18:11:50.266486" elapsed="0.000259"/>
+</if>
+<arg>${NEW_SELLER_USER}</arg>
+<arg>${NEW_SELLER_PASS}</arg>
+<status status="PASS" start="2026-10-10T18:11:44.586497" elapsed="5.680287"/>
+</kw>
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:50.267084" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/seller-application/apply'</msg>
+<arg>${SELLER_APPLY_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:11:50.266976" elapsed="0.574633"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${APPLY_INPUT_SHOP_NAME}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:11:50.841934" elapsed="2.928877"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:53.771533" level="INFO">Typing text 'Shop_user_wzzyym' into text field 'id:shopName'.</msg>
+<arg>${APPLY_INPUT_SHOP_NAME}</arg>
+<arg>${NEW_SHOP_NAME}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:53.771230" elapsed="0.051475"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:53.823441" level="INFO">Typing text 'ร้านจำหน่ายอุปกรณ์ไอทีและแกดเจ็ตแพนด้าคุณภาพสูง พร้อมส่งทั่วประเทศ' into text field 'id:shopDescription'.</msg>
+<arg>${APPLY_INPUT_SHOP_DESC}</arg>
+<arg>${APPLY_SHOP_DESC}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:53.823129" elapsed="0.117456"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:53.941561" level="INFO">Typing text '0891234567' into text field 'id:shopPhone'.</msg>
+<arg>${APPLY_INPUT_SHOP_PHONE}</arg>
+<arg>${APPLY_SHOP_PHONE}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:53.941089" elapsed="0.046817"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:53.988446" level="INFO">Typing text 'user_wzzyym@testpanda.com' into text field 'id:shopEmail'.</msg>
+<arg>${APPLY_INPUT_SHOP_EMAIL}</arg>
+<arg>${NEW_SELLER_EMAIL}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:53.988220" elapsed="0.057821"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:54.046790" level="INFO">Typing text '888/123 ถนนมิตรภาพ ต.ในเมือง อ.เมือง จ.ขอนแก่น 40000' into text field 'id:shopAddress'.</msg>
+<arg>${APPLY_INPUT_SHOP_ADDR}</arg>
+<arg>${APPLY_SHOP_ADDRESS}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:54.046473" elapsed="0.080267"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${APPLY_BTN_CONTINUE}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-10T18:11:54.127069" elapsed="0.290807"/>
+</kw>
+<kw name="Click Button" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:54.418737" level="INFO">Clicking button 'xpath://button[@type='submit' and contains(., 'Continue')]'.</msg>
+<arg>${APPLY_BTN_CONTINUE}</arg>
+<doc>Clicks the button identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:54.418420" elapsed="0.064570"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${APPLY_INPUT_FIRST_NAME}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:11:54.483420" elapsed="0.006049"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:54.490456" level="INFO">Typing text 'สมศักดิ์' into text field 'id:sellerFirstName'.</msg>
+<arg>${APPLY_INPUT_FIRST_NAME}</arg>
+<arg>${APPLY_FIRST_NAME}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:54.489919" elapsed="0.048648"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:54.539069" level="INFO">Typing text 'ตั้งใจขาย' into text field 'id:sellerLastName'.</msg>
+<arg>${APPLY_INPUT_LAST_NAME}</arg>
+<arg>${APPLY_LAST_NAME}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:54.538850" elapsed="0.054257"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:54.593806" level="INFO">Typing text '1103701234567' into text field 'id:idCardNumber'.</msg>
+<arg>${APPLY_INPUT_ID_CARD}</arg>
+<arg>${APPLY_ID_CARD_NO}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:54.593464" elapsed="0.053261"/>
+</kw>
+<kw name="Make File Input Interactable" owner="common_keywords">
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:54.653550" level="INFO">${elem} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.100E5BC4CA98098CBD6EFF78910D0A6B.e.433")&gt;</msg>
+<var>${elem}</var>
+<arg>${locator}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:54.647303" elapsed="0.006303"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:54.653953" level="INFO">Executing JavaScript:
+arguments[0].style.display = 'block'; arguments[0].style.visibility = 'visible'; arguments[0].style.opacity = '1'; arguments[0].style.width = '100px'; arguments[0].style.height = '30px'; arguments[0].classList.remove('sr-only');
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.100E5BC4CA98098CBD6EFF78910D0A6B.e.433")&gt;'</msg>
+<arg>arguments[0].style.display = 'block'; arguments[0].style.visibility = 'visible'; arguments[0].style.opacity = '1'; arguments[0].style.width = '100px'; arguments[0].style.height = '30px'; arguments[0].classList.remove('sr-only');</arg>
+<arg>ARGUMENTS</arg>
+<arg>${elem}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:11:54.653777" elapsed="0.005049"/>
+</kw>
+<arg>${APPLY_FILE_ID_CARD}</arg>
+<status status="PASS" start="2026-10-10T18:11:54.647026" elapsed="0.011907"/>
+</kw>
+<kw name="Choose File" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:54.659447" level="INFO">Sending C:\Users\Thananchai\Pictures\printi\PandaStore\img\products\product-1-sm-1.png to browser.</msg>
+<arg>${APPLY_FILE_ID_CARD}</arg>
+<arg>${TEST_IMAGE_PATH}</arg>
+<doc>Inputs the ``file_path`` into the file input field ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:54.659193" elapsed="0.018071"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>xpath://span[contains(., 'File uploaded')]</arg>
+<arg>timeout=30s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:11:54.677585" elapsed="3.280743"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:57.959237" level="INFO">Typing text 'ธนาคารกสิกรไทย (KBANK)' into text field 'id:bankName'.</msg>
+<arg>${APPLY_INPUT_BANK_NAME}</arg>
+<arg>${APPLY_BANK_NAME}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:57.958887" elapsed="0.071094"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:58.031088" level="INFO">Typing text 'สมศักดิ์ ตั้งใจขาย' into text field 'id:bankAccountName'.</msg>
+<arg>${APPLY_INPUT_BANK_ACC_NAME}</arg>
+<arg>${APPLY_BANK_ACC_NAME}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:58.030558" elapsed="0.056241"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:58.087883" level="INFO">Typing text '0123456789' into text field 'id:bankAccountNumber'.</msg>
+<arg>${APPLY_INPUT_BANK_ACC_NO}</arg>
+<arg>${APPLY_BANK_ACC_NO}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:58.087518" elapsed="0.049304"/>
+</kw>
+<kw name="Make File Input Interactable" owner="common_keywords">
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:58.144104" level="INFO">${elem} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.100E5BC4CA98098CBD6EFF78910D0A6B.e.434")&gt;</msg>
+<var>${elem}</var>
+<arg>${locator}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:58.138138" elapsed="0.006030"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:58.144691" level="INFO">Executing JavaScript:
+arguments[0].style.display = 'block'; arguments[0].style.visibility = 'visible'; arguments[0].style.opacity = '1'; arguments[0].style.width = '100px'; arguments[0].style.height = '30px'; arguments[0].classList.remove('sr-only');
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.100E5BC4CA98098CBD6EFF78910D0A6B.e.434")&gt;'</msg>
+<arg>arguments[0].style.display = 'block'; arguments[0].style.visibility = 'visible'; arguments[0].style.opacity = '1'; arguments[0].style.width = '100px'; arguments[0].style.height = '30px'; arguments[0].classList.remove('sr-only');</arg>
+<arg>ARGUMENTS</arg>
+<arg>${elem}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:11:58.144434" elapsed="0.003267"/>
+</kw>
+<arg>${APPLY_FILE_BANK_BOOK}</arg>
+<status status="PASS" start="2026-10-10T18:11:58.137663" elapsed="0.010162"/>
+</kw>
+<kw name="Choose File" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:11:58.148397" level="INFO">Sending C:\Users\Thananchai\Pictures\printi\PandaStore\img\products\product-1-sm-1.png to browser.</msg>
+<arg>${APPLY_FILE_BANK_BOOK}</arg>
+<arg>${TEST_IMAGE_PATH}</arg>
+<doc>Inputs the ``file_path`` into the file input field ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:11:58.148119" elapsed="0.014024"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${APPLY_BTN_SUBMIT}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-10T18:11:58.162505" elapsed="0.274898"/>
+</kw>
+<kw name="Wait Until Element Is Enabled" owner="SeleniumLibrary">
+<arg>${APPLY_BTN_SUBMIT}</arg>
+<arg>timeout=40s</arg>
+<doc>Waits until the element ``locator`` is enabled.</doc>
+<status status="PASS" start="2026-10-10T18:11:58.437818" elapsed="2.339283"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:00.782162" level="INFO">${sub_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.100E5BC4CA98098CBD6EFF78910D0A6B.e.423")&gt;</msg>
+<var>${sub_btn}</var>
+<arg>${APPLY_BTN_SUBMIT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:00.777494" elapsed="0.004723"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:00.782925" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.100E5BC4CA98098CBD6EFF78910D0A6B.e.423")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${sub_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:00.782705" elapsed="0.004789"/>
+</kw>
+<kw name="Wait Until Location Contains" owner="SeleniumLibrary">
+<arg>/seller-application</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-10-10T18:12:00.787829" elapsed="0.004953"/>
+</kw>
+<kw name="Page Should Contain" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:03.999206" level="INFO">Current page contains text 'Under review'.</msg>
+<arg>Under review</arg>
+<doc>Verifies that current page contains ``text``.</doc>
+<status status="PASS" start="2026-10-10T18:12:00.793165" elapsed="3.206163"/>
+</kw>
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:04.051539" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/E2E_02_Seller_Application_Submitted.png"&gt;&lt;img src="img/robot/E2E_02_Seller_Application_Submitted.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>${SCREENSHOT_DIR}/E2E_02_Seller_Application_Submitted.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-10T18:12:03.999750" elapsed="0.051931"/>
+</kw>
+<doc>Step 2: The registered customer applies to become a Seller.</doc>
+<tag>application</tag>
+<tag>e2e</tag>
+<tag>seller</tag>
+<status status="PASS" start="2026-10-10T18:11:44.585958" elapsed="19.466095"/>
+</test>
+<test id="s1-t3" name="PHASE 3: Admin Approves Seller Application" line="92">
+<kw name="Login As Admin" owner="common_keywords">
+<kw name="Logout Customer" owner="common_keywords">
+<kw name="Delete All Cookies" owner="SeleniumLibrary">
+<doc>Deletes all cookies.</doc>
+<status status="PASS" start="2026-10-10T18:12:04.054495" elapsed="0.007726"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:04.063346" level="INFO">Executing JavaScript:
+window.localStorage.clear(); window.sessionStorage.clear();
+Without any arguments.</msg>
+<arg>window.localStorage.clear(); window.sessionStorage.clear();</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:04.063149" elapsed="0.005475"/>
+</kw>
+<arg>Execute JavaScript</arg>
+<arg>window.localStorage.clear(); window.sessionStorage.clear();</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible errorw.</doc>
+<status status="PASS" start="2026-10-10T18:12:04.062541" elapsed="0.006226"/>
+</kw>
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:04.069131" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/'</msg>
+<arg>${HOME_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:12:04.068951" elapsed="1.752087"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-10-10T18:12:06.822946" level="INFO">Slept 1 second.</msg>
+<arg>1s</arg>
+<doc>Pauses execution for the given time.</doc>
+<status status="PASS" start="2026-10-10T18:12:05.821277" elapsed="1.001821"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:12:04.054183" elapsed="2.769043"/>
+</kw>
+<kw name="Login As Customer" owner="common_keywords">
+<kw name="Go To Sign In Page" owner="common_keywords">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:06.824285" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/signin'</msg>
+<arg>${SIGNIN_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:12:06.824161" elapsed="0.108761"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNIN_INPUT_USERNAME}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:12:06.933281" elapsed="1.023721"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:12:06.823908" elapsed="1.133253"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:07.957699" level="INFO">Typing text 'checkout_admin' into text field 'id:usernameOrEmail'.</msg>
+<arg>${SIGNIN_INPUT_USERNAME}</arg>
+<arg>${username}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:07.957364" elapsed="0.045433"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:08.003440" level="INFO">Typing password into text field 'id:signin-password'.</msg>
+<msg time="2026-10-10T18:12:08.020091" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNIN_INPUT_PASSWORD}</arg>
+<arg>${password}</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:08.003074" elapsed="0.045360"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNIN_BUTTON_SUBMIT}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:12:08.048664" elapsed="0.011094"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:08.063920" level="INFO">${btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.F253F7A9FBA39BFBF80F81C6AA8CABA3.e.985")&gt;</msg>
+<var>${btn}</var>
+<arg>${SIGNIN_BUTTON_SUBMIT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:08.059987" elapsed="0.003990"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:08.064409" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.F253F7A9FBA39BFBF80F81C6AA8CABA3.e.985")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:08.064204" elapsed="0.005372"/>
+</kw>
+<kw name="Wait Until Location Does Not Contain" owner="SeleniumLibrary">
+<arg>/signin</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the current URL does not contains ``location``.</doc>
+<status status="PASS" start="2026-10-10T18:12:08.069805" elapsed="3.488369"/>
+</kw>
+<arg>${username}</arg>
+<arg>${password}</arg>
+<status status="PASS" start="2026-10-10T18:12:06.823458" elapsed="4.734857"/>
+</kw>
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:11.558664" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/admin'</msg>
+<arg>${ADMIN_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:12:11.558490" elapsed="1.321251"/>
+</kw>
+<kw name="Wait Until Location Contains" owner="SeleniumLibrary">
+<arg>/admin</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-10-10T18:12:12.879988" elapsed="0.003284"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:12:04.053713" elapsed="8.829678"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${ADMIN_HEADING}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:12:12.883719" elapsed="0.459016"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${ADMIN_FILTER_STATUS}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:12:13.343137" elapsed="0.008008"/>
+</kw>
+<kw name="Select From List By Value" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:13.351948" level="INFO">Selecting options from selection list 'id:application-status-filter' by value PENDING.</msg>
+<arg>${ADMIN_FILTER_STATUS}</arg>
+<arg>PENDING</arg>
+<doc>Selects options from selection list ``locator`` by ``values``.</doc>
+<status status="PASS" start="2026-10-10T18:12:13.351629" elapsed="0.042609"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-10-10T18:12:14.897192" level="INFO">Slept 1 second 500 milliseconds.</msg>
+<arg>1.5s</arg>
+<doc>Pauses execution for the given time.</doc>
+<status status="PASS" start="2026-10-10T18:12:13.396407" elapsed="1.500996"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-10T18:12:14.898954" level="INFO">${specific_shop_btn} = xpath:(//table//tr[contains(., 'Shop_user_wzzyym')]//button[contains(., 'Review') or contains(., 'View')])[1]</msg>
+<var>${specific_shop_btn}</var>
+<arg>xpath:(//table//tr[contains(., '${NEW_SHOP_NAME}')]//button[contains(., 'Review') or contains(., 'View')])[1]</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-10T18:12:14.898020" elapsed="0.001020"/>
+</kw>
+<kw name="Run Keyword And Return Status" owner="BuiltIn">
+<kw name="Page Should Contain Element" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:14.908669" level="INFO">Current page contains element 'xpath:(//table//tr[contains(., 'Shop_user_wzzyym')]//button[contains(., 'Review') or contains(., 'View')])[1]'.</msg>
+<arg>${specific_shop_btn}</arg>
+<doc>Verifies that element ``locator`` is found on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:12:14.901141" elapsed="0.007657"/>
+</kw>
+<msg time="2026-10-10T18:12:14.908981" level="INFO">${has_specific} = True</msg>
+<var>${has_specific}</var>
+<arg>Page Should Contain Element</arg>
+<arg>${specific_shop_btn}</arg>
+<doc>Runs the specified keyword and returns the status as a Boolean value.</doc>
+<status status="PASS" start="2026-10-10T18:12:14.899820" elapsed="0.009197"/>
+</kw>
+<if>
+<branch type="IF" condition="${has_specific}">
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${specific_shop_btn}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-10T18:12:14.909549" elapsed="0.277572"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:15.193995" level="INFO">${rev_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.C069CBB70ADB96DAC90EDDBF8C9FF3A7.e.1128")&gt;</msg>
+<var>${rev_btn}</var>
+<arg>${specific_shop_btn}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:15.187550" elapsed="0.006505"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:12:14.909345" elapsed="0.284796"/>
+</branch>
+<branch type="ELSE">
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${ADMIN_BTN_REVIEW}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:15.194408" elapsed="0.000050"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${ADMIN_BTN_REVIEW}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:15.194603" elapsed="0.000039"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${ADMIN_BTN_REVIEW}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:15.194816" elapsed="0.000035"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<var>${rev_btn}</var>
+<arg>${ADMIN_BTN_REVIEW}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:15.194965" elapsed="0.000030"/>
+</kw>
+<status status="NOT RUN" start="2026-10-10T18:12:15.194205" elapsed="0.000840"/>
+</branch>
+<status status="PASS" start="2026-10-10T18:12:14.909308" elapsed="0.285782"/>
+</if>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:15.195722" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.C069CBB70ADB96DAC90EDDBF8C9FF3A7.e.1128")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${rev_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:15.195412" elapsed="0.030446"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${ADMIN_DECISION_APPROVE}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:12:15.226417" elapsed="0.014978"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:15.246048" level="INFO">${appr_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.C069CBB70ADB96DAC90EDDBF8C9FF3A7.e.1129")&gt;</msg>
+<var>${appr_btn}</var>
+<arg>${ADMIN_DECISION_APPROVE}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:15.241770" elapsed="0.004329"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:15.246664" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.C069CBB70ADB96DAC90EDDBF8C9FF3A7.e.1129")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${appr_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:15.246456" elapsed="0.006252"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${ADMIN_BTN_CONFIRM_DECISION}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:12:15.253067" elapsed="0.013113"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:15.271305" level="INFO">${conf_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.C069CBB70ADB96DAC90EDDBF8C9FF3A7.e.1140")&gt;</msg>
+<var>${conf_btn}</var>
+<arg>${ADMIN_BTN_CONFIRM_DECISION}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:15.266555" elapsed="0.004811"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:15.271983" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.C069CBB70ADB96DAC90EDDBF8C9FF3A7.e.1140")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${conf_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:15.271752" elapsed="0.011611"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-10-10T18:12:17.285522" level="INFO">Slept 2 seconds.</msg>
+<arg>2s</arg>
+<doc>Pauses execution for the given time.</doc>
+<status status="PASS" start="2026-10-10T18:12:15.284098" elapsed="2.001641"/>
+</kw>
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:17.349875" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/E2E_03_Admin_Approved_Application.png"&gt;&lt;img src="img/robot/E2E_03_Admin_Approved_Application.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>${SCREENSHOT_DIR}/E2E_03_Admin_Approved_Application.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-10T18:12:17.286566" elapsed="0.063489"/>
+</kw>
+<doc>Step 3: Platform Admin reviews and approves the pending seller application.</doc>
+<tag>admin</tag>
+<tag>approval</tag>
+<tag>e2e</tag>
+<status status="PASS" start="2026-10-10T18:12:04.052990" elapsed="13.297689"/>
+</test>
+<test id="s1-t4" name="PHASE 4: Approved Seller Publishes A New Product" line="127">
+<kw name="Login As Seller" owner="common_keywords">
+<kw name="Logout Customer" owner="common_keywords">
+<kw name="Delete All Cookies" owner="SeleniumLibrary">
+<doc>Deletes all cookies.</doc>
+<status status="PASS" start="2026-10-10T18:12:17.354168" elapsed="0.011971"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:17.367061" level="INFO">Executing JavaScript:
+window.localStorage.clear(); window.sessionStorage.clear();
+Without any arguments.</msg>
+<arg>window.localStorage.clear(); window.sessionStorage.clear();</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:17.366912" elapsed="0.003282"/>
+</kw>
+<arg>Execute JavaScript</arg>
+<arg>window.localStorage.clear(); window.sessionStorage.clear();</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible errorw.</doc>
+<status status="PASS" start="2026-10-10T18:12:17.366429" elapsed="0.003886"/>
+</kw>
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:17.370665" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/'</msg>
+<arg>${HOME_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:12:17.370489" elapsed="1.764061"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-10-10T18:12:20.136226" level="INFO">Slept 1 second.</msg>
+<arg>1s</arg>
+<doc>Pauses execution for the given time.</doc>
+<status status="PASS" start="2026-10-10T18:12:19.134963" elapsed="1.001408"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:12:17.353875" elapsed="2.782627"/>
+</kw>
+<kw name="Login As Customer" owner="common_keywords">
+<kw name="Go To Sign In Page" owner="common_keywords">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:20.137712" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/signin'</msg>
+<arg>${SIGNIN_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:12:20.137565" elapsed="0.104232"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNIN_INPUT_USERNAME}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:12:20.242056" elapsed="1.020424"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:12:20.137205" elapsed="1.125419"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:21.263147" level="INFO">Typing text 'user_wzzyym' into text field 'id:usernameOrEmail'.</msg>
+<arg>${SIGNIN_INPUT_USERNAME}</arg>
+<arg>${username}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:21.262820" elapsed="0.044987"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:21.308439" level="INFO">Typing password into text field 'id:signin-password'.</msg>
+<msg time="2026-10-10T18:12:21.324547" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNIN_INPUT_PASSWORD}</arg>
+<arg>${password}</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:21.308088" elapsed="0.043019"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNIN_BUTTON_SUBMIT}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:12:21.351347" elapsed="0.009265"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:21.365118" level="INFO">${btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.8A33B5972C590814E705A61AA14DF51D.e.1696")&gt;</msg>
+<var>${btn}</var>
+<arg>${SIGNIN_BUTTON_SUBMIT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:21.360856" elapsed="0.004317"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:21.365587" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.8A33B5972C590814E705A61AA14DF51D.e.1696")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:21.365382" elapsed="0.004984"/>
+</kw>
+<kw name="Wait Until Location Does Not Contain" owner="SeleniumLibrary">
+<arg>/signin</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the current URL does not contains ``location``.</doc>
+<status status="PASS" start="2026-10-10T18:12:21.370604" elapsed="3.919689"/>
+</kw>
+<arg>${username}</arg>
+<arg>${password}</arg>
+<status status="PASS" start="2026-10-10T18:12:20.136746" elapsed="5.153743"/>
+</kw>
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:25.290900" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/seller-dashboard'</msg>
+<arg>${SELLER_DASHBOARD_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:12:25.290702" elapsed="1.358182"/>
+</kw>
+<kw name="Wait Until Location Contains" owner="SeleniumLibrary">
+<arg>/seller</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-10-10T18:12:26.649123" elapsed="0.004705"/>
+</kw>
+<arg>${NEW_SELLER_USER}</arg>
+<arg>${NEW_SELLER_PASS}</arg>
+<status status="PASS" start="2026-10-10T18:12:17.353346" elapsed="9.300655"/>
+</kw>
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:26.654565" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/seller/products/add'</msg>
+<arg>${SELLER_ADD_PRODUCT_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:12:26.654356" elapsed="1.811778"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${PRODUCT_ADD_INPUT_NAME}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:12:28.466536" elapsed="0.256331"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:28.723732" level="INFO">Typing text 'Panda Mechanical Keyboard RGB Pro' into text field 'id:product-name'.</msg>
+<arg>${PRODUCT_ADD_INPUT_NAME}</arg>
+<arg>${NEW_PRODUCT_NAME}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:28.723347" elapsed="0.062048"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:28.786165" level="INFO">Typing text 'คีย์บอร์ดแมคคานิคอลคัสตอมลายแพนด้า สวิตช์เงียบ ไฟ RGB สวยงาม รองรับ Bluetooth และ Wireless' into text field 'id:product-description'.</msg>
+<arg>${PRODUCT_ADD_INPUT_DESC}</arg>
+<arg>${NEW_PRODUCT_DESC}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:28.785806" elapsed="0.098128"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:28.884773" level="INFO">Typing text '1290.00' into text field 'id:product-price'.</msg>
+<arg>${PRODUCT_ADD_INPUT_PRICE}</arg>
+<arg>${NEW_PRODUCT_PRICE}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:28.884397" elapsed="0.041997"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:28.927153" level="INFO">Typing text '50' into text field 'id:product-stock'.</msg>
+<arg>${PRODUCT_ADD_INPUT_STOCK}</arg>
+<arg>${NEW_PRODUCT_STOCK}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:28.926800" elapsed="0.041090"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:28.968676" level="INFO">Typing text 'จัดส่งผ่านขนส่งเอกชน Standard Delivery ภายใน 1-2 วันทำการ' into text field 'id:product-shipping'.</msg>
+<arg>${PRODUCT_ADD_INPUT_SHIPPING}</arg>
+<arg>${NEW_PRODUCT_SHIPPING}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:28.968312" elapsed="0.077843"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${PRODUCT_ADD_CHECKBOX_FIRST}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-10T18:12:29.046753" elapsed="1.040860"/>
+</kw>
+<kw name="Select Checkbox" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:30.088827" level="INFO">Selecting checkbox 'xpath:(//div[@role='group' and @aria-label='Product categories']//input[@type='checkbox'])[1]'.</msg>
+<arg>${PRODUCT_ADD_CHECKBOX_FIRST}</arg>
+<doc>Selects the checkbox identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:30.088368" elapsed="0.049043"/>
+</kw>
+<kw name="Make File Input Interactable" owner="common_keywords">
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:30.144800" level="INFO">${elem} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.7A65F9C1E58802D25D534B423135CD74.e.1816")&gt;</msg>
+<var>${elem}</var>
+<arg>${locator}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:30.138511" elapsed="0.006351"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:30.145311" level="INFO">Executing JavaScript:
+arguments[0].style.display = 'block'; arguments[0].style.visibility = 'visible'; arguments[0].style.opacity = '1'; arguments[0].style.width = '100px'; arguments[0].style.height = '30px'; arguments[0].classList.remove('sr-only');
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.7A65F9C1E58802D25D534B423135CD74.e.1816")&gt;'</msg>
+<arg>arguments[0].style.display = 'block'; arguments[0].style.visibility = 'visible'; arguments[0].style.opacity = '1'; arguments[0].style.width = '100px'; arguments[0].style.height = '30px'; arguments[0].classList.remove('sr-only');</arg>
+<arg>ARGUMENTS</arg>
+<arg>${elem}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:30.145084" elapsed="0.003000"/>
+</kw>
+<arg>${PRODUCT_ADD_FILE_INPUT}</arg>
+<status status="PASS" start="2026-10-10T18:12:30.138082" elapsed="0.010118"/>
+</kw>
+<kw name="Choose File" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:30.148789" level="INFO">Sending C:\Users\Thananchai\Pictures\printi\PandaStore\img\products\product-1-sm-1.png to browser.</msg>
+<arg>${PRODUCT_ADD_FILE_INPUT}</arg>
+<arg>${TEST_IMAGE_PATH}</arg>
+<doc>Inputs the ``file_path`` into the file input field ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:30.148486" elapsed="0.021422"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${PRODUCT_ADD_BTN_SUBMIT}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-10T18:12:30.170799" elapsed="0.279644"/>
+</kw>
+<kw name="Wait Until Element Is Enabled" owner="SeleniumLibrary">
+<arg>${PRODUCT_ADD_BTN_SUBMIT}</arg>
+<arg>timeout=30s</arg>
+<doc>Waits until the element ``locator`` is enabled.</doc>
+<status status="PASS" start="2026-10-10T18:12:30.450864" elapsed="3.227096"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:33.682525" level="INFO">${add_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.7A65F9C1E58802D25D534B423135CD74.e.1847")&gt;</msg>
+<var>${add_btn}</var>
+<arg>${PRODUCT_ADD_BTN_SUBMIT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:33.678356" elapsed="0.004219"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:33.683091" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.7A65F9C1E58802D25D534B423135CD74.e.1847")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${add_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:33.682890" elapsed="0.008645"/>
+</kw>
+<kw name="Wait Until Location Contains" owner="SeleniumLibrary">
+<arg>/shop/</arg>
+<arg>timeout=25s</arg>
+<doc>Waits until the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-10-10T18:12:33.692345" elapsed="5.915178"/>
+</kw>
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:39.665871" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/E2E_04_Product_Published.png"&gt;&lt;img src="img/robot/E2E_04_Product_Published.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>${SCREENSHOT_DIR}/E2E_04_Product_Published.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-10T18:12:39.608213" elapsed="0.057819"/>
+</kw>
+<doc>Step 4: The approved Seller adds and publishes a product for sale.</doc>
+<tag>e2e</tag>
+<tag>product</tag>
+<tag>seller</tag>
+<status status="PASS" start="2026-10-10T18:12:17.352524" elapsed="22.313919"/>
+</test>
+<test id="s1-t5" name="PHASE 5: Customer Buys Product And Places Order" line="161">
+<kw name="Logout Customer" owner="common_keywords">
+<kw name="Delete All Cookies" owner="SeleniumLibrary">
+<doc>Deletes all cookies.</doc>
+<status status="PASS" start="2026-10-10T18:12:39.668366" elapsed="0.011431"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:39.680817" level="INFO">Executing JavaScript:
+window.localStorage.clear(); window.sessionStorage.clear();
+Without any arguments.</msg>
+<arg>window.localStorage.clear(); window.sessionStorage.clear();</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:39.680637" elapsed="0.003383"/>
+</kw>
+<arg>Execute JavaScript</arg>
+<arg>window.localStorage.clear(); window.sessionStorage.clear();</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible errorw.</doc>
+<status status="PASS" start="2026-10-10T18:12:39.680079" elapsed="0.004063"/>
+</kw>
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:39.684479" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/'</msg>
+<arg>${HOME_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:12:39.684310" elapsed="1.844542"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-10-10T18:12:42.530278" level="INFO">Slept 1 second.</msg>
+<arg>1s</arg>
+<doc>Pauses execution for the given time.</doc>
+<status status="PASS" start="2026-10-10T18:12:41.529114" elapsed="1.001311"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:12:39.667995" elapsed="2.862564"/>
+</kw>
+<kw name="Login As Customer" owner="common_keywords">
+<kw name="Go To Sign In Page" owner="common_keywords">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:42.531899" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/signin'</msg>
+<arg>${SIGNIN_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:12:42.531767" elapsed="0.086134"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNIN_INPUT_USERNAME}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:12:42.618160" elapsed="1.018476"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:12:42.531501" elapsed="1.105278"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:43.637309" level="INFO">Typing text 'customer1' into text field 'id:usernameOrEmail'.</msg>
+<arg>${SIGNIN_INPUT_USERNAME}</arg>
+<arg>${username}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:43.636975" elapsed="0.042786"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:43.680404" level="INFO">Typing password into text field 'id:signin-password'.</msg>
+<msg time="2026-10-10T18:12:43.696692" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNIN_INPUT_PASSWORD}</arg>
+<arg>${password}</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:43.680061" elapsed="0.043546"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNIN_BUTTON_SUBMIT}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:12:43.723837" elapsed="0.008353"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:43.736527" level="INFO">${btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.B694AD79FA220C5C518DA1B7BF50B044.e.2430")&gt;</msg>
+<var>${btn}</var>
+<arg>${SIGNIN_BUTTON_SUBMIT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:43.732413" elapsed="0.004170"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:43.737017" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.B694AD79FA220C5C518DA1B7BF50B044.e.2430")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:43.736803" elapsed="0.003998"/>
+</kw>
+<kw name="Wait Until Location Does Not Contain" owner="SeleniumLibrary">
+<arg>/signin</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the current URL does not contains ``location``.</doc>
+<status status="PASS" start="2026-10-10T18:12:43.741007" elapsed="3.295667"/>
+</kw>
+<arg>${VALID_USERNAME}</arg>
+<arg>${VALID_PASSWORD}</arg>
+<status status="PASS" start="2026-10-10T18:12:42.530990" elapsed="4.505828"/>
+</kw>
+<kw name="Add First Product In Shop To Cart" owner="common_keywords">
+<kw name="Navigate To Shop Page" owner="common_keywords">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:47.038026" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/shop-with-sidebar'</msg>
+<arg>${SHOP_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:12:47.037888" elapsed="2.089590"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${HEADER_SEARCH_INPUT}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:12:49.127725" elapsed="0.649607"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:12:47.037621" elapsed="2.739888"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${SHOP_FIRST_PRODUCT_LINK}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:12:49.777724" elapsed="0.006538"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${SHOP_FIRST_PRODUCT_LINK}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-10T18:12:49.784497" elapsed="0.274473"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:50.063695" level="INFO">${item} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.79C7A326031FDC33784B253207482222.e.2570")&gt;</msg>
+<var>${item}</var>
+<arg>${SHOP_FIRST_PRODUCT_LINK}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:50.059212" elapsed="0.004541"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:50.064210" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.79C7A326031FDC33784B253207482222.e.2570")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${item}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:50.063993" elapsed="0.005106"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${PRODUCT_BTN_ADD_TO_CART}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:12:50.069343" elapsed="2.031821"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${PRODUCT_BTN_ADD_TO_CART}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-10T18:12:52.101395" elapsed="0.276918"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:52.390967" level="INFO">${cart_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.79C7A326031FDC33784B253207482222.e.2924")&gt;</msg>
+<var>${cart_btn}</var>
+<arg>${PRODUCT_BTN_ADD_TO_CART}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:52.378979" elapsed="0.012074"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:52.391717" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.79C7A326031FDC33784B253207482222.e.2924")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${cart_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:52.391410" elapsed="0.007929"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-10-10T18:12:53.400520" level="INFO">Slept 1 second.</msg>
+<arg>1s</arg>
+<doc>Pauses execution for the given time.</doc>
+<status status="PASS" start="2026-10-10T18:12:52.399559" elapsed="1.001502"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:12:47.037249" elapsed="6.364370"/>
+</kw>
+<kw name="Navigate To Checkout Page" owner="common_keywords">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:53.403794" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/checkout'</msg>
+<arg>${CHECKOUT_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:12:53.403490" elapsed="0.855208"/>
+</kw>
+<kw name="Wait Until Location Contains" owner="SeleniumLibrary">
+<arg>/checkout</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-10-10T18:12:54.258957" elapsed="0.003247"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:12:53.402699" elapsed="0.859631"/>
+</kw>
+<kw name="Run Keyword And Return Status" owner="BuiltIn">
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${CHECKOUT_RADIO_FIRST_ADDR}</arg>
+<arg>timeout=5s</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:12:54.263139" elapsed="3.326149"/>
+</kw>
+<msg time="2026-10-10T18:12:57.589657" level="INFO">${has_addr} = True</msg>
+<var>${has_addr}</var>
+<arg>Wait Until Page Contains Element</arg>
+<arg>${CHECKOUT_RADIO_FIRST_ADDR}</arg>
+<arg>timeout=5s</arg>
+<doc>Runs the specified keyword and returns the status as a Boolean value.</doc>
+<status status="PASS" start="2026-10-10T18:12:54.262664" elapsed="3.327034"/>
+</kw>
+<if>
+<branch type="IF" condition="${has_addr}">
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:57.594267" level="INFO">${addr_elem} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.20C45580F37CA53F600E9DD9B6F68697.e.3042")&gt;</msg>
+<var>${addr_elem}</var>
+<arg>${CHECKOUT_RADIO_FIRST_ADDR}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:57.590274" elapsed="0.004041"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:57.594702" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.20C45580F37CA53F600E9DD9B6F68697.e.3042")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${addr_elem}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:57.594508" elapsed="0.002937"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:12:57.590014" elapsed="0.007510"/>
+</branch>
+<branch type="ELSE">
+<kw name="Run Keyword And Return Status" owner="BuiltIn">
+<var>${has_add_btn}</var>
+<arg>Wait Until Element Is Visible</arg>
+<arg>${ADDR_BTN_ADD_FORM}</arg>
+<arg>timeout=5s</arg>
+<doc>Runs the specified keyword and returns the status as a Boolean value.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.597731" elapsed="0.000036"/>
+</kw>
+<if>
+<branch type="IF" condition="${has_add_btn}">
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${ADDR_BTN_ADD_FORM}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.597978" elapsed="0.000031"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<var>${add_btn}</var>
+<arg>${ADDR_BTN_ADD_FORM}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.598119" elapsed="0.000029"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${add_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.598293" elapsed="0.000029"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${ADDR_INPUT_RECEIVER}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.598445" elapsed="0.000029"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<arg>${ADDR_INPUT_RECEIVER}</arg>
+<arg>${CUST_RECEIVER_NAME}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.598610" elapsed="0.000028"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<arg>${ADDR_INPUT_PHONE}</arg>
+<arg>${CUST_PHONE}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.598764" elapsed="0.000027"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<arg>${ADDR_INPUT_LINE}</arg>
+<arg>${CUST_ADDRESS_LINE}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.598917" elapsed="0.000027"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<arg>${ADDR_INPUT_DISTRICT}</arg>
+<arg>${CUST_DISTRICT}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.599070" elapsed="0.000028"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<arg>${ADDR_INPUT_PROVINCE}</arg>
+<arg>${CUST_PROVINCE}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.599220" elapsed="0.000027"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<arg>${ADDR_INPUT_POSTAL}</arg>
+<arg>${CUST_POSTAL_CODE}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.599370" elapsed="0.000027"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${ADDR_BUTTON_SAVE}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.599500" elapsed="0.000027"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<var>${save_btn}</var>
+<arg>${ADDR_BUTTON_SAVE}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.599630" elapsed="0.000026"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${save_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.599792" elapsed="0.000027"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<arg>2s</arg>
+<doc>Pauses execution for the given time.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.599932" elapsed="0.000029"/>
+</kw>
+<status status="NOT RUN" start="2026-10-10T18:12:57.597869" elapsed="0.002135"/>
+</branch>
+<status status="NOT RUN" start="2026-10-10T18:12:57.597847" elapsed="0.002199"/>
+</if>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${CHECKOUT_RADIO_FIRST_ADDR}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.600148" elapsed="0.000028"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<var>${addr_elem}</var>
+<arg>${CHECKOUT_RADIO_FIRST_ADDR}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.600276" elapsed="0.000026"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${addr_elem}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="NOT RUN" start="2026-10-10T18:12:57.600442" elapsed="0.000026"/>
+</kw>
+<status status="NOT RUN" start="2026-10-10T18:12:57.597582" elapsed="0.002935"/>
+</branch>
+<status status="PASS" start="2026-10-10T18:12:57.589977" elapsed="0.010583"/>
+</if>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${CHECKOUT_RADIO_PROMPTPAY}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:12:57.600793" elapsed="0.006069"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:57.612124" level="INFO">${pay_elem} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.20C45580F37CA53F600E9DD9B6F68697.e.3043")&gt;</msg>
+<var>${pay_elem}</var>
+<arg>${CHECKOUT_RADIO_PROMPTPAY}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:57.607189" elapsed="0.004989"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:57.612746" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.20C45580F37CA53F600E9DD9B6F68697.e.3043")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${pay_elem}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:57.612529" elapsed="0.004129"/>
+</kw>
+<kw name="Scroll Element Into View" owner="SeleniumLibrary">
+<arg>${CHECKOUT_BTN_PLACE_ORDER}</arg>
+<doc>Scrolls the element identified by ``locator`` into view.</doc>
+<status status="PASS" start="2026-10-10T18:12:57.617227" elapsed="0.269279"/>
+</kw>
+<kw name="Wait Until Element Is Enabled" owner="SeleniumLibrary">
+<arg>${CHECKOUT_BTN_PLACE_ORDER}</arg>
+<arg>timeout=20s</arg>
+<doc>Waits until the element ``locator`` is enabled.</doc>
+<status status="PASS" start="2026-10-10T18:12:57.886892" elapsed="1.953288"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:59.844394" level="INFO">${place_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.20C45580F37CA53F600E9DD9B6F68697.e.3047")&gt;</msg>
+<var>${place_btn}</var>
+<arg>${CHECKOUT_BTN_PLACE_ORDER}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:12:59.840583" elapsed="0.003863"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:12:59.844936" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.20C45580F37CA53F600E9DD9B6F68697.e.3047")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${place_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:12:59.844740" elapsed="0.005235"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${CHECKOUT_CONFIRMATION_TITLE}</arg>
+<arg>timeout=20s</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:12:59.850324" elapsed="2.192445"/>
+</kw>
+<kw name="Page Should Contain" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:02.054834" level="INFO">Current page contains text 'Your order has been placed'.</msg>
+<arg>Your order has been placed</arg>
+<doc>Verifies that current page contains ``text``.</doc>
+<status status="PASS" start="2026-10-10T18:13:02.043249" elapsed="0.011736"/>
+</kw>
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:02.108879" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/E2E_05_Order_Placed.png"&gt;&lt;img src="img/robot/E2E_05_Order_Placed.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>${SCREENSHOT_DIR}/E2E_05_Order_Placed.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-10T18:13:02.055491" elapsed="0.053531"/>
+</kw>
+<doc>Step 5: Customer browses, adds the product to cart, and completes checkout.</doc>
+<tag>checkout</tag>
+<tag>customer</tag>
+<tag>e2e</tag>
+<status status="PASS" start="2026-10-10T18:12:39.667267" elapsed="22.442099"/>
+</test>
+<test id="s1-t6" name="PHASE 6: Customer Confirms PromptPay Payment" line="216">
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${CHECKOUT_LINK_PAY_NOW}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:13:02.110820" elapsed="0.011664"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:02.127232" level="INFO">${paynow_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.20C45580F37CA53F600E9DD9B6F68697.e.3066")&gt;</msg>
+<var>${paynow_btn}</var>
+<arg>${CHECKOUT_LINK_PAY_NOW}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:13:02.122865" elapsed="0.004436"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:02.127944" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.20C45580F37CA53F600E9DD9B6F68697.e.3066")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${paynow_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:13:02.127703" elapsed="0.005074"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${PAYMENT_PAGE_TITLE}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:13:02.133190" elapsed="1.633433"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${PAYMENT_BTN_CONFIRM}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:13:03.767017" elapsed="0.010021"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:03.781910" level="INFO">${confirm_btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.20C45580F37CA53F600E9DD9B6F68697.e.3068")&gt;</msg>
+<var>${confirm_btn}</var>
+<arg>${PAYMENT_BTN_CONFIRM}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:13:03.777453" elapsed="0.004510"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:03.782521" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.20C45580F37CA53F600E9DD9B6F68697.e.3068")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${confirm_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:13:03.782302" elapsed="0.005077"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${PAYMENT_SUCCESS_MESSAGE}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:13:03.787794" elapsed="5.902054"/>
+</kw>
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:09.733882" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/E2E_06_Payment_Confirmed.png"&gt;&lt;img src="img/robot/E2E_06_Payment_Confirmed.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>${SCREENSHOT_DIR}/E2E_06_Payment_Confirmed.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-10T18:13:09.690296" elapsed="0.043730"/>
+</kw>
+<doc>Step 6: Customer scans PromptPay QR and confirms payment.</doc>
+<tag>customer</tag>
+<tag>e2e</tag>
+<tag>payment</tag>
+<status status="PASS" start="2026-10-10T18:13:02.110119" elapsed="7.624440"/>
+</test>
+<test id="s1-t7" name="PHASE 7: Seller Fulfills And Ships The Order" line="234">
+<kw name="Login As Seller" owner="common_keywords">
+<kw name="Logout Customer" owner="common_keywords">
+<kw name="Delete All Cookies" owner="SeleniumLibrary">
+<doc>Deletes all cookies.</doc>
+<status status="PASS" start="2026-10-10T18:13:09.736793" elapsed="0.010201"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:09.748003" level="INFO">Executing JavaScript:
+window.localStorage.clear(); window.sessionStorage.clear();
+Without any arguments.</msg>
+<arg>window.localStorage.clear(); window.sessionStorage.clear();</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:13:09.747793" elapsed="0.004350"/>
+</kw>
+<arg>Execute JavaScript</arg>
+<arg>window.localStorage.clear(); window.sessionStorage.clear();</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible errorw.</doc>
+<status status="PASS" start="2026-10-10T18:13:09.747242" elapsed="0.005035"/>
+</kw>
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:09.752652" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/'</msg>
+<arg>${HOME_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:13:09.752467" elapsed="1.987198"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-10-10T18:13:12.741140" level="INFO">Slept 1 second.</msg>
+<arg>1s</arg>
+<doc>Pauses execution for the given time.</doc>
+<status status="PASS" start="2026-10-10T18:13:11.739945" elapsed="1.001377"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:13:09.736493" elapsed="3.004997"/>
+</kw>
+<kw name="Login As Customer" owner="common_keywords">
+<kw name="Go To Sign In Page" owner="common_keywords">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:12.743018" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/signin'</msg>
+<arg>${SIGNIN_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:13:12.742811" elapsed="0.079737"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNIN_INPUT_USERNAME}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:13:12.822817" elapsed="1.065811"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:13:12.742394" elapsed="1.146387"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:13.889359" level="INFO">Typing text 'seller1' into text field 'id:usernameOrEmail'.</msg>
+<arg>${SIGNIN_INPUT_USERNAME}</arg>
+<arg>${username}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:13:13.888986" elapsed="0.046344"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:13.935902" level="INFO">Typing password into text field 'id:signin-password'.</msg>
+<msg time="2026-10-10T18:13:13.950760" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNIN_INPUT_PASSWORD}</arg>
+<arg>${password}</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:13:13.935583" elapsed="0.044120"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNIN_BUTTON_SUBMIT}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:13:13.979945" elapsed="0.008517"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:13.992809" level="INFO">${btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.17C3F531F778405898FB2D5EF72AC5AF.e.3679")&gt;</msg>
+<var>${btn}</var>
+<arg>${SIGNIN_BUTTON_SUBMIT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:13:13.988721" elapsed="0.004141"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:13.993298" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.17C3F531F778405898FB2D5EF72AC5AF.e.3679")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:13:13.993082" elapsed="0.004288"/>
+</kw>
+<kw name="Wait Until Location Does Not Contain" owner="SeleniumLibrary">
+<arg>/signin</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the current URL does not contains ``location``.</doc>
+<status status="PASS" start="2026-10-10T18:13:13.997580" elapsed="3.725757"/>
+</kw>
+<arg>${username}</arg>
+<arg>${password}</arg>
+<status status="PASS" start="2026-10-10T18:13:12.741804" elapsed="4.981689"/>
+</kw>
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:17.723838" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/seller-dashboard'</msg>
+<arg>${SELLER_DASHBOARD_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:13:17.723666" elapsed="1.260631"/>
+</kw>
+<kw name="Wait Until Location Contains" owner="SeleniumLibrary">
+<arg>/seller</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-10-10T18:13:18.984534" elapsed="0.005358"/>
+</kw>
+<arg>${SELLER_USERNAME}</arg>
+<arg>${SELLER_PASSWORD}</arg>
+<status status="PASS" start="2026-10-10T18:13:09.736008" elapsed="9.254034"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${SELLER_ORDER_FIRST_LINK}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-10-10T18:13:18.990418" elapsed="3.954994"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:22.950124" level="INFO">${ord_link} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.A24C5A962ADD036F798F1914A8108736.e.3803")&gt;</msg>
+<var>${ord_link}</var>
+<arg>${SELLER_ORDER_FIRST_LINK}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:13:22.945812" elapsed="0.004366"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:22.950768" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.A24C5A962ADD036F798F1914A8108736.e.3803")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${ord_link}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:13:22.950532" elapsed="0.004555"/>
+</kw>
+<kw name="Run Keyword And Return Status" owner="BuiltIn">
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:28.199792" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="test/img/robot/selenium-screenshot-12.png"&gt;&lt;img src="test/img/robot/selenium-screenshot-12.png" width="800px"&gt;&lt;/a&gt;</msg>
+<msg time="2026-10-10T18:13:28.200007" level="FAIL">Element 'xpath://button[contains(., 'Accept and confirm')]' not visible after 5 seconds.</msg>
+<arg>${SELLER_ORDER_BTN_ACCEPT}</arg>
+<arg>timeout=5s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="FAIL" start="2026-10-10T18:13:22.955962" elapsed="5.252381">Element 'xpath://button[contains(., 'Accept and confirm')]' not visible after 5 seconds.</status>
+</kw>
+<msg time="2026-10-10T18:13:28.208562" level="INFO">${has_accept} = False</msg>
+<var>${has_accept}</var>
+<arg>Wait Until Element Is Visible</arg>
+<arg>${SELLER_ORDER_BTN_ACCEPT}</arg>
+<arg>timeout=5s</arg>
+<doc>Runs the specified keyword and returns the status as a Boolean value.</doc>
+<status status="PASS" start="2026-10-10T18:13:22.955477" elapsed="5.253125"/>
+</kw>
+<if>
+<branch type="IF" condition="${has_accept}">
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<var>${acc_btn}</var>
+<arg>${SELLER_ORDER_BTN_ACCEPT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:13:28.209190" elapsed="0.000050"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${acc_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="NOT RUN" start="2026-10-10T18:13:28.209418" elapsed="0.000034"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<arg>2s</arg>
+<doc>Pauses execution for the given time.</doc>
+<status status="NOT RUN" start="2026-10-10T18:13:28.209585" elapsed="0.000033"/>
+</kw>
+<status status="NOT RUN" start="2026-10-10T18:13:28.208958" elapsed="0.000709"/>
+</branch>
+<status status="PASS" start="2026-10-10T18:13:28.208908" elapsed="0.000811"/>
+</if>
+<kw name="Run Keyword And Return Status" owner="BuiltIn">
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:33.487907" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="test/img/robot/selenium-screenshot-13.png"&gt;&lt;img src="test/img/robot/selenium-screenshot-13.png" width="800px"&gt;&lt;/a&gt;</msg>
+<msg time="2026-10-10T18:13:33.488097" level="FAIL">Element 'id:courier' not visible after 5 seconds.</msg>
+<arg>${SELLER_ORDER_INPUT_COURIER}</arg>
+<arg>timeout=5s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="FAIL" start="2026-10-10T18:13:28.210434" elapsed="5.278913">Element 'id:courier' not visible after 5 seconds.</status>
+</kw>
+<msg time="2026-10-10T18:13:33.489544" level="INFO">${has_ship} = False</msg>
+<var>${has_ship}</var>
+<arg>Wait Until Element Is Visible</arg>
+<arg>${SELLER_ORDER_INPUT_COURIER}</arg>
+<arg>timeout=5s</arg>
+<doc>Runs the specified keyword and returns the status as a Boolean value.</doc>
+<status status="PASS" start="2026-10-10T18:13:28.209976" elapsed="5.279610"/>
+</kw>
+<if>
+<branch type="IF" condition="${has_ship}">
+<kw name="Input Text" owner="SeleniumLibrary">
+<arg>${SELLER_ORDER_INPUT_COURIER}</arg>
+<arg>${COURIER_NAME}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:13:33.490222" elapsed="0.000085"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<arg>${SELLER_ORDER_INPUT_TRACKING}</arg>
+<arg>${TRACKING_NUMBER}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:13:33.490516" elapsed="0.000047"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<var>${ship_btn}</var>
+<arg>${SELLER_ORDER_BTN_SHIP}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:13:33.490734" elapsed="0.000044"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${ship_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="NOT RUN" start="2026-10-10T18:13:33.490962" elapsed="0.000042"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<arg>2s</arg>
+<doc>Pauses execution for the given time.</doc>
+<status status="NOT RUN" start="2026-10-10T18:13:33.491158" elapsed="0.000041"/>
+</kw>
+<status status="NOT RUN" start="2026-10-10T18:13:33.489904" elapsed="0.001354"/>
+</branch>
+<status status="PASS" start="2026-10-10T18:13:33.489864" elapsed="0.001450"/>
+</if>
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:33.547433" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/E2E_07_Seller_Shipped_Order.png"&gt;&lt;img src="img/robot/E2E_07_Seller_Shipped_Order.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>${SCREENSHOT_DIR}/E2E_07_Seller_Shipped_Order.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-10T18:13:33.491637" elapsed="0.055937"/>
+</kw>
+<doc>Step 7: Seller accepts order, enters tracking, and marks as shipped.</doc>
+<tag>e2e</tag>
+<tag>seller</tag>
+<tag>shipping</tag>
+<status status="PASS" start="2026-10-10T18:13:09.735334" elapsed="23.812773"/>
+</test>
+<test id="s1-t8" name="PHASE 8: Customer Verifies Shipped Order In Order History" line="266">
+<kw name="Logout Customer" owner="common_keywords">
+<kw name="Delete All Cookies" owner="SeleniumLibrary">
+<doc>Deletes all cookies.</doc>
+<status status="PASS" start="2026-10-10T18:13:33.549838" elapsed="0.005288"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:33.556075" level="INFO">Executing JavaScript:
+window.localStorage.clear(); window.sessionStorage.clear();
+Without any arguments.</msg>
+<arg>window.localStorage.clear(); window.sessionStorage.clear();</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:13:33.555911" elapsed="0.002864"/>
+</kw>
+<arg>Execute JavaScript</arg>
+<arg>window.localStorage.clear(); window.sessionStorage.clear();</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible errorw.</doc>
+<status status="PASS" start="2026-10-10T18:13:33.555375" elapsed="0.003505"/>
+</kw>
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:33.559188" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/'</msg>
+<arg>${HOME_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:13:33.559032" elapsed="1.877901"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-10-10T18:13:36.437871" level="INFO">Slept 1 second.</msg>
+<arg>1s</arg>
+<doc>Pauses execution for the given time.</doc>
+<status status="PASS" start="2026-10-10T18:13:35.437092" elapsed="1.001176"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:13:33.549522" elapsed="2.889000"/>
+</kw>
+<kw name="Login As Customer" owner="common_keywords">
+<kw name="Go To Sign In Page" owner="common_keywords">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:36.441126" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/signin'</msg>
+<arg>${SIGNIN_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:13:36.440855" elapsed="0.107528"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNIN_INPUT_USERNAME}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:13:36.548634" elapsed="1.016635"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:13:36.440235" elapsed="1.125122"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:37.565658" level="INFO">Typing text 'customer1' into text field 'id:usernameOrEmail'.</msg>
+<arg>${SIGNIN_INPUT_USERNAME}</arg>
+<arg>${username}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:13:37.565467" elapsed="0.032913"/>
+</kw>
+<kw name="Input Password" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:37.598760" level="INFO">Typing password into text field 'id:signin-password'.</msg>
+<msg time="2026-10-10T18:13:37.612816" level="INFO">Temporally setting log level to: NONE</msg>
+<arg>${SIGNIN_INPUT_PASSWORD}</arg>
+<arg>${password}</arg>
+<doc>Types the given password into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:13:37.598542" elapsed="0.037212"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${SIGNIN_BUTTON_SUBMIT}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-10-10T18:13:37.635895" elapsed="0.006812"/>
+</kw>
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:37.645801" level="INFO">${btn} = &lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.FC53F4743110C76708CB84F6F0BF44DF.e.4385")&gt;</msg>
+<var>${btn}</var>
+<arg>${SIGNIN_BUTTON_SUBMIT}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="PASS" start="2026-10-10T18:13:37.642873" elapsed="0.002960"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:37.646074" level="INFO">Executing JavaScript:
+arguments[0].click();
+By using argument:
+'&lt;selenium.webdriver.remote.webelement.WebElement (session="c5326972082f5b2c4ef1624d68b575be", element="f.F3522A46F713E2C190D5D575979C4A31.d.FC53F4743110C76708CB84F6F0BF44DF.e.4385")&gt;'</msg>
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-10-10T18:13:37.645953" elapsed="0.004863"/>
+</kw>
+<kw name="Wait Until Location Does Not Contain" owner="SeleniumLibrary">
+<arg>/signin</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the current URL does not contains ``location``.</doc>
+<status status="PASS" start="2026-10-10T18:13:37.651110" elapsed="3.103628"/>
+</kw>
+<arg>${VALID_USERNAME}</arg>
+<arg>${VALID_PASSWORD}</arg>
+<status status="PASS" start="2026-10-10T18:13:36.439248" elapsed="4.315583"/>
+</kw>
+<kw name="Navigate To Order History Page" owner="common_keywords">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:40.755677" level="INFO">Opening url 'https://panda-store-kappa.vercel.app/order-history'</msg>
+<arg>${ORDER_HISTORY_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-10-10T18:13:40.755569" elapsed="0.781112"/>
+</kw>
+<kw name="Wait Until Location Contains" owner="SeleniumLibrary">
+<arg>/order-history</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-10-10T18:13:41.536919" elapsed="0.002444"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:13:40.755280" elapsed="0.784158"/>
+</kw>
+<kw name="Run Keyword And Return Status" owner="BuiltIn">
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:46.864000" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="test/img/robot/selenium-screenshot-14.png"&gt;&lt;img src="test/img/robot/selenium-screenshot-14.png" width="800px"&gt;&lt;/a&gt;</msg>
+<msg time="2026-10-10T18:13:46.864116" level="FAIL">Element 'xpath:(//button[contains(., 'Details')])[1]' not visible after 5 seconds.</msg>
+<arg>${ORDER_BTN_DETAILS}</arg>
+<arg>timeout=5s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="FAIL" start="2026-10-10T18:13:41.539980" elapsed="5.324762">Element 'xpath:(//button[contains(., 'Details')])[1]' not visible after 5 seconds.</status>
+</kw>
+<msg time="2026-10-10T18:13:46.864862" level="INFO">${has_details} = False</msg>
+<var>${has_details}</var>
+<arg>Wait Until Element Is Visible</arg>
+<arg>${ORDER_BTN_DETAILS}</arg>
+<arg>timeout=5s</arg>
+<doc>Runs the specified keyword and returns the status as a Boolean value.</doc>
+<status status="PASS" start="2026-10-10T18:13:41.539710" elapsed="5.325172"/>
+</kw>
+<if>
+<branch type="IF" condition="${has_details}">
+<kw name="Get WebElement" owner="SeleniumLibrary">
+<var>${det_btn}</var>
+<arg>${ORDER_BTN_DETAILS}</arg>
+<doc>Returns the first WebElement matching the given ``locator``.</doc>
+<status status="NOT RUN" start="2026-10-10T18:13:46.865181" elapsed="0.000021"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<arg>arguments[0].click();</arg>
+<arg>ARGUMENTS</arg>
+<arg>${det_btn}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="NOT RUN" start="2026-10-10T18:13:46.865290" elapsed="0.000016"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${ORDER_ITEMS_CONTAINER}</arg>
+<arg>timeout=${TIMEOUT}</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="NOT RUN" start="2026-10-10T18:13:46.865372" elapsed="0.000016"/>
+</kw>
+<status status="NOT RUN" start="2026-10-10T18:13:46.865054" elapsed="0.000357"/>
+</branch>
+<status status="PASS" start="2026-10-10T18:13:46.865032" elapsed="0.000405"/>
+</if>
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-10-10T18:13:46.925470" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="img/robot/E2E_08_Order_History_Complete.png"&gt;&lt;img src="img/robot/E2E_08_Order_History_Complete.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>${SCREENSHOT_DIR}/E2E_08_Order_History_Complete.png</arg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-10-10T18:13:46.865577" elapsed="0.059976"/>
+</kw>
+<doc>Step 8: Customer tracks order in Order History and verifies SHIPPED status.</doc>
+<tag>customer</tag>
+<tag>e2e</tag>
+<tag>order_history</tag>
+<status status="PASS" start="2026-10-10T18:13:33.548827" elapsed="13.376966"/>
+</test>
+<kw name="Close PandaStore Browser" owner="common_keywords" type="TEARDOWN">
+<kw name="Close All Browsers" owner="SeleniumLibrary">
+<doc>Closes all open browsers and resets the browser cache.</doc>
+<status status="PASS" start="2026-10-10T18:13:46.926900" elapsed="2.264378"/>
+</kw>
+<status status="PASS" start="2026-10-10T18:13:46.926732" elapsed="2.265040"/>
+</kw>
+<doc>Complete End-to-End (E2E) Lifecycle Test Suite for PandaStore.
+Workflow: User Signup -&gt; Seller Application -&gt; Admin Approval -&gt;
+Seller Publishes Product -&gt; Customer Orders &amp; Pays -&gt; Seller Fulfills &amp; Ships.</doc>
+<status status="PASS" start="2026-10-10T18:11:34.815461" elapsed="134.376507"/>
+</suite>
+<statistics>
+<total>
+<stat pass="8" fail="0" skip="0">All Tests</stat>
+</total>
+<tag>
+<stat pass="1" fail="0" skip="0">admin</stat>
+<stat pass="1" fail="0" skip="0">application</stat>
+<stat pass="1" fail="0" skip="0">approval</stat>
+<stat pass="1" fail="0" skip="0">checkout</stat>
+<stat pass="3" fail="0" skip="0">customer</stat>
+<stat pass="8" fail="0" skip="0">e2e</stat>
+<stat pass="1" fail="0" skip="0">order_history</stat>
+<stat pass="1" fail="0" skip="0">payment</stat>
+<stat pass="1" fail="0" skip="0">product</stat>
+<stat pass="1" fail="0" skip="0">register</stat>
+<stat pass="3" fail="0" skip="0">seller</stat>
+<stat pass="1" fail="0" skip="0">shipping</stat>
+<stat pass="1" fail="0" skip="0">user</stat>
+</tag>
+<suite>
+<stat name="00 E2E Full Lifecycle" id="s1" pass="8" fail="0" skip="0">00 E2E Full Lifecycle</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>

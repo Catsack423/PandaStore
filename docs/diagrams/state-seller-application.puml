@@ -1,0 +1,36 @@
+@startuml
+!include _style.puml
+title SellerApplication State: Actual Review Guards
+hide empty description
+[*] --> PENDING : customer submits new application\n[not already seller; no PENDING/APPROVED application]
+PENDING --> APPROVED : approveApplication()\n[no existing seller]
+PENDING --> REJECTED : rejectApplication(reason)
+PENDING --> NEED_MORE_DOC : requestMoreDocuments(message)
+REJECTED --> APPROVED : approveApplication()\n[no existing seller]
+NEED_MORE_DOC --> APPROVED : approveApplication()\n[no existing seller]
+REJECTED --> NEED_MORE_DOC : requestMoreDocuments(message)
+NEED_MORE_DOC --> REJECTED : rejectApplication(reason)
+APPROVED --> REJECTED : rejectApplication(reason)\n[no source-status guard]
+APPROVED --> NEED_MORE_DOC : requestMoreDocuments(message)\n[no source-status guard]
+REJECTED --> REJECTED : repeat reject / replace note and review metadata
+NEED_MORE_DOC --> NEED_MORE_DOC : repeat request-docs / replace note and review metadata
+
+note right of APPROVED
+Approval saves reviewedBy/reviewedAt, changes User.role to SELLER,
+and creates ACTIVE Seller plus SellerBankAccount.
+Already APPROVED or existing seller blocks approval.
+Later rejection/document request does not remove that Seller
+or revert the User role.
+Admin authorization is enforced outside the service by the filter.
+end note
+note left of NEED_MORE_DOC
+No in-place edit/resubmit endpoint exists.
+After NEED_MORE_DOC or REJECTED, an eligible customer
+can submit a NEW PENDING application (different entity).
+All review actions save a review timestamp and reviewer;
+rejection/document requests also save adminNote.
+end note
+' Sources: backend/src/main/java/project/project/Entity/seller/SellerApplicationStatus.java
+' Sources: backend/src/main/java/project/project/Service/implement/SellerApplicationServiceImp.java
+' Sources: backend/src/main/java/project/project/Controller/SellerApplicationController.java; Filter/SellerApplicationAdminFilter.java
+@enduml
