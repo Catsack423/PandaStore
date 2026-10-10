@@ -1,8 +1,8 @@
-*** Settings ***
+﻿*** Settings ***
 Documentation       Test suite for Order Placement & Checkout in PandaStore (/checkout).
-Resource            resources/variables.resource
-Resource            resources/locators.resource
-Resource            resources/common_keywords.resource
+Resource            ../resources/variables.resource
+Resource            ../resources/locators.resource
+Resource            ../resources/common_keywords.resource
 
 Test Setup          Setup Customer With Item In Cart
 Test Teardown       Teardown With Screenshot

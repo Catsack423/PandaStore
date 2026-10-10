@@ -130,9 +130,9 @@ PandaStore/
 ├── test/
 │   └── Robot/                   # ทดสอบระบบด้วย Robot Framework
 │       ├── 00_e2e_full_lifecycle.robot    # ทดสอบการใช้งานตั้งแต่ต้นจนจบ
-│       ├── 01_user_register.robot ... 08_order_history.robot # ชุดทดสอบลูกค้า
-│       ├── seller_01_*.robot ... seller_04_*.robot           # ชุดทดสอบผู้ขาย
-│       ├── admin_01_*.robot ... admin_03_*.robot             # ชุดทดสอบผู้ดูแลระบบ
+│       ├── User/                # ชุดทดสอบลูกค้า (01_user_register ... 08_order_history)
+│       ├── Seller/              # ชุดทดสอบผู้ขาย (seller_01 ... seller_04)
+│       ├── Admin/               # ชุดทดสอบผู้ดูแลระบบ (admin_01 ... admin_03)
 │       └── resources/           # Locators, Variables และ Keywords ที่ใช้ซ้ำ
 ├── docs/                        # เอกสารออกแบบระบบและรายงานความปลอดภัย
 │   └── diagrams/                # แผนภาพและรายละเอียด Use Case
@@ -182,6 +182,19 @@ python -m robot test/Robot/00_e2e_full_lifecycle.robot
 
 # รันแบบ Headless
 python -m robot -v HEADLESS:True test/Robot/00_e2e_full_lifecycle.robot
+
+# รันเฉพาะฝั่ง Admin
+python -m robot test/Robot/Admin/
+
+# รันเฉพาะฝั่ง Seller
+python -m robot test/Robot/Seller/
+
+# รันเฉพาะฝั่ง User
+python -m robot test/Robot/User/
+
+# รันทั้งหมดพร้อมกัน
+python -m robot test/Robot/
+
 ```
 
 ## ผลการทดสอบอัตโนมัติ (Robot Framework Test Results)

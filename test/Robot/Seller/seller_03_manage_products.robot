@@ -1,4 +1,4 @@
-*** Settings ***
+﻿*** Settings ***
 Documentation       Seller Product Management Test Suite for PandaStore.
 ...                 Covers seller adding and publishing products:
 ...                 - Accessing /seller/products/add
@@ -6,9 +6,9 @@ Documentation       Seller Product Management Test Suite for PandaStore.
 ...                 - Image upload and preview
 ...                 - Category search and selection
 ...                 - Successfully creating and listing a new product
-Resource            resources/variables.resource
-Resource            resources/locators.resource
-Resource            resources/common_keywords.resource
+Resource            ../resources/variables.resource
+Resource            ../resources/locators.resource
+Resource            ../resources/common_keywords.resource
 
 Suite Setup         Open PandaStore Browser And Login As Seller
 Suite Teardown      Close PandaStore Browser

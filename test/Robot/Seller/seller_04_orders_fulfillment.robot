@@ -1,4 +1,4 @@
-*** Settings ***
+﻿*** Settings ***
 Documentation       Seller Orders & Fulfillment Test Suite for PandaStore.
 ...                 Covers seller order management and shipping:
 ...                 - Viewing orders on the dashboard
@@ -6,9 +6,9 @@ Documentation       Seller Orders & Fulfillment Test Suite for PandaStore.
 ...                 - Accepting paid order (WAITING_SELLER_CONFIRM -> PREPARING)
 ...                 - Entering shipping courier and tracking number
 ...                 - Marking order as shipped (PREPARING -> SHIPPED)
-Resource            resources/variables.resource
-Resource            resources/locators.resource
-Resource            resources/common_keywords.resource
+Resource            ../resources/variables.resource
+Resource            ../resources/locators.resource
+Resource            ../resources/common_keywords.resource
 
 Suite Setup         Open PandaStore Browser And Login As Seller
 Suite Teardown      Close PandaStore Browser

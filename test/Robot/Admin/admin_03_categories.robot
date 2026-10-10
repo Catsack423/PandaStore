@@ -1,4 +1,4 @@
-*** Settings ***
+﻿*** Settings ***
 Documentation       Admin Categories Management Test Suite for PandaStore.
 ...                 Covers product categories CRUD by administrator:
 ...                 - Accessing /admin/categories
@@ -6,9 +6,9 @@ Documentation       Admin Categories Management Test Suite for PandaStore.
 ...                 - Validating form rules (max 20 characters)
 ...                 - Creating a new product category
 ...                 - Deleting a category with confirmation dialog
-Resource            resources/variables.resource
-Resource            resources/locators.resource
-Resource            resources/common_keywords.resource
+Resource            ../resources/variables.resource
+Resource            ../resources/locators.resource
+Resource            ../resources/common_keywords.resource
 
 Suite Setup         Open PandaStore Browser And Login As Admin
 Suite Teardown      Close PandaStore Browser

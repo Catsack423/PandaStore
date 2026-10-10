@@ -1,13 +1,13 @@
-*** Settings ***
+﻿*** Settings ***
 Documentation       Seller Application Test Suite for PandaStore.
 ...                 Covers customer applying to become a seller:
 ...                 - Accessing /seller-application and application status
 ...                 - Step 1: Shop details (name, description, phone, email, address)
 ...                 - Step 2: KYC & Payout details (ID card, bank account, document uploads)
 ...                 - Verifying submitted application status (Under review)
-Resource            resources/variables.resource
-Resource            resources/locators.resource
-Resource            resources/common_keywords.resource
+Resource            ../resources/variables.resource
+Resource            ../resources/locators.resource
+Resource            ../resources/common_keywords.resource
 
 Suite Setup         Open PandaStore Browser    ${HOME_URL}
 Suite Teardown      Close PandaStore Browser

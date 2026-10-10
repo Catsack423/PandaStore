@@ -1,8 +1,8 @@
-*** Settings ***
+﻿*** Settings ***
 Documentation       Test suite for Shopping Cart Management in PandaStore (/cart).
-Resource            resources/variables.resource
-Resource            resources/locators.resource
-Resource            resources/common_keywords.resource
+Resource            ../resources/variables.resource
+Resource            ../resources/locators.resource
+Resource            ../resources/common_keywords.resource
 
 Test Setup          Open PandaStore Browser    ${SHOP_URL}
 Test Teardown       Teardown With Screenshot

@@ -1,8 +1,8 @@
-*** Settings ***
+﻿*** Settings ***
 Documentation       Test suite for Browsing Catalog & Searching Products in PandaStore.
-Resource            resources/variables.resource
-Resource            resources/locators.resource
-Resource            resources/common_keywords.resource
+Resource            ../resources/variables.resource
+Resource            ../resources/locators.resource
+Resource            ../resources/common_keywords.resource
 
 Test Setup          Open PandaStore Browser    ${SHOP_URL}
 Test Teardown       Teardown With Screenshot

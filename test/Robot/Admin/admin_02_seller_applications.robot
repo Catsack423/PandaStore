@@ -1,4 +1,4 @@
-*** Settings ***
+﻿*** Settings ***
 Documentation       Admin Seller Applications Review Test Suite for PandaStore.
 ...                 Covers admin reviewing seller onboarding requests:
 ...                 - Viewing all seller applications on /admin
@@ -7,9 +7,9 @@ Documentation       Admin Seller Applications Review Test Suite for PandaStore.
 ...                 - Opening application details dialog
 ...                 - Verifying applicant KYC & bank details
 ...                 - Approving or Rejecting applications
-Resource            resources/variables.resource
-Resource            resources/locators.resource
-Resource            resources/common_keywords.resource
+Resource            ../resources/variables.resource
+Resource            ../resources/locators.resource
+Resource            ../resources/common_keywords.resource
 
 Suite Setup         Open PandaStore Browser And Login As Admin
 Suite Teardown      Close PandaStore Browser

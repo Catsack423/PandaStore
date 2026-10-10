@@ -21,7 +21,7 @@ test/Robot/
 │
 ├── 00_e2e_full_lifecycle.robot        # ★ E2E Full Lifecycle ทดสอบทั้งระบบในไฟล์เดียว
 │
-├── [USER SUITES]
+├── [User/]                            # โฟลเดอร์ชุดทดสอบฝั่งลูกค้า (Customer)
 │   ├── 01_user_register.robot         # สมัครสมาชิกผู้ใช้ (Customer Sign Up + Validation)
 │   ├── 02_user_login.robot            # เข้าสู่ระบบและออกจากระบบ (Sign In / Sign Out)
 │   ├── 03_user_profile.robot          # จัดการข้อมูลส่วนตัวและที่อยู่จัดส่ง (/my-account)
@@ -31,13 +31,13 @@ test/Robot/
 │   ├── 07_payment.robot               # สแกนจ่าย QR PromptPay & ยกเลิกออเดอร์ (/payment)
 │   └── 08_order_history.robot         # ตรวจสอบประวัติคำสั่งซื้อและสถานะ (/order-history)
 │
-├── [SELLER SUITES]
+├── [Seller/]                          # โฟลเดอร์ชุดทดสอบฝั่งผู้ขาย (Seller)
 │   ├── seller_01_application.robot    # สมัครเป็นผู้ขาย (Step 1 ข้อมูลร้าน + Step 2 KYC & บัญชีธนาคาร)
 │   ├── seller_02_dashboard.robot      # แดชบอร์ดร้านค้า ยอดขาย 4 การ์ด และแท็บออเดอร์ (/seller-dashboard)
 │   ├── seller_03_manage_products.robot# ลงขายสินค้าใหม่ อัปโหลดรูปภาพ สต็อก หมวดหมู่ (/seller/products/add)
 │   └── seller_04_orders_fulfillment.robot # รับออเดอร์ ใส่เลข Tracking ขนส่ง และกดจัดส่งพัสดุ (/seller/{orderId})
 │
-└── [ADMIN SUITES]
+└── [Admin/]                           # โฟลเดอร์ชุดทดสอบฝั่งผู้ดูแลระบบ (Admin)
     ├── admin_01_access.robot          # ป้องกันผู้ใช้ทั่วไปเข้าถึง และล็อกอินผู้ดูแลระบบ (/admin)
     ├── admin_02_seller_applications.robot # ตรวจสอบรายชื่อคำขอเปิดร้าน กรองสถานะ และกดอนุมัติ/ปฏิเสธ
     └── admin_03_categories.robot      # จัดการหมวดหมู่สินค้า เพิ่ม/ลบหมวดหมู่พร้อมกล่องยืนยัน (/admin/categories)
@@ -120,17 +120,17 @@ python -m robot test/Robot/00_e2e_full_lifecycle.robot
 
 ### 3. รันกลุ่ม Seller ทั้งหมด
 ```powershell
-python -m robot test/Robot/seller_*.robot
+python -m robot test/Robot/Seller/
 ```
 
 ### 4. รันกลุ่ม Admin ทั้งหมด
 ```powershell
-python -m robot test/Robot/admin_*.robot
+python -m robot test/Robot/Admin/
 ```
 
 ### 5. รันกลุ่ม User ทั้งหมด
 ```powershell
-python -m robot test/Robot/0*.robot
+python -m robot test/Robot/User/
 ```
 
 ### 6. รันแบบ Headless (ไม่เปิดหน้าต่างเบราว์เซอร์)

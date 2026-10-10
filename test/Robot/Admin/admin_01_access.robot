@@ -1,12 +1,12 @@
-*** Settings ***
+﻿*** Settings ***
 Documentation       Admin Authentication and Access Control Test Suite for PandaStore.
 ...                 Covers admin security and portal access:
 ...                 - Guest and Customer access prevention to /admin
 ...                 - Successful Admin login (admin / admin1234)
 ...                 - Admin header navigation and layout verification
-Resource            resources/variables.resource
-Resource            resources/locators.resource
-Resource            resources/common_keywords.resource
+Resource            ../resources/variables.resource
+Resource            ../resources/locators.resource
+Resource            ../resources/common_keywords.resource
 
 Test Setup          Open PandaStore Browser    ${HOME_URL}
 Test Teardown       Teardown With Screenshot

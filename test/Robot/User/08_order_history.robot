@@ -1,8 +1,8 @@
-*** Settings ***
+﻿*** Settings ***
 Documentation       Test suite for Order History & Order Details in PandaStore (/order-history).
-Resource            resources/variables.resource
-Resource            resources/locators.resource
-Resource            resources/common_keywords.resource
+Resource            ../resources/variables.resource
+Resource            ../resources/locators.resource
+Resource            ../resources/common_keywords.resource
 
 Test Setup          Open And Login Customer
 Test Teardown       Teardown With Screenshot

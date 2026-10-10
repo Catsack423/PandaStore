@@ -1,13 +1,13 @@
-*** Settings ***
+﻿*** Settings ***
 Documentation       Seller Dashboard Test Suite for PandaStore.
 ...                 Covers seller shop dashboard:
 ...                 - Authentication as Seller
 ...                 - Dashboard metrics (Paid sales, Active orders, Awaiting acceptance, Completed orders)
 ...                 - Order views tab filtering (Active vs History)
 ...                 - Storefront link navigation
-Resource            resources/variables.resource
-Resource            resources/locators.resource
-Resource            resources/common_keywords.resource
+Resource            ../resources/variables.resource
+Resource            ../resources/locators.resource
+Resource            ../resources/common_keywords.resource
 
 Suite Setup         Open PandaStore Browser And Login As Seller
 Suite Teardown      Close PandaStore Browser

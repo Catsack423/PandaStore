@@ -1,8 +1,8 @@
-*** Settings ***
+﻿*** Settings ***
 Documentation       Test suite for Payment Processing in PandaStore (/payment/{orderGroupId}).
-Resource            resources/variables.resource
-Resource            resources/locators.resource
-Resource            resources/common_keywords.resource
+Resource            ../resources/variables.resource
+Resource            ../resources/locators.resource
+Resource            ../resources/common_keywords.resource
 
 Test Setup          Setup Placed Order For Payment
 Test Teardown       Teardown With Screenshot
